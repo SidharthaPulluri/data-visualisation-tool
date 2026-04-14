@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rule-Based Data Visualisation Tool</title>
+  <style>
+    :root {
+      --bg: #f5efe5;
+      --panel: rgba(255, 252, 247, 0.78);
+      --panel-strong: rgba(255, 248, 238, 0.95);
+      --ink: #1c1914;
+      --muted: #665b4e;
+      --accent: #1f6f5f;
+      --accent-2: #d67c2d;
+      --border: rgba(28, 25, 20, 0.12);
+      --shadow: 0 18px 48px rgba(45, 31, 14, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(214, 124, 45, 0.18), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(31, 111, 95, 0.16), transparent 28%),
+        linear-gradient(180deg, #f8f3eb 0%, #f1e9de 100%);
+      min-height: 100vh;
+    }
+
+    .shell { width: min(1360px, calc(100% - 32px)); margin: 24px auto 40px; }
+    .hero {
+      display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 24px; padding: 28px;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(255,255,255,0.82), rgba(255,248,238,0.68));
+      box-shadow: var(--shadow); backdrop-filter: blur(14px); overflow: hidden; position: relative;
+    }
+    .hero::after {
+      content: ""; position: absolute; inset: auto -60px -80px auto; width: 240px; height: 240px;
+      background: radial-gradient(circle, rgba(31,111,95,0.3), transparent 65%);
+      pointer-events: none;
+    }
+    .hero h1 { font-size: clamp(2.3rem, 5vw, 4.6rem); line-height: 0.94; margin: 0 0 12px; letter-spacing: -0.06em; max-width: 10ch; }
+    .hero p { max-width: 62ch; color: var(--muted); font-size: 1rem; }
+    .hero-metrics { display: grid; align-content: end; gap: 14px; }
+    .metric { padding: 14px 0; border-top: 1px solid var(--border); }
+    .metric strong { display: block; font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px; }
+    .metric span { font-size: 1.3rem; }
+    .grid { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 22px; margin-top: 22px; }
+    .panel { background: var(--panel); border: 1px solid var(--border); box-shadow: var(--shadow); backdrop-filter: blur(14px); }
+    .controls { padding: 22px; position: sticky; top: 18px; height: fit-content; }
+    .results { padding: 18px; display: grid; gap: 18px; }
+    .section { padding: 20px; background: var(--panel-strong); border: 1px solid var(--border); }
+    h2, h3 { margin: 0 0 12px; letter-spacing: -0.03em; }
+    .subtle { color: var(--muted); margin: 0 0 12px; }
+    label { display: block; font-size: 0.92rem; margin-bottom: 6px; color: var(--muted); }
+    input, select, button {
+      width: 100%; border: 1px solid rgba(28, 25, 20, 0.15); background: rgba(255,255,255,0.9);
+      color: var(--ink); padding: 11px 12px; font: inherit;
+    }
+    button { cursor: pointer; background: var(--ink); color: white; border: none; transition: transform 0.18s ease, opacity 0.18s ease; }
+    button.secondary { background: var(--accent); }
+    button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+    button:hover { transform: translateY(-1px); opacity: 0.96; }
+    .stack { display: grid; gap: 12px; margin-bottom: 18px; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; }
+    .badge { display: inline-flex; padding: 5px 10px; background: rgba(31, 111, 95, 0.12); color: var(--accent); border-radius: 999px; font-size: 0.82rem; margin: 0 8px 8px 0; }
+    pre { margin: 0; white-space: pre-wrap; word-break: break-word; background: rgba(28, 25, 20, 0.05); padding: 14px; overflow: auto; }
+    .table-wrap { overflow: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px; border-bottom: 1px solid rgba(28, 25, 20, 0.08); text-align: left; font-size: 0.92rem; vertical-align: top; }
+    .status { min-height: 22px; color: var(--muted); font-size: 0.95rem; }
+    .chart-frame {
+      min-height: 320px; display: grid; place-items: center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,248,238,0.86));
+      border: 1px solid var(--border);
+    }
+    .chart-frame img { width: 100%; height: auto; display: block; }
+    @media (max-width: 1040px) {
+      .hero, .grid { grid-template-columns: 1fr; }
+      .controls { position: static; }
+    }
+    @media (max-width: 720px) {
+      .shell { width: min(100% - 20px, 1360px); }
+      .hero, .controls, .section { padding: 18px; }
+      .two, .three { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero panel">
+      <div>
+        <div class="badge">Deterministic Pipeline</div>
+        <h1>Rule-Based Data Analysis and Visualisation</h1>
+        <p>Upload a structured dataset, let the pipeline parse, clean, transform, analyse, and then choose the exact chart you want. No AI layer, just transparent rules based on data types and user-selected operations.</p>
+      </div>
+      <div class="hero-metrics">
+        <div class="metric"><strong>Pipeline</strong><span>Ingest -> Detect -> Clean -> Transform -> Analyse -> Visualise -> Export</span></div>
+        <div class="metric"><strong>Supported Inputs</strong><span>CSV, Excel (.xlsx), JSON</span></div>
+        <div class="metric"><strong>Chart Logic</strong><span>Numeric, categorical, and datetime rules drive what the user can plot</span></div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <aside class="controls panel">
+        <h2>Controls</h2>
+        <p class="subtle">Upload a file, preview transformations, then render and export deterministic outputs.</p>
+
+        <div class="stack">
+          <label for="fileInput">Dataset</label>
+          <input id="fileInput" type="file" accept=".csv,.xlsx,.json">
+          <button id="uploadButton" class="secondary">Upload And Process</button>
+        </div>
+
+        <div class="stack">
+          <h3>Transform</h3>
+          <label for="selectedColumns">Selected columns</label>
+          <select id="selectedColumns" multiple size="6"></select>
+
+          <div class="three">
+            <div>
+              <label for="filterColumn">Filter column</label>
+              <select id="filterColumn"></select>
+            </div>
+            <div>
+              <label for="filterOperator">Operator</label>
+              <select id="filterOperator">
+                <option value="">None</option>
+                <option value="==">==</option>
+                <option value="!=">!=</option>
+                <option value=">">&gt;</option>
+                <option value=">=">&gt;=</option>
+                <option value="<">&lt;</option>
+                <option value="<=">&lt;=</option>
+                <option value="contains">contains</option>
+              </select>
+            </div>
+            <div>
+              <label for="filterValue">Value</label>
+              <input id="filterValue" type="text" placeholder="e.g. 100">
+            </div>
+          </div>
+
+          <div class="two">
+            <div>
+              <label for="groupBy">Group by</label>
+              <select id="groupBy"></select>
+            </div>
+            <div>
+              <label for="aggregationColumn">Aggregation column</label>
+              <select id="aggregationColumn"></select>
+            </div>
+          </div>
+
+          <div class="two">
+            <div>
+              <label for="aggregationType">Aggregation type</label>
+              <select id="aggregationType">
+                <option value="">None</option>
+                <option value="sum">sum</option>
+                <option value="mean">mean</option>
+                <option value="count">count</option>
+                <option value="min">min</option>
+                <option value="max">max</option>
+              </select>
+            </div>
+            <div>
+              <label for="refreshTransform">Apply transform</label>
+              <button id="refreshTransform" class="ghost">Preview Transformation</button>
+            </div>
+          </div>
+
+          <div class="three">
+            <div>
+              <label for="derivedName">Derived column</label>
+              <input id="derivedName" type="text" placeholder="profit_margin">
+            </div>
+            <div>
+              <label for="derivedLeft">Left operand</label>
+              <select id="derivedLeft"></select>
+            </div>
+            <div>
+              <label for="derivedOperation">Operation</label>
+              <select id="derivedOperation">
+                <option value="">None</option>
+                <option value="add">add</option>
+                <option value="subtract">subtract</option>
+                <option value="multiply">multiply</option>
+                <option value="divide">divide</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="two">
+            <div>
+              <label for="derivedRight">Right operand</label>
+              <select id="derivedRight"></select>
+            </div>
+            <div>
+              <label for="derivedLiteral">Or constant value</label>
+              <input id="derivedLiteral" type="text" placeholder="e.g. 100">
+            </div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <h3>Visualise</h3>
+          <div class="two">
+            <div>
+              <label for="chartType">Chart type</label>
+              <select id="chartType">
+                <option value="bar">bar</option>
+                <option value="pie">pie</option>
+                <option value="histogram">histogram</option>
+                <option value="box">box</option>
+                <option value="line">line</option>
+                <option value="scatter">scatter</option>
+              </select>
+            </div>
+            <div>
+              <label for="chartFormat">File format</label>
+              <select id="chartFormat">
+                <option value="png">png</option>
+                <option value="pdf">pdf</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="two">
+            <div>
+              <label for="xColumn">X column</label>
+              <select id="xColumn"></select>
+            </div>
+            <div>
+              <label for="yColumn">Y column</label>
+              <select id="yColumn"></select>
+            </div>
+          </div>
+
+          <label for="chartTitle">Chart title</label>
+          <input id="chartTitle" type="text" placeholder="Optional chart title">
+          <button id="renderChart">Render Chart</button>
+        </div>
+
+        <div class="stack">
+          <h3>Export</h3>
+          <div class="toolbar">
+            <button id="exportCsv" class="ghost" type="button">CSV</button>
+            <button id="exportXlsx" class="ghost" type="button">Excel</button>
+            <button id="exportReport" class="ghost" type="button">Report</button>
+          </div>
+        </div>
+
+        <div id="status" class="status"></div>
+      </aside>
+
+      <section class="results">
+        <article class="section">
+          <h2>Schema Detection</h2>
+          <p class="subtle">Column types are inferred from deterministic rules so the system can restrict transformations and chart choices safely.</p>
+          <div id="schemaBadges"></div>
+        </article>
+
+        <article class="section">
+          <h2>Preview</h2>
+          <div class="table-wrap">
+            <table>
+              <thead id="previewHead"></thead>
+              <tbody id="previewBody"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="section">
+          <h2>Analysis Output</h2>
+          <pre id="analysisText">Upload a file to generate summary statistics and rule-based metrics.</pre>
+        </article>
+
+        <article class="section">
+          <h2>Visual Output</h2>
+          <div class="chart-frame" id="chartFrame">
+            <p class="subtle">No chart rendered yet.</p>
+          </div>
+        </article>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const state = { datasetId: null, datasetState: null, schema: {}, lastChartUrl: null };
+    const ids = {
+      fileInput: document.getElementById("fileInput"),
+      uploadButton: document.getElementById("uploadButton"),
+      selectedColumns: document.getElementById("selectedColumns"),
+      filterColumn: document.getElementById("filterColumn"),
+      filterOperator: document.getElementById("filterOperator"),
+      filterValue: document.getElementById("filterValue"),
+      groupBy: document.getElementById("groupBy"),
+      aggregationColumn: document.getElementById("aggregationColumn"),
+      aggregationType: document.getElementById("aggregationType"),
+      refreshTransform: document.getElementById("refreshTransform"),
+      derivedName: document.getElementById("derivedName"),
+      derivedLeft: document.getElementById("derivedLeft"),
+      derivedOperation: document.getElementById("derivedOperation"),
+      derivedRight: document.getElementById("derivedRight"),
+      derivedLiteral: document.getElementById("derivedLiteral"),
+      chartType: document.getElementById("chartType"),
+      chartFormat: document.getElementById("chartFormat"),
+      xColumn: document.getElementById("xColumn"),
+      yColumn: document.getElementById("yColumn"),
+      chartTitle: document.getElementById("chartTitle"),
+      renderChart: document.getElementById("renderChart"),
+      exportCsv: document.getElementById("exportCsv"),
+      exportXlsx: document.getElementById("exportXlsx"),
+      exportReport: document.getElementById("exportReport"),
+      status: document.getElementById("status"),
+      schemaBadges: document.getElementById("schemaBadges"),
+      previewHead: document.getElementById("previewHead"),
+      previewBody: document.getElementById("previewBody"),
+      analysisText: document.getElementById("analysisText"),
+      chartFrame: document.getElementById("chartFrame")
+    };
+
+    function setStatus(message) { ids.status.textContent = message; }
+
+    function populateSelect(select, columns, includeEmpty = true) {
+      const previous = select.value;
+      select.innerHTML = includeEmpty ? '<option value="">None</option>' : "";
+      columns.forEach((column) => {
+        const option = document.createElement("option");
+        option.value = column;
+        option.textContent = column;
+        select.appendChild(option);
+      });
+      if (columns.includes(previous)) select.value = previous;
+    }
+
+    function populateMultiSelect(select, columns) {
+      const previous = new Set(Array.from(select.selectedOptions).map((option) => option.value));
+      select.innerHTML = "";
+      columns.forEach((column) => {
+        const option = document.createElement("option");
+        option.value = column;
+        option.textContent = column;
+        option.selected = previous.has(column);
+        select.appendChild(option);
+      });
+    }
+
+    function renderSchema(schema) {
+      ids.schemaBadges.innerHTML = "";
+      Object.entries(schema).forEach(([column, meta]) => {
+        const item = document.createElement("div");
+        item.className = "badge";
+        item.textContent = `${column}: ${meta.type}`;
+        ids.schemaBadges.appendChild(item);
+      });
+    }
+
+    function renderPreview(rows) {
+      ids.previewHead.innerHTML = "";
+      ids.previewBody.innerHTML = "";
+      if (!rows.length) {
+        ids.previewBody.innerHTML = '<tr><td>No rows available.</td></tr>';
+        return;
+      }
+      const columns = Object.keys(rows[0]);
+      const headRow = document.createElement("tr");
+      columns.forEach((column) => {
+        const th = document.createElement("th");
+        th.textContent = column;
+        headRow.appendChild(th);
+      });
+      ids.previewHead.appendChild(headRow);
+      rows.forEach((row) => {
+        const tr = document.createElement("tr");
+        columns.forEach((column) => {
+          const td = document.createElement("td");
+          td.textContent = row[column] ?? "";
+          tr.appendChild(td);
+        });
+        ids.previewBody.appendChild(tr);
+      });
+    }
+
+    function renderAnalysis(payload) {
+      const lines = [
+        payload.analysis.summary_lines, "",
+        "Numeric Summary:", JSON.stringify(payload.analysis.numeric_summary, null, 2), "",
+        "Correlations:", JSON.stringify(payload.analysis.correlations, null, 2), "",
+        "Categorical Breakdown:", JSON.stringify(payload.analysis.categorical_breakdown, null, 2)
+      ];
+      ids.analysisText.textContent = lines.join("\n");
+    }
+
+    function updateColumnControls(schema) {
+      const columns = Object.keys(schema);
+      state.schema = schema;
+      populateMultiSelect(ids.selectedColumns, columns);
+      populateSelect(ids.filterColumn, columns);
+      populateSelect(ids.groupBy, columns);
+      populateSelect(ids.aggregationColumn, columns);
+      populateSelect(ids.derivedLeft, columns);
+      populateSelect(ids.derivedRight, columns);
+      populateSelect(ids.xColumn, columns, false);
+      populateSelect(ids.yColumn, columns);
+    }
+
+    function collectTransformConfig() {
+      const selectedColumns = Array.from(ids.selectedColumns.selectedOptions).map((option) => option.value);
+      const filters = [];
+      if (ids.filterColumn.value && ids.filterOperator.value && ids.filterValue.value) {
+        filters.push({ column: ids.filterColumn.value, operator: ids.filterOperator.value, value: ids.filterValue.value });
+      }
+      const groupBy = ids.groupBy.value ? [ids.groupBy.value] : [];
+      const aggregations = [];
+      if (ids.aggregationColumn.value && ids.aggregationType.value) {
+        aggregations.push({ column: ids.aggregationColumn.value, operation: ids.aggregationType.value });
+      }
+      const derivedColumns = [];
+      if (ids.derivedName.value && ids.derivedLeft.value && ids.derivedOperation.value) {
+        derivedColumns.push({
+          name: ids.derivedName.value.trim(),
+          left: ids.derivedLeft.value,
+          operation: ids.derivedOperation.value,
+          right: ids.derivedLiteral.value.trim() || ids.derivedRight.value
+        });
+      }
+      return { selected_columns: selectedColumns, filters, group_by: groupBy, aggregations, derived_columns: derivedColumns };
+    }
+
+    async function fetchJson(url, options) {
+      const response = await fetch(url, options);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Request failed.");
+      return data;
+    }
+
+    async function applyTransformPreview() {
+      if (!state.datasetId) {
+        setStatus("Upload a dataset first.");
+        return;
+      }
+      setStatus("Applying rule-based transformation preview...");
+      const payload = await fetchJson("/api/transform", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataset_id: state.datasetId, dataset_state: state.datasetState, config: collectTransformConfig() })
+      });
+      state.datasetState = payload.dataset_state || state.datasetState;
+      renderSchema(payload.schema);
+      renderPreview(payload.preview);
+      renderAnalysis(payload);
+      updateColumnControls(payload.schema);
+      setStatus(`Preview updated. ${payload.shape.rows} rows and ${payload.shape.columns} columns in the transformed dataset.`);
+    }
+
+    ids.uploadButton.addEventListener("click", async () => {
+      const file = ids.fileInput.files[0];
+      if (!file) {
+        setStatus("Choose a CSV, XLSX, or JSON file first.");
+        return;
+      }
+      setStatus("Uploading and processing dataset...");
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const response = await fetch("/api/upload", { method: "POST", body: formData });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Upload failed.");
+        state.datasetId = payload.dataset_id;
+        state.datasetState = payload.dataset_state;
+        renderSchema(payload.schema);
+        renderPreview(payload.preview);
+        renderAnalysis(payload);
+        updateColumnControls(payload.schema);
+        setStatus(`Loaded ${payload.filename} with ${payload.shape.rows} rows and ${payload.shape.columns} columns.`);
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    ids.refreshTransform.addEventListener("click", async () => {
+      try { await applyTransformPreview(); } catch (error) { setStatus(error.message); }
+    });
+
+    ids.renderChart.addEventListener("click", async () => {
+      if (!state.datasetId) {
+        setStatus("Upload a dataset first.");
+        return;
+      }
+      try {
+        setStatus("Rendering chart...");
+        const payload = await fetchJson("/api/visualize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            dataset_id: state.datasetId,
+            dataset_state: state.datasetState,
+            config: collectTransformConfig(),
+            chart_type: ids.chartType.value,
+            x_column: ids.xColumn.value,
+            y_column: ids.yColumn.value || null,
+            title: ids.chartTitle.value || null,
+            format: ids.chartFormat.value
+          })
+        });
+        state.lastChartUrl = payload.chart_data_url;
+        ids.chartFrame.innerHTML = ids.chartFormat.value === "png"
+          ? `<img src="${payload.chart_data_url}" alt="Rendered chart">`
+          : `<p><a href="${payload.chart_data_url}" target="_blank" rel="noreferrer" download="${payload.chart_file}">Open generated PDF chart</a></p>`;
+        setStatus(`Chart created as ${payload.chart_file}.`);
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    async function downloadExport(endpoint, format) {
+      if (!state.datasetId) {
+        setStatus("Upload a dataset first.");
+        return;
+      }
+      setStatus(`Preparing ${format.toUpperCase()} export...`);
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataset_id: state.datasetId, dataset_state: state.datasetState, config: collectTransformConfig(), format })
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        setStatus(payload.error || "Export failed.");
+        return;
+      }
+      const blob = await response.blob();
+      const disposition = response.headers.get("Content-Disposition") || "";
+      const filename = disposition.split("filename=")[1]?.replace(/"/g, "") || `export.${format}`;
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      setStatus(`${filename} downloaded.`);
+    }
+
+    ids.exportCsv.addEventListener("click", () => downloadExport("/api/export/dataset", "csv"));
+    ids.exportXlsx.addEventListener("click", () => downloadExport("/api/export/dataset", "xlsx"));
+    ids.exportReport.addEventListener("click", () => downloadExport("/api/export/report", "txt"));
+  </script>
+</body>
+</html>
