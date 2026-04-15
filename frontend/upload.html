@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Dataset</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <aside class="nav-shell">
+      <div class="brand">
+        <span class="eyebrow">Rule-based analytics</span>
+        <strong>Data Visualisation Tool</strong>
+      </div>
+      <div class="nav-steps">
+        <span class="nav-step active">1. Upload</span>
+        <span class="nav-step">2. Prepare</span>
+        <span class="nav-step">3. Visualize</span>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">Step 1</span>
+          <h1>Bring in the dataset.</h1>
+          <p>Upload one CSV, Excel, or JSON file and the app will clean it with fixed rules, detect column roles, and prepare a guided workspace for analysis. No AI, no hidden inference, no black-box behavior.</p>
+        </div>
+        <div class="hero-side">
+          <div class="metric-card"><strong>Supported files</strong><span>CSV, Excel (.xlsx), JSON</span></div>
+          <div class="metric-card"><strong>Session flow</strong><span>Upload -> prepare -> visualize -> export</span></div>
+          <div class="metric-card"><strong>Logic style</strong><span>Deterministic rules based on data type, structure, and your selections.</span></div>
+        </div>
+      </section>
+
+      <section class="page-grid">
+        <aside class="sidebar">
+          <div class="stack">
+            <span class="section-kicker">Upload</span>
+            <h2>Start a new session</h2>
+            <p class="helper">Choose a single dataset and move straight into preparation.</p>
+            <div>
+              <label for="fileInput">Choose file</label>
+              <input id="fileInput" type="file" accept=".csv,.xlsx,.json">
+            </div>
+            <button id="uploadButton" class="secondary">Upload And Continue</button>
+          </div>
+
+          <div class="stack">
+            <span class="section-kicker">Saved Session</span>
+            <h3>Resume where you left off</h3>
+            <div id="sessionSummary" class="empty-copy">No saved dataset session yet.</div>
+            <div class="button-row">
+              <a id="resumeButton" class="button-link ghost" href="/prepare">Open Preparation</a>
+              <button id="clearButton" class="ghost" type="button">Clear Saved Session</button>
+            </div>
+          </div>
+
+          <div id="status" class="status">Choose a file to begin.</div>
+        </aside>
+
+        <section class="content">
+          <article class="section">
+            <div class="section-head">
+              <div>
+                <span class="section-kicker">Workflow</span>
+                <h2>What happens after upload</h2>
+              </div>
+            </div>
+            <div class="grid-3">
+              <div class="option-card">
+                <h3>Parse</h3>
+                <p class="helper">The file type is detected and your data is loaded into one consistent table shape.</p>
+              </div>
+              <div class="option-card">
+                <h3>Clean</h3>
+                <p class="helper">Missing values, duplicates, and data types are handled with explicit, repeatable rules.</p>
+              </div>
+              <div class="option-card">
+                <h3>Label roles</h3>
+                <p class="helper">Fields are tagged as time, geography, count, rate, measure, category, or identifier to guide the next steps.</p>
+              </div>
+            </div>
+          </article>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <script src="/static/shared.js"></script>
+  <script>
+    const ids = {
+      fileInput: document.getElementById("fileInput"),
+      uploadButton: document.getElementById("uploadButton"),
+      status: document.getElementById("status"),
+      sessionSummary: document.getElementById("sessionSummary"),
+      clearButton: document.getElementById("clearButton"),
+      resumeButton: document.getElementById("resumeButton")
+    };
+
+    function setStatus(message) {
+      ids.status.textContent = message;
+    }
+
+    function renderSessionSummary() {
+      const session = window.dataTool.loadSession();
+      if (!session) {
+        ids.sessionSummary.textContent = "No saved dataset session yet.";
+        ids.resumeButton.style.pointerEvents = "none";
+        ids.resumeButton.style.opacity = "0.5";
+        return;
+      }
+      ids.resumeButton.style.pointerEvents = "";
+      ids.resumeButton.style.opacity = "";
+      ids.sessionSummary.innerHTML = `
+        <span class="file-pill">${window.dataTool.escapeHtml(session.filename || "dataset")}</span>
+        <p class="helper">Last saved shape: ${window.dataTool.formatNumber(session.shape?.rows || 0, 0)} rows and ${window.dataTool.formatNumber(session.shape?.columns || 0, 0)} columns.</p>
+      `;
+    }
+
+    ids.uploadButton.addEventListener("click", async () => {
+      const file = ids.fileInput.files[0];
+      if (!file) {
+        setStatus("Choose a CSV, XLSX, or JSON file first.");
+        return;
+      }
+
+      try {
+        setStatus("Uploading and processing dataset...");
+        const formData = new FormData();
+        formData.append("file", file);
+        const payload = await window.dataTool.fetchJson("/api/upload", { method: "POST", body: formData });
+        window.dataTool.saveSession({
+          datasetId: payload.dataset_id,
+          datasetState: payload.dataset_state,
+          filename: payload.filename,
+          shape: payload.shape,
+          schema: payload.schema,
+          preview: payload.preview,
+          analysis: payload.analysis,
+          transformConfig: {},
+          chartConfig: null
+        });
+        window.location.href = "/prepare";
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    ids.clearButton.addEventListener("click", () => {
+      window.dataTool.clearSession();
+      renderSessionSummary();
+      setStatus("Saved browser session cleared.");
+    });
+
+    renderSessionSummary();
+  </script>
+</body>
+</html>

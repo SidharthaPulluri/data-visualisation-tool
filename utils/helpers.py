@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import re
 from pathlib import Path
 from typing import Any
@@ -53,3 +54,24 @@ def chart_options_for_type(column_type: str) -> list[str]:
         "text": ["bar", "pie"],
     }
     return mapping.get(column_type, [])
+
+
+def make_json_safe(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {key: make_json_safe(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [make_json_safe(item) for item in value]
+    if isinstance(value, tuple):
+        return [make_json_safe(item) for item in value]
+    if isinstance(value, pd.Timestamp):
+        return value.isoformat()
+    if pd.isna(value):
+        return None
+    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+        return None
+    if hasattr(value, "item"):
+        try:
+            return make_json_safe(value.item())
+        except Exception:
+            return str(value)
+    return value

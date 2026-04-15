@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prepare Dataset</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <aside class="nav-shell">
+      <div class="brand">
+        <span class="eyebrow">Rule-based analytics</span>
+        <strong>Data Visualisation Tool</strong>
+      </div>
+      <div class="nav-steps">
+        <a class="nav-step" href="/">1. Upload</a>
+        <span class="nav-step active">2. Prepare</span>
+        <a class="nav-step" href="/visualize">3. Visualize</a>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">Step 2</span>
+          <h1 id="datasetName">Prepare the data.</h1>
+          <p id="datasetMeta" class="helper">Loading saved dataset session...</p>
+        </div>
+        <div class="hero-side">
+          <div class="metric-card"><strong>What changes here</strong><span>Filters, grouping, selected columns, and derived fields update the current working view.</span></div>
+          <div class="metric-card"><strong>What stays visible</strong><span>The schema, preview, and rule-based analysis update together after every apply step.</span></div>
+        </div>
+      </section>
+
+      <section class="prepare-flow">
+        <article class="section">
+          <div class="section-head">
+            <div>
+              <span class="section-kicker">Next Step</span>
+              <h2>Review, then continue</h2>
+            </div>
+          </div>
+          <div class="workspace-intro">
+            <p class="workspace-copy">If the schema and preview look right, go straight to charting. You only need the advanced options if you want to reshape the data first.</p>
+            <div class="stack compact-stack">
+              <div class="mini-nav">
+                <a class="button-link" href="/visualize">Continue To Charts</a>
+                <a class="button-link ghost" href="/">Upload Another File</a>
+              </div>
+              <div id="status" class="status">Loading current dataset view...</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="section">
+          <div class="section-head">
+            <div>
+              <span class="section-kicker">Structure</span>
+              <h2>Schema detection</h2>
+              <p class="subtle">The current dataset view is profiled into types, roles, and plot suggestions before charting.</p>
+            </div>
+          </div>
+          <div class="table-wrap schema">
+            <table>
+              <thead>
+                <tr>
+                  <th>Column</th>
+                  <th>Type</th>
+                  <th>Role</th>
+                  <th>Missing</th>
+                  <th>Unique</th>
+                  <th>Aggregation hint</th>
+                  <th>Suggested plots</th>
+                </tr>
+              </thead>
+              <tbody id="schemaBody"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="section">
+          <div class="section-head">
+            <div>
+              <span class="section-kicker">Preview</span>
+              <h2>Current working view</h2>
+            </div>
+          </div>
+          <p id="previewMeta" class="helper">Showing the current saved preview.</p>
+          <div class="table-wrap preview">
+            <table>
+              <thead id="previewHead"></thead>
+              <tbody id="previewBody"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="section">
+          <div class="section-head">
+            <div>
+              <span class="section-kicker">Analysis</span>
+              <h2>Preparation insights</h2>
+            </div>
+          </div>
+          <div id="analysisText"></div>
+        </article>
+
+        <article class="section">
+          <div class="section-head">
+            <div>
+              <span class="section-kicker">Optional</span>
+              <h2>Advanced data changes</h2>
+              <p class="subtle">Open only the section you need. Nothing changes until you click apply.</p>
+            </div>
+          </div>
+
+          <div class="option-stack">
+            <details class="disclosure">
+              <summary>Keep only selected columns</summary>
+              <div class="disclosure-body">
+                <label for="selectedColumns">Columns</label>
+                <select id="selectedColumns" multiple size="5"></select>
+              </div>
+            </details>
+
+            <details class="disclosure">
+              <summary>Filter rows</summary>
+              <div class="disclosure-body">
+                <div class="grid-2">
+                  <div>
+                    <label for="filterColumn">Filter column</label>
+                    <select id="filterColumn"></select>
+                  </div>
+                  <div>
+                    <label for="filterOperator">Condition</label>
+                    <select id="filterOperator">
+                      <option value="">None</option>
+                      <option value="==">equals</option>
+                      <option value="!=">does not equal</option>
+                      <option value=">">greater than</option>
+                      <option value=">=">greater than or equal</option>
+                      <option value="<">less than</option>
+                      <option value="<=">less than or equal</option>
+                      <option value="contains">contains text</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label for="filterValue">Filter value</label>
+                  <input id="filterValue" type="text" placeholder="Example: 100">
+                </div>
+              </div>
+            </details>
+
+            <details class="disclosure">
+              <summary>Group and summarise</summary>
+              <div class="disclosure-body">
+                <div class="grid-2">
+                  <div>
+                    <label for="groupBy">Group rows by</label>
+                    <select id="groupBy"></select>
+                  </div>
+                  <div>
+                    <label for="aggregationColumn">Summarise this column</label>
+                    <select id="aggregationColumn"></select>
+                  </div>
+                </div>
+                <div>
+                  <label for="aggregationType">Summary type</label>
+                  <select id="aggregationType">
+                    <option value="">None</option>
+                    <option value="sum">sum</option>
+                    <option value="mean">average</option>
+                    <option value="count">count</option>
+                    <option value="min">minimum</option>
+                    <option value="max">maximum</option>
+                  </select>
+                </div>
+              </div>
+            </details>
+
+            <details class="disclosure">
+              <summary>Create a calculated column</summary>
+              <div class="disclosure-body">
+                <div class="grid-2">
+                  <div>
+                    <label for="derivedName">New column name</label>
+                    <input id="derivedName" type="text" placeholder="profit_margin">
+                  </div>
+                  <div>
+                    <label for="derivedOperation">Calculation</label>
+                    <select id="derivedOperation">
+                      <option value="">None</option>
+                      <option value="add">add</option>
+                      <option value="subtract">subtract</option>
+                      <option value="multiply">multiply</option>
+                      <option value="divide">divide</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="grid-2">
+                  <div>
+                    <label for="derivedLeft">First value</label>
+                    <select id="derivedLeft"></select>
+                  </div>
+                  <div>
+                    <label for="derivedRight">Second value</label>
+                    <select id="derivedRight"></select>
+                  </div>
+                </div>
+                <div>
+                  <label for="derivedLiteral">Or use a fixed number</label>
+                  <input id="derivedLiteral" type="text" placeholder="Example: 100">
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <div class="button-row">
+            <button id="refreshTransform" class="secondary" type="button">Apply Changes To Preview</button>
+          </div>
+        </article>
+      </section>
+    </div>
+  </main>
+
+  <script src="/static/shared.js"></script>
+  <script>
+    const session = window.dataTool.requireSession("/");
+    const state = session ? { ...session } : null;
+
+    const ids = {
+      datasetName: document.getElementById("datasetName"),
+      datasetMeta: document.getElementById("datasetMeta"),
+      status: document.getElementById("status"),
+      selectedColumns: document.getElementById("selectedColumns"),
+      filterColumn: document.getElementById("filterColumn"),
+      filterOperator: document.getElementById("filterOperator"),
+      filterValue: document.getElementById("filterValue"),
+      groupBy: document.getElementById("groupBy"),
+      aggregationColumn: document.getElementById("aggregationColumn"),
+      aggregationType: document.getElementById("aggregationType"),
+      refreshTransform: document.getElementById("refreshTransform"),
+      derivedName: document.getElementById("derivedName"),
+      derivedLeft: document.getElementById("derivedLeft"),
+      derivedOperation: document.getElementById("derivedOperation"),
+      derivedRight: document.getElementById("derivedRight"),
+      derivedLiteral: document.getElementById("derivedLiteral"),
+      schemaBody: document.getElementById("schemaBody"),
+      previewMeta: document.getElementById("previewMeta"),
+      previewHead: document.getElementById("previewHead"),
+      previewBody: document.getElementById("previewBody"),
+      analysisText: document.getElementById("analysisText")
+    };
+
+    function setStatus(message) {
+      document.getElementById("status").textContent = message;
+    }
+
+    function updateColumnControls(schema) {
+      const columns = Object.keys(schema);
+      window.dataTool.populateMultiSelect(ids.selectedColumns, columns);
+      window.dataTool.populateSelect(ids.filterColumn, columns);
+      window.dataTool.populateSelect(ids.groupBy, columns);
+      window.dataTool.populateSelect(ids.aggregationColumn, columns);
+      window.dataTool.populateSelect(ids.derivedLeft, columns);
+      window.dataTool.populateSelect(ids.derivedRight, columns);
+    }
+
+    function renderSession() {
+      ids.datasetName.textContent = state.filename || "Dataset";
+      ids.datasetMeta.textContent = `${window.dataTool.formatNumber(state.shape?.rows || 0, 0)} rows and ${window.dataTool.formatNumber(state.shape?.columns || 0, 0)} columns in the current saved view.`;
+      window.dataTool.renderSchema(ids.schemaBody, state.schema || {});
+      window.dataTool.renderPreview(ids.previewHead, ids.previewBody, ids.previewMeta, state.preview || []);
+      window.dataTool.renderAnalysis(ids.analysisText, state.analysis || {}, state.shape || {});
+      updateColumnControls(state.schema || {});
+    }
+
+    function collectTransformConfig() {
+      const selectedColumns = Array.from(ids.selectedColumns.selectedOptions).map((option) => option.value);
+      const filters = [];
+      if (ids.filterColumn.value && ids.filterOperator.value && ids.filterValue.value) {
+        filters.push({ column: ids.filterColumn.value, operator: ids.filterOperator.value, value: ids.filterValue.value });
+      }
+      const groupBy = ids.groupBy.value ? [ids.groupBy.value] : [];
+      const aggregations = [];
+      if (ids.aggregationColumn.value && ids.aggregationType.value) {
+        aggregations.push({ column: ids.aggregationColumn.value, operation: ids.aggregationType.value });
+      }
+      const derivedColumns = [];
+      if (ids.derivedName.value && ids.derivedLeft.value && ids.derivedOperation.value) {
+        derivedColumns.push({
+          name: ids.derivedName.value.trim(),
+          left: ids.derivedLeft.value,
+          operation: ids.derivedOperation.value,
+          right: ids.derivedLiteral.value.trim() || ids.derivedRight.value
+        });
+      }
+      return { selected_columns: selectedColumns, filters, group_by: groupBy, aggregations, derived_columns: derivedColumns };
+    }
+
+    ids.refreshTransform.addEventListener("click", async () => {
+      try {
+        setStatus("Applying rule-based transformations...");
+        const payload = await window.dataTool.fetchJson("/api/transform", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            dataset_id: state.datasetId,
+            dataset_state: state.datasetState,
+            config: collectTransformConfig()
+          })
+        });
+
+        state.datasetState = payload.dataset_state;
+        state.schema = payload.schema;
+        state.preview = payload.preview;
+        state.analysis = payload.analysis;
+        state.shape = payload.shape;
+        state.transformConfig = collectTransformConfig();
+        state.chartConfig = null;
+        window.dataTool.saveSession(state);
+        renderSession();
+        setStatus(`Preview updated. ${payload.shape.rows} rows and ${payload.shape.columns} columns in the current view.`);
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    if (state) {
+      renderSession();
+      setStatus("Dataset loaded. Review the schema and apply any optional preparation changes.");
+    }
+  </script>
+</body>
+</html>

@@ -6,79 +6,581 @@
   <title>Rule-Based Data Visualisation Tool</title>
   <style>
     :root {
-      --bg: #f5efe5;
-      --panel: rgba(255, 252, 247, 0.78);
-      --panel-strong: rgba(255, 248, 238, 0.95);
-      --ink: #1c1914;
-      --muted: #665b4e;
-      --accent: #1f6f5f;
-      --accent-2: #d67c2d;
-      --border: rgba(28, 25, 20, 0.12);
-      --shadow: 0 18px 48px rgba(45, 31, 14, 0.12);
+      --bg: #eef3f9;
+      --panel: rgba(255, 255, 255, 0.88);
+      --panel-strong: rgba(255, 255, 255, 0.97);
+      --ink: #142033;
+      --muted: #607086;
+      --accent: #1c6ef2;
+      --accent-strong: #0f56c7;
+      --accent-soft: rgba(28, 110, 242, 0.08);
+      --success-soft: rgba(11, 163, 96, 0.12);
+      --border: rgba(20, 32, 51, 0.1);
+      --border-strong: rgba(20, 32, 51, 0.16);
+      --shadow: 0 24px 60px rgba(15, 33, 62, 0.1);
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
     }
 
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      font-family: "Aptos", "Bahnschrift", "Segoe UI", sans-serif;
       color: var(--ink);
       background:
-        radial-gradient(circle at top left, rgba(214, 124, 45, 0.18), transparent 32%),
-        radial-gradient(circle at bottom right, rgba(31, 111, 95, 0.16), transparent 28%),
-        linear-gradient(180deg, #f8f3eb 0%, #f1e9de 100%);
+        radial-gradient(circle at top left, rgba(28, 110, 242, 0.1), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(11, 163, 96, 0.08), transparent 26%),
+        linear-gradient(180deg, #f7f9fc 0%, #edf2f8 100%);
       min-height: 100vh;
     }
 
-    .shell { width: min(1360px, calc(100% - 32px)); margin: 24px auto 40px; }
+    .shell { width: min(1420px, calc(100% - 32px)); margin: 18px auto 36px; }
     .hero {
-      display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 24px; padding: 28px;
+      display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.8fr); gap: 28px; padding: 30px 32px;
       border: 1px solid var(--border);
-      background: linear-gradient(135deg, rgba(255,255,255,0.82), rgba(255,248,238,0.68));
-      box-shadow: var(--shadow); backdrop-filter: blur(14px); overflow: hidden; position: relative;
+      border-radius: 28px;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,0.96), rgba(246,250,255,0.92)),
+        linear-gradient(180deg, rgba(28,110,242,0.03), rgba(11,163,96,0.03));
+      box-shadow: var(--shadow); backdrop-filter: blur(16px); overflow: hidden; position: relative;
     }
     .hero::after {
-      content: ""; position: absolute; inset: auto -60px -80px auto; width: 240px; height: 240px;
-      background: radial-gradient(circle, rgba(31,111,95,0.3), transparent 65%);
+      content: ""; position: absolute; inset: -80px -60px auto auto; width: 280px; height: 280px;
+      background: radial-gradient(circle, rgba(28,110,242,0.13), transparent 68%);
       pointer-events: none;
     }
-    .hero h1 { font-size: clamp(2.3rem, 5vw, 4.6rem); line-height: 0.94; margin: 0 0 12px; letter-spacing: -0.06em; max-width: 10ch; }
-    .hero p { max-width: 62ch; color: var(--muted); font-size: 1rem; }
-    .hero-metrics { display: grid; align-content: end; gap: 14px; }
-    .metric { padding: 14px 0; border-top: 1px solid var(--border); }
-    .metric strong { display: block; font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px; }
-    .metric span { font-size: 1.3rem; }
-    .grid { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 22px; margin-top: 22px; }
-    .panel { background: var(--panel); border: 1px solid var(--border); box-shadow: var(--shadow); backdrop-filter: blur(14px); }
-    .controls { padding: 22px; position: sticky; top: 18px; height: fit-content; }
-    .results { padding: 18px; display: grid; gap: 18px; }
-    .section { padding: 20px; background: var(--panel-strong); border: 1px solid var(--border); }
-    h2, h3 { margin: 0 0 12px; letter-spacing: -0.03em; }
-    .subtle { color: var(--muted); margin: 0 0 12px; }
-    label { display: block; font-size: 0.92rem; margin-bottom: 6px; color: var(--muted); }
-    input, select, button {
-      width: 100%; border: 1px solid rgba(28, 25, 20, 0.15); background: rgba(255,255,255,0.9);
-      color: var(--ink); padding: 11px 12px; font: inherit;
+    .hero-copy { position: relative; z-index: 1; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 18px;
     }
-    button { cursor: pointer; background: var(--ink); color: white; border: none; transition: transform 0.18s ease, opacity 0.18s ease; }
-    button.secondary { background: var(--accent); }
-    button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--border); }
-    button:hover { transform: translateY(-1px); opacity: 0.96; }
-    .stack { display: grid; gap: 12px; margin-bottom: 18px; }
+    .hero h1 {
+      font-size: clamp(2.3rem, 5vw, 4.8rem);
+      line-height: 0.95;
+      margin: 0 0 14px;
+      letter-spacing: -0.065em;
+      max-width: 11ch;
+    }
+    .hero p {
+      max-width: 64ch;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.65;
+      margin: 0;
+    }
+    .hero-steps {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .step-chip {
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(28, 110, 242, 0.12);
+      background: rgba(255, 255, 255, 0.82);
+      color: #31445e;
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+    .hero-metrics {
+      display: grid;
+      align-content: stretch;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .metric {
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: rgba(248, 251, 255, 0.92);
+    }
+    .metric strong {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 8px;
+    }
+    .metric span {
+      display: block;
+      font-size: 1.05rem;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+    .grid { display: grid; grid-template-columns: 372px minmax(0, 1fr); gap: 22px; margin-top: 22px; align-items: start; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+    .controls {
+      padding: 24px;
+      position: sticky;
+      top: 18px;
+      height: fit-content;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,251,255,0.92));
+    }
+    .controls-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .results { padding: 0; display: grid; gap: 18px; min-width: 0; }
+    .section {
+      padding: 20px;
+      background: var(--panel-strong);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 10px 30px rgba(15, 33, 62, 0.06);
+      min-width: 0;
+      overflow: hidden;
+    }
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    .section-kicker {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 0.77rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    h2, h3 {
+      margin: 0 0 12px;
+      letter-spacing: -0.035em;
+      font-weight: 700;
+    }
+    h2 { font-size: 1.15rem; }
+    h3 { font-size: 0.96rem; margin-bottom: 10px; }
+    .subtle { color: var(--muted); margin: 0; line-height: 1.55; }
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 7px;
+      color: #5d6c82;
+    }
+    input, select, button {
+      width: 100%;
+      border: 1px solid rgba(20, 32, 51, 0.12);
+      background: rgba(255,255,255,0.98);
+      color: var(--ink);
+      padding: 11px 13px;
+      font: inherit;
+      border-radius: 12px;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: rgba(28, 110, 242, 0.35);
+      box-shadow: 0 0 0 4px rgba(28, 110, 242, 0.1);
+    }
+    select[multiple] {
+      min-height: 180px;
+      background: rgba(250, 252, 255, 0.98);
+    }
+    button {
+      cursor: pointer;
+      background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+      color: white;
+      border: none;
+      font-weight: 700;
+      box-shadow: 0 10px 24px rgba(28, 110, 242, 0.18);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+    }
+    button.secondary {
+      background: linear-gradient(180deg, #0f7df4, #1157cb);
+    }
+    button.ghost {
+      background: rgba(255,255,255,0.9);
+      color: var(--ink);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(28, 110, 242, 0.16);
+      opacity: 0.98;
+    }
+    .stack {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding: 16px;
+      border: 1px solid rgba(20, 32, 51, 0.08);
+      border-radius: var(--radius-md);
+      background: rgba(249, 251, 255, 0.82);
+    }
     .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
     .toolbar { display: flex; flex-wrap: wrap; gap: 10px; }
-    .badge { display: inline-flex; padding: 5px 10px; background: rgba(31, 111, 95, 0.12); color: var(--accent); border-radius: 999px; font-size: 0.82rem; margin: 0 8px 8px 0; }
-    pre { margin: 0; white-space: pre-wrap; word-break: break-word; background: rgba(28, 25, 20, 0.05); padding: 14px; overflow: auto; }
-    .table-wrap { overflow: auto; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 10px; border-bottom: 1px solid rgba(28, 25, 20, 0.08); text-align: left; font-size: 0.92rem; vertical-align: top; }
-    .status { min-height: 22px; color: var(--muted); font-size: 0.95rem; }
+    .toolbar button { flex: 1 1 110px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 12px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin: 0 8px 8px 0;
+    }
+    .badge.neutral {
+      background: rgba(20, 32, 51, 0.06);
+      color: #43546c;
+    }
+    .table-wrap {
+      overflow: auto;
+      max-width: 100%;
+      width: 100%;
+      border: 1px solid rgba(20, 32, 51, 0.08);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.84);
+    }
+    .schema-wrap { max-height: min(34vh, 320px); }
+    .preview-wrap { max-height: min(42vh, 360px); }
+    table {
+      width: 100%;
+      min-width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .preview-wrap table {
+      width: max-content;
+      min-width: 100%;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(20, 32, 51, 0.07);
+      text-align: left;
+      font-size: 0.92rem;
+      vertical-align: top;
+      max-width: 220px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    tr:hover td { background: rgba(28, 110, 242, 0.025); }
+    th {
+      position: sticky;
+      top: 0;
+      background: #f8fbff;
+      z-index: 1;
+      color: #55657c;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .status {
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      border-radius: 14px;
+      background: rgba(20, 32, 51, 0.05);
+      border: 1px solid rgba(20, 32, 51, 0.06);
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .helper {
+      margin: -2px 0 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .guide {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .guide-step {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 12px 14px;
+      border: 1px solid rgba(20, 32, 51, 0.08);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.74);
+    }
+    .guide-step strong {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 0.92rem;
+    }
+    .guide-step span {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+    .guide-num {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .recommendation {
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(28, 110, 242, 0.12);
+      background: linear-gradient(180deg, rgba(28,110,242,0.06), rgba(255,255,255,0.88));
+      margin-bottom: 18px;
+    }
+    .recommendation strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.92rem;
+    }
+    .recommendation p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    details.stack {
+      padding: 0;
+      overflow: hidden;
+    }
+    details.stack summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 16px;
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--ink);
+    }
+    details.stack summary::-webkit-details-marker { display: none; }
+    details.stack summary::after {
+      content: "+";
+      font-size: 1.2rem;
+      color: var(--muted);
+    }
+    details.stack[open] summary::after { content: "-"; }
+    .stack-body {
+      display: grid;
+      gap: 14px;
+      padding: 0 16px 16px;
+    }
+    .advanced-layout {
+      display: grid;
+      gap: 14px;
+    }
+    .option-group {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid rgba(20, 32, 51, 0.08);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.78);
+    }
+    .option-group h4 {
+      margin: 0;
+      font-size: 0.95rem;
+      letter-spacing: -0.02em;
+    }
+    .option-group .helper {
+      margin: 0;
+    }
+    .option-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .analysis-panel {
+      display: grid;
+      gap: 14px;
+      max-height: min(52vh, 560px);
+      overflow: auto;
+      padding-right: 4px;
+    }
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .summary-card, .analysis-block, .stats-card {
+      border: 1px solid rgba(20, 32, 51, 0.08);
+      border-radius: 16px;
+      background: #f7faff;
+    }
+    .summary-card {
+      padding: 14px;
+    }
+    .summary-card strong {
+      display: block;
+      font-size: 1.25rem;
+      letter-spacing: -0.03em;
+      margin-bottom: 4px;
+    }
+    .summary-card span {
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+    .analysis-block {
+      padding: 16px;
+    }
+    .analysis-block h3 {
+      margin-bottom: 6px;
+    }
+    .analysis-block p {
+      margin: 0;
+    }
+    .insight-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #233247;
+      display: grid;
+      gap: 8px;
+      line-height: 1.55;
+    }
+    .chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(20, 32, 51, 0.06);
+      color: #33455c;
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+    }
+    .stats-card {
+      padding: 14px;
+      min-width: 0;
+    }
+    .stats-card strong {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .metric-pair {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(20, 32, 51, 0.06);
+      font-size: 0.88rem;
+    }
+    .metric-pair:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .metric-pair span:first-child {
+      color: var(--muted);
+    }
+    .metric-pair span:last-child {
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .preview-frame {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+    }
+    .preview-meta {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .mini-table {
+      background: transparent;
+    }
+    .mini-table th,
+    .mini-table td {
+      white-space: normal;
+      max-width: none;
+      font-size: 0.86rem;
+    }
+    .empty-copy {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
     .chart-frame {
-      min-height: 320px; display: grid; place-items: center;
-      background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,248,238,0.86));
-      border: 1px solid var(--border);
+      min-height: 320px;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(180deg, rgba(252,254,255,0.95), rgba(245,249,255,0.95));
+      border: 1px dashed rgba(20, 32, 51, 0.12);
+      border-radius: 18px;
+      overflow: hidden;
     }
     .chart-frame img { width: 100%; height: auto; display: block; }
+    .chart-frame iframe {
+      width: 100%;
+      min-height: 560px;
+      border: none;
+      display: block;
+      background: white;
+    }
+    .chart-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .chart-actions button {
+      width: auto;
+      min-width: 180px;
+    }
+    .chart-actions[hidden] {
+      display: none;
+    }
     @media (max-width: 1040px) {
       .hero, .grid { grid-template-columns: 1fr; }
       .controls { position: static; }
@@ -87,128 +589,83 @@
       .shell { width: min(100% - 20px, 1360px); }
       .hero, .controls, .section { padding: 18px; }
       .two, .three { grid-template-columns: 1fr; }
+      .option-grid { grid-template-columns: 1fr; }
+      .controls-header, .section-head { flex-direction: column; }
     }
   </style>
 </head>
 <body>
   <main class="shell">
     <section class="hero panel">
-      <div>
-        <div class="badge">Deterministic Pipeline</div>
+      <div class="hero-copy">
+        <div class="eyebrow">Local-first analytics workspace</div>
         <h1>Rule-Based Data Analysis and Visualisation</h1>
         <p>Upload a structured dataset, let the pipeline parse, clean, transform, analyse, and then choose the exact chart you want. No AI layer, just transparent rules based on data types and user-selected operations.</p>
+        <div class="hero-steps">
+          <span class="step-chip">Upload structured data</span>
+          <span class="step-chip">Review schema rules</span>
+          <span class="step-chip">Transform with filters and groups</span>
+          <span class="step-chip">Export clean outputs</span>
+        </div>
       </div>
       <div class="hero-metrics">
         <div class="metric"><strong>Pipeline</strong><span>Ingest -> Detect -> Clean -> Transform -> Analyse -> Visualise -> Export</span></div>
         <div class="metric"><strong>Supported Inputs</strong><span>CSV, Excel (.xlsx), JSON</span></div>
-        <div class="metric"><strong>Chart Logic</strong><span>Numeric, categorical, and datetime rules drive what the user can plot</span></div>
+        <div class="metric"><strong>Chart Logic</strong><span>Suggested plots are derived directly from column types, so the UI only recommends charts that fit the data.</span></div>
       </div>
     </section>
 
     <section class="grid">
       <aside class="controls panel">
-        <h2>Controls</h2>
-        <p class="subtle">Upload a file, preview transformations, then render and export deterministic outputs.</p>
+        <div class="controls-header">
+          <div>
+            <span class="section-kicker">Control Center</span>
+            <h2>Dataset Controls</h2>
+            <p class="subtle">The easiest path is upload -> accept the suggested chart -> render. Advanced edits are optional.</p>
+          </div>
+          <span class="badge neutral">No ML</span>
+        </div>
+
+        <div class="guide">
+          <div class="guide-step">
+            <div class="guide-num">1</div>
+            <div>
+              <strong>Upload your file</strong>
+              <span>Use a CSV, Excel, or JSON dataset with clear column names.</span>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-num">2</div>
+            <div>
+              <strong>Review the suggested chart</strong>
+              <span>The app picks a chart and columns automatically based on your data types.</span>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-num">3</div>
+            <div>
+              <strong>Render and export</strong>
+              <span>Create the chart, then download the cleaned data or report if you need it.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="recommendation" id="recommendationBox">
+          <strong>Suggested next step</strong>
+          <p id="recommendationText">Upload a dataset and the app will prepare a recommended chart for you.</p>
+        </div>
 
         <div class="stack">
-          <label for="fileInput">Dataset</label>
+          <h3>Step 1: Upload Dataset</h3>
+          <p class="helper">Start here. The app will inspect the file and prepare chart options automatically.</p>
+          <label for="fileInput">Choose file</label>
           <input id="fileInput" type="file" accept=".csv,.xlsx,.json">
           <button id="uploadButton" class="secondary">Upload And Process</button>
         </div>
 
         <div class="stack">
-          <h3>Transform</h3>
-          <label for="selectedColumns">Selected columns</label>
-          <select id="selectedColumns" multiple size="6"></select>
-
-          <div class="three">
-            <div>
-              <label for="filterColumn">Filter column</label>
-              <select id="filterColumn"></select>
-            </div>
-            <div>
-              <label for="filterOperator">Operator</label>
-              <select id="filterOperator">
-                <option value="">None</option>
-                <option value="==">==</option>
-                <option value="!=">!=</option>
-                <option value=">">&gt;</option>
-                <option value=">=">&gt;=</option>
-                <option value="<">&lt;</option>
-                <option value="<=">&lt;=</option>
-                <option value="contains">contains</option>
-              </select>
-            </div>
-            <div>
-              <label for="filterValue">Value</label>
-              <input id="filterValue" type="text" placeholder="e.g. 100">
-            </div>
-          </div>
-
-          <div class="two">
-            <div>
-              <label for="groupBy">Group by</label>
-              <select id="groupBy"></select>
-            </div>
-            <div>
-              <label for="aggregationColumn">Aggregation column</label>
-              <select id="aggregationColumn"></select>
-            </div>
-          </div>
-
-          <div class="two">
-            <div>
-              <label for="aggregationType">Aggregation type</label>
-              <select id="aggregationType">
-                <option value="">None</option>
-                <option value="sum">sum</option>
-                <option value="mean">mean</option>
-                <option value="count">count</option>
-                <option value="min">min</option>
-                <option value="max">max</option>
-              </select>
-            </div>
-            <div>
-              <label for="refreshTransform">Apply transform</label>
-              <button id="refreshTransform" class="ghost">Preview Transformation</button>
-            </div>
-          </div>
-
-          <div class="three">
-            <div>
-              <label for="derivedName">Derived column</label>
-              <input id="derivedName" type="text" placeholder="profit_margin">
-            </div>
-            <div>
-              <label for="derivedLeft">Left operand</label>
-              <select id="derivedLeft"></select>
-            </div>
-            <div>
-              <label for="derivedOperation">Operation</label>
-              <select id="derivedOperation">
-                <option value="">None</option>
-                <option value="add">add</option>
-                <option value="subtract">subtract</option>
-                <option value="multiply">multiply</option>
-                <option value="divide">divide</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="two">
-            <div>
-              <label for="derivedRight">Right operand</label>
-              <select id="derivedRight"></select>
-            </div>
-            <div>
-              <label for="derivedLiteral">Or constant value</label>
-              <input id="derivedLiteral" type="text" placeholder="e.g. 100">
-            </div>
-          </div>
-        </div>
-
-        <div class="stack">
-          <h3>Visualise</h3>
+          <h3>Step 2: Create Chart</h3>
+          <p class="helper">Beginners can usually keep the suggested choices and click render.</p>
           <div class="two">
             <div>
               <label for="chartType">Chart type</label>
@@ -243,15 +700,126 @@
 
           <label for="chartTitle">Chart title</label>
           <input id="chartTitle" type="text" placeholder="Optional chart title">
-          <button id="renderChart">Render Chart</button>
+          <button id="renderChart">Create Suggested Chart</button>
         </div>
 
+        <details class="stack">
+          <summary>Optional: Advanced Data Changes</summary>
+          <div class="stack-body">
+            <p class="helper">Use these only if you want to narrow the dataset, group rows, or create a new calculated column.</p>
+            <div class="advanced-layout">
+              <section class="option-group">
+                <h4>1. Keep Only The Columns You Need</h4>
+                <p class="helper">Use this to simplify the preview and exports before you chart anything.</p>
+                <label for="selectedColumns">Columns to keep</label>
+                <select id="selectedColumns" multiple size="5"></select>
+              </section>
+
+              <section class="option-group">
+                <h4>2. Filter Rows</h4>
+                <p class="helper">Limit the dataset to rows that match one condition.</p>
+                <div class="option-grid">
+                  <div>
+                    <label for="filterColumn">Filter column</label>
+                    <select id="filterColumn"></select>
+                  </div>
+                  <div>
+                    <label for="filterOperator">Condition</label>
+                    <select id="filterOperator">
+                      <option value="">None</option>
+                      <option value="==">equals</option>
+                      <option value="!=">does not equal</option>
+                      <option value=">">greater than</option>
+                      <option value=">=">greater than or equal</option>
+                      <option value="<">less than</option>
+                      <option value="<=">less than or equal</option>
+                      <option value="contains">contains text</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label for="filterValue">Filter value</label>
+                  <input id="filterValue" type="text" placeholder="Example: 100">
+                </div>
+              </section>
+
+              <section class="option-group">
+                <h4>3. Group And Summarise</h4>
+                <p class="helper">Use this when you want totals, averages, or counts by category.</p>
+                <div class="option-grid">
+                  <div>
+                    <label for="groupBy">Group rows by</label>
+                    <select id="groupBy"></select>
+                  </div>
+                  <div>
+                    <label for="aggregationColumn">Summarise this column</label>
+                    <select id="aggregationColumn"></select>
+                  </div>
+                </div>
+                <div class="option-grid">
+                  <div>
+                    <label for="aggregationType">Summary type</label>
+                    <select id="aggregationType">
+                      <option value="">None</option>
+                      <option value="sum">sum</option>
+                      <option value="mean">average</option>
+                      <option value="count">count</option>
+                      <option value="min">minimum</option>
+                      <option value="max">maximum</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="refreshTransform">Refresh preview</label>
+                    <button id="refreshTransform" class="ghost">Apply Changes To Preview</button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="option-group">
+                <h4>4. Create A Calculated Column</h4>
+                <p class="helper">Build one new numeric field from two existing values or one value plus a fixed number.</p>
+                <div class="option-grid">
+                  <div>
+                    <label for="derivedName">New column name</label>
+                    <input id="derivedName" type="text" placeholder="profit_margin">
+                  </div>
+                  <div>
+                    <label for="derivedOperation">Calculation</label>
+                    <select id="derivedOperation">
+                      <option value="">None</option>
+                      <option value="add">add</option>
+                      <option value="subtract">subtract</option>
+                      <option value="multiply">multiply</option>
+                      <option value="divide">divide</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="option-grid">
+                  <div>
+                    <label for="derivedLeft">First value</label>
+                    <select id="derivedLeft"></select>
+                  </div>
+                  <div>
+                    <label for="derivedRight">Second value</label>
+                    <select id="derivedRight"></select>
+                  </div>
+                </div>
+                <div>
+                  <label for="derivedLiteral">Or use a fixed number</label>
+                  <input id="derivedLiteral" type="text" placeholder="Example: 100">
+                </div>
+              </section>
+            </div>
+          </div>
+        </details>
+
         <div class="stack">
-          <h3>Export</h3>
+          <h3>Step 3: Export Results</h3>
+          <p class="helper">Download the cleaned table or a simple text report after you review the chart.</p>
           <div class="toolbar">
-            <button id="exportCsv" class="ghost" type="button">CSV</button>
-            <button id="exportXlsx" class="ghost" type="button">Excel</button>
-            <button id="exportReport" class="ghost" type="button">Report</button>
+            <button id="exportCsv" class="ghost" type="button">Download CSV</button>
+            <button id="exportXlsx" class="ghost" type="button">Download Excel</button>
+            <button id="exportReport" class="ghost" type="button">Download Report</button>
           </div>
         </div>
 
@@ -260,30 +828,75 @@
 
       <section class="results">
         <article class="section">
-          <h2>Schema Detection</h2>
-          <p class="subtle">Column types are inferred from deterministic rules so the system can restrict transformations and chart choices safely.</p>
-          <div id="schemaBadges"></div>
-        </article>
-
-        <article class="section">
-          <h2>Preview</h2>
-          <div class="table-wrap">
+          <div class="section-head">
+            <div>
+              <span class="section-kicker">Structure</span>
+              <h2>Schema Detection</h2>
+              <p class="subtle">Column types are inferred from deterministic rules so the system can restrict transformations and chart choices safely.</p>
+            </div>
+            <span class="badge">Suggested plots included</span>
+          </div>
+          <div class="table-wrap schema-wrap">
             <table>
-              <thead id="previewHead"></thead>
-              <tbody id="previewBody"></tbody>
+              <thead>
+                <tr>
+                  <th>Column</th>
+                  <th>Type</th>
+                  <th>Role</th>
+                  <th>Missing</th>
+                  <th>Unique</th>
+                  <th>Aggregation hint</th>
+                  <th>Suggested plots</th>
+                </tr>
+              </thead>
+              <tbody id="schemaBody"></tbody>
             </table>
           </div>
         </article>
 
         <article class="section">
-          <h2>Analysis Output</h2>
-          <pre id="analysisText">Upload a file to generate summary statistics and rule-based metrics.</pre>
+          <div class="section-head">
+            <div>
+              <span class="section-kicker">Data View</span>
+              <h2>Preview</h2>
+            </div>
+            <span class="badge neutral">Scrollable</span>
+          </div>
+          <div class="preview-frame">
+            <p class="preview-meta" id="previewMeta">Showing a sample of the cleaned dataset after processing.</p>
+            <div class="table-wrap preview-wrap">
+              <table>
+                <thead id="previewHead"></thead>
+                <tbody id="previewBody"></tbody>
+              </table>
+            </div>
+          </div>
         </article>
 
         <article class="section">
-          <h2>Visual Output</h2>
+          <div class="section-head">
+            <div>
+              <span class="section-kicker">Insights</span>
+              <h2>Analysis Output</h2>
+            </div>
+          </div>
+          <div id="analysisText" class="analysis-panel">
+            <p class="empty-copy">Upload a file to generate a clean, readable analysis summary.</p>
+          </div>
+        </article>
+
+        <article class="section">
+          <div class="section-head">
+            <div>
+              <span class="section-kicker">Visuals</span>
+              <h2>Visual Output</h2>
+            </div>
+          </div>
           <div class="chart-frame" id="chartFrame">
             <p class="subtle">No chart rendered yet.</p>
+          </div>
+          <div class="chart-actions" id="chartActions" hidden>
+            <button id="downloadChart" class="ghost" type="button">Download Current Chart</button>
           </div>
         </article>
       </section>
@@ -291,7 +904,16 @@
   </main>
 
   <script>
-    const state = { datasetId: null, datasetState: null, schema: {}, lastChartUrl: null };
+    const state = {
+      datasetId: null,
+      datasetState: null,
+      schema: {},
+      lastChartUrl: null,
+      lastChartFile: null,
+      lastChartMime: null,
+      lastChartRequest: null,
+      lastSuggestedTitle: ""
+    };
     const ids = {
       fileInput: document.getElementById("fileInput"),
       uploadButton: document.getElementById("uploadButton"),
@@ -318,14 +940,62 @@
       exportXlsx: document.getElementById("exportXlsx"),
       exportReport: document.getElementById("exportReport"),
       status: document.getElementById("status"),
-      schemaBadges: document.getElementById("schemaBadges"),
+      recommendationText: document.getElementById("recommendationText"),
+      schemaBody: document.getElementById("schemaBody"),
+      previewMeta: document.getElementById("previewMeta"),
       previewHead: document.getElementById("previewHead"),
       previewBody: document.getElementById("previewBody"),
       analysisText: document.getElementById("analysisText"),
-      chartFrame: document.getElementById("chartFrame")
+      chartFrame: document.getElementById("chartFrame"),
+      chartActions: document.getElementById("chartActions"),
+      downloadChart: document.getElementById("downloadChart")
     };
 
     function setStatus(message) { ids.status.textContent = message; }
+
+    function setRecommendation(message) {
+      ids.recommendationText.textContent = message;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function formatNumber(value, digits = 2) {
+      const numericValue = Number(value);
+      if (value === null || value === undefined || value === "") return "n/a";
+      if (!Number.isFinite(numericValue)) return String(value);
+      return numericValue.toLocaleString(undefined, { maximumFractionDigits: digits });
+    }
+
+    function truncateValue(value, limit = 46) {
+      const compact = String(value ?? "-").replace(/\s+/g, " ").trim();
+      if (compact.length <= limit) return compact || "-";
+      return `${compact.slice(0, limit - 3)}...`;
+    }
+
+    function setChartDownloadState(enabled) {
+      ids.chartActions.hidden = !enabled;
+    }
+
+    function buildSuggestedTitle() {
+      if (!ids.chartType.value || !ids.xColumn.value) return "";
+      return `${ids.chartType.value.charAt(0).toUpperCase() + ids.chartType.value.slice(1)} of ${ids.xColumn.value}`;
+    }
+
+    function syncSuggestedTitle(force = false) {
+      const suggestedTitle = buildSuggestedTitle();
+      if (!suggestedTitle) return;
+      if (force || !ids.chartTitle.value || ids.chartTitle.value === state.lastSuggestedTitle) {
+        ids.chartTitle.value = suggestedTitle;
+      }
+      state.lastSuggestedTitle = suggestedTitle;
+    }
 
     function populateSelect(select, columns, includeEmpty = true) {
       const previous = select.value;
@@ -352,22 +1022,250 @@
     }
 
     function renderSchema(schema) {
-      ids.schemaBadges.innerHTML = "";
+      ids.schemaBody.innerHTML = "";
       Object.entries(schema).forEach(([column, meta]) => {
-        const item = document.createElement("div");
-        item.className = "badge";
-        item.textContent = `${column}: ${meta.type}`;
-        ids.schemaBadges.appendChild(item);
+        const row = document.createElement("tr");
+        const warnings = (meta.warnings || []).join(" ");
+        row.innerHTML = `
+          <td title="${escapeHtml(column)}">${column}</td>
+          <td>${meta.type}</td>
+          <td>${meta.role || "-"}</td>
+          <td>${meta.missing}</td>
+          <td>${meta.unique}</td>
+          <td title="${escapeHtml(warnings || meta.aggregation_hint || "")}">${meta.aggregation_hint || "-"}</td>
+          <td>${(meta.allowed_charts || []).join(", ") || "none"}</td>
+        `;
+        ids.schemaBody.appendChild(row);
       });
+    }
+
+    function getColumnsForTypes(schema, types) {
+      return Object.entries(schema)
+        .filter(([, meta]) => types.includes(meta.type))
+        .map(([name]) => name);
+    }
+
+    function getColumnsForRoles(schema, roles, allowedTypes = []) {
+      return Object.entries(schema)
+        .filter(([, meta]) => roles.includes(meta.role) && (!allowedTypes.length || allowedTypes.includes(meta.type)))
+        .map(([name]) => name);
+    }
+
+    function uniqueColumns(columns) {
+      return [...new Set(columns)];
+    }
+
+    function getChartCompatibility(chartType, schema) {
+      const identifierLike = new Set(getColumnsForRoles(schema, ["identifier"]));
+      const categorical = uniqueColumns(
+        getColumnsForRoles(schema, ["category", "geography"], ["categorical", "text"])
+          .concat(getColumnsForTypes(schema, ["categorical", "text"]).filter((name) => !identifierLike.has(name)))
+      );
+      const datetime = getColumnsForTypes(schema, ["datetime"]);
+      const numeric = Object.entries(schema)
+        .filter(([, meta]) => meta.type === "numeric" && !["identifier", "constant"].includes(meta.role))
+        .map(([name]) => name);
+      const rates = getColumnsForRoles(schema, ["rate"], ["numeric"]);
+      const counts = getColumnsForRoles(schema, ["count"], ["numeric"]);
+      const measures = getColumnsForRoles(schema, ["measure"], ["numeric"]);
+      const allColumns = Object.entries(schema)
+        .filter(([, meta]) => meta.role !== "identifier")
+        .map(([name]) => name);
+      const preferredNumeric = uniqueColumns(counts.concat(rates).concat(measures).concat(numeric));
+
+      switch (chartType) {
+        case "histogram":
+        case "box":
+          return {
+            xColumns: uniqueColumns(rates.concat(measures).concat(counts).concat(numeric)),
+            yColumns: [],
+            yOptional: true,
+            hint: numeric.length
+              ? `This ${chartType} chart needs one numeric measure, rate, or count column.`
+              : `No numeric columns are available for a ${chartType} chart.`
+          };
+        case "scatter":
+          return {
+            xColumns: numeric,
+            yColumns: numeric,
+            yOptional: false,
+            hint: numeric.length >= 2
+              ? "Scatter plots need two numeric columns."
+              : "You need at least two numeric columns for a scatter plot."
+          };
+        case "line":
+          return {
+            xColumns: datetime,
+            yColumns: numeric,
+            yOptional: false,
+            hint: datetime.length && numeric.length
+              ? "Line charts need a date/time column on X and a numeric column on Y."
+              : "You need one datetime column and one numeric column for a line chart."
+          };
+        case "pie":
+          return {
+            xColumns: categorical,
+            yColumns: preferredNumeric,
+            yOptional: true,
+            hint: categorical.length
+              ? "Pie charts work best with a few categories and a meaningful part-to-whole measure. Geography fields often need filtering first."
+              : "You need a categorical column for a pie chart."
+          };
+        case "bar":
+        default:
+          return {
+            xColumns: categorical.length ? categorical.concat(datetime) : allColumns,
+            yColumns: preferredNumeric,
+            yOptional: true,
+            hint: "Bar charts work best with a category, geography, or time field on X and a count, rate, or measure on Y."
+          };
+      }
+    }
+
+    function syncChartControls(force = false) {
+      if (!Object.keys(state.schema).length) return;
+      const compatibility = getChartCompatibility(ids.chartType.value, state.schema);
+      const previousX = ids.xColumn.value;
+      const previousY = ids.yColumn.value;
+
+      populateSelect(ids.xColumn, compatibility.xColumns, false);
+      populateSelect(ids.yColumn, compatibility.yColumns, compatibility.yOptional);
+
+      if (!compatibility.xColumns.includes(previousX)) {
+        ids.xColumn.value = compatibility.xColumns[0] || "";
+      }
+
+      if (compatibility.yOptional) {
+        if (compatibility.yColumns.includes(previousY)) {
+          ids.yColumn.value = previousY;
+        } else {
+          ids.yColumn.value = "";
+        }
+      } else if (!compatibility.yColumns.includes(previousY)) {
+        const fallbackY = compatibility.yColumns.find((column) => column !== ids.xColumn.value) || compatibility.yColumns[0] || "";
+        ids.yColumn.value = fallbackY;
+      }
+
+      if (!compatibility.yOptional && ids.yColumn.value === ids.xColumn.value) {
+        ids.yColumn.value = compatibility.yColumns.find((column) => column !== ids.xColumn.value) || "";
+      }
+
+      syncSuggestedTitle(force);
+      setRecommendation(compatibility.hint);
+    }
+
+    function ensureChartSelectionValid() {
+      if (!Object.keys(state.schema).length) return false;
+      syncChartControls();
+      const compatibility = getChartCompatibility(ids.chartType.value, state.schema);
+      const hasValidX = compatibility.xColumns.includes(ids.xColumn.value);
+      const hasValidY = compatibility.yOptional || compatibility.yColumns.includes(ids.yColumn.value);
+
+      if (!hasValidX || !hasValidY) {
+        setStatus(`The selected ${ids.chartType.value} chart needs compatible columns. The controls were updated to the nearest valid options.`);
+        return false;
+      }
+
+      return true;
+    }
+
+    function recommendChartConfig(schema) {
+      const entries = Object.entries(schema);
+      const numeric = entries
+        .filter(([, meta]) => meta.type === "numeric" && !["identifier", "constant"].includes(meta.role))
+        .map(([name]) => name);
+      const countColumns = getColumnsForRoles(schema, ["count"], ["numeric"]);
+      const rateColumns = getColumnsForRoles(schema, ["rate"], ["numeric"]);
+      const measureColumns = getColumnsForRoles(schema, ["measure"], ["numeric"]);
+      const categorical = uniqueColumns(
+        getColumnsForRoles(schema, ["geography", "category"], ["categorical", "text"])
+          .concat(entries.filter(([, meta]) => ["categorical", "text"].includes(meta.type) && meta.role !== "identifier").map(([name]) => name))
+      );
+      const datetime = entries.filter(([, meta]) => meta.type === "datetime" || meta.role === "time").map(([name]) => name);
+      const primaryMeasure = countColumns[0] || rateColumns[0] || measureColumns[0] || numeric[0];
+
+      if (datetime.length && primaryMeasure) {
+        return {
+          chartType: "line",
+          xColumn: datetime[0],
+          yColumn: primaryMeasure,
+          message: `Suggested chart: line chart using ${datetime[0]} over ${primaryMeasure}.`
+        };
+      }
+
+      if (categorical.length && primaryMeasure) {
+        const xMeta = schema[categorical[0]];
+        return {
+          chartType: "bar",
+          xColumn: categorical[0],
+          yColumn: primaryMeasure,
+          message: xMeta?.role === "geography"
+            ? `Suggested chart: bar chart comparing ${primaryMeasure} across ${categorical[0]}. Pie charts may need top-N filtering first.`
+            : `Suggested chart: bar chart using ${categorical[0]} and ${primaryMeasure}.`
+        };
+      }
+
+      if (numeric.length >= 2) {
+        return {
+          chartType: "scatter",
+          xColumn: numeric[0],
+          yColumn: numeric[1],
+          message: `Suggested chart: scatter plot using ${numeric[0]} and ${numeric[1]}.`
+        };
+      }
+
+      if (numeric.length) {
+        return {
+          chartType: "histogram",
+          xColumn: rateColumns[0] || measureColumns[0] || countColumns[0] || numeric[0],
+          yColumn: "",
+          message: `Suggested chart: histogram of ${rateColumns[0] || measureColumns[0] || countColumns[0] || numeric[0]}.`
+        };
+      }
+
+      if (categorical.length) {
+        return {
+          chartType: "bar",
+          xColumn: categorical[0],
+          yColumn: "",
+          message: `Suggested chart: bar chart of ${categorical[0]}.`
+        };
+      }
+
+      return {
+        chartType: "bar",
+        xColumn: entries[0]?.[0] || "",
+        yColumn: "",
+        message: "Upload a dataset to get a chart suggestion."
+      };
+    }
+
+    function applyRecommendedChart(schema) {
+      const recommendation = recommendChartConfig(schema);
+      if (recommendation.chartType) ids.chartType.value = recommendation.chartType;
+      syncChartControls(true);
+      if (recommendation.xColumn && Array.from(ids.xColumn.options).some((option) => option.value === recommendation.xColumn)) {
+        ids.xColumn.value = recommendation.xColumn;
+      }
+      if (
+        recommendation.yColumn !== undefined &&
+        Array.from(ids.yColumn.options).some((option) => option.value === recommendation.yColumn)
+      ) {
+        ids.yColumn.value = recommendation.yColumn;
+      }
+      syncSuggestedTitle(true);
+      setRecommendation(recommendation.message);
     }
 
     function renderPreview(rows) {
       ids.previewHead.innerHTML = "";
       ids.previewBody.innerHTML = "";
       if (!rows.length) {
+        ids.previewMeta.textContent = "No rows are available in the current dataset view.";
         ids.previewBody.innerHTML = '<tr><td>No rows available.</td></tr>';
         return;
       }
+      ids.previewMeta.textContent = `Showing the first ${rows.length} rows from the current processed dataset. Scroll inside the preview if your table is wide.`;
       const columns = Object.keys(rows[0]);
       const headRow = document.createElement("tr");
       columns.forEach((column) => {
@@ -380,7 +1278,9 @@
         const tr = document.createElement("tr");
         columns.forEach((column) => {
           const td = document.createElement("td");
-          td.textContent = row[column] ?? "";
+          const fullValue = row[column] ?? "-";
+          td.textContent = truncateValue(fullValue);
+          td.title = String(fullValue);
           tr.appendChild(td);
         });
         ids.previewBody.appendChild(tr);
@@ -388,13 +1288,104 @@
     }
 
     function renderAnalysis(payload) {
-      const lines = [
-        payload.analysis.summary_lines, "",
-        "Numeric Summary:", JSON.stringify(payload.analysis.numeric_summary, null, 2), "",
-        "Correlations:", JSON.stringify(payload.analysis.correlations, null, 2), "",
-        "Categorical Breakdown:", JSON.stringify(payload.analysis.categorical_breakdown, null, 2)
+      const analysis = payload.analysis || {};
+      const typeCounts = analysis.type_counts || {};
+      const summaryCards = [
+        { label: "Rows analyzed", value: formatNumber(analysis.row_count ?? payload.shape?.rows, 0) },
+        { label: "Columns analyzed", value: formatNumber(analysis.column_count ?? payload.shape?.columns, 0) },
+        { label: "Numeric columns", value: formatNumber(typeCounts.numeric ?? 0, 0) },
+        { label: "Categorical columns", value: formatNumber(typeCounts.categorical ?? 0, 0) }
       ];
-      ids.analysisText.textContent = lines.join("\n");
+      const insightItems = (analysis.key_insights || []).length
+        ? (analysis.key_insights || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")
+        : "<li>No standout insights were generated for the current dataset view.</li>";
+      const relationshipRows = (analysis.top_correlations || []).slice(0, 5).map((item) => `
+        <tr>
+          <td>${escapeHtml(item.left)}</td>
+          <td>${escapeHtml(item.right)}</td>
+          <td>${escapeHtml(formatNumber(item.value, 4))}</td>
+        </tr>
+      `).join("");
+      const groupComparison = analysis.group_comparison;
+      const groupRows = groupComparison && (groupComparison.largest_mean_gaps || []).length
+        ? groupComparison.largest_mean_gaps.slice(0, 5).map((item) => `
+            <tr>
+              <td>${escapeHtml(item.metric)}</td>
+              <td>${escapeHtml(item.highest_group)} (${escapeHtml(formatNumber(item.highest_mean, 4))})</td>
+              <td>${escapeHtml(item.lowest_group)} (${escapeHtml(formatNumber(item.lowest_mean, 4))})</td>
+              <td>${escapeHtml(formatNumber(item.difference, 4))}</td>
+            </tr>
+          `).join("")
+        : "";
+      const numericCards = Object.entries(analysis.numeric_summary || {}).slice(0, 6).map(([field, stats]) => `
+        <div class="stats-card">
+          <strong>${escapeHtml(field)}</strong>
+          <div class="metric-pair"><span>Mean</span><span>${escapeHtml(formatNumber(stats.mean, 4))}</span></div>
+          <div class="metric-pair"><span>Median</span><span>${escapeHtml(formatNumber(stats["50%"], 4))}</span></div>
+          <div class="metric-pair"><span>Min</span><span>${escapeHtml(formatNumber(stats.min, 4))}</span></div>
+          <div class="metric-pair"><span>Max</span><span>${escapeHtml(formatNumber(stats.max, 4))}</span></div>
+        </div>
+      `).join("");
+      const categoryCards = Object.entries(analysis.categorical_breakdown || {}).map(([field, values]) => `
+        <div class="stats-card">
+          <strong>${escapeHtml(field)}</strong>
+          <div class="chip-list">
+            ${Object.entries(values).slice(0, 8).map(([label, count]) => `<span class="chip">${escapeHtml(label)}: ${escapeHtml(formatNumber(count, 0))}</span>`).join("") || '<span class="chip">No values</span>'}
+          </div>
+        </div>
+      `).join("");
+      const summaryLineChips = (analysis.summary_lines || "")
+        .split("\n")
+        .filter(Boolean)
+        .map((line) => `<span class="chip">${escapeHtml(line)}</span>`)
+        .join("");
+      const warningItems = (analysis.warnings || []).slice(0, 5).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+
+      ids.analysisText.innerHTML = `
+        <div class="analysis-grid">
+          ${summaryCards.map((item) => `
+            <div class="summary-card">
+              <strong>${escapeHtml(item.value)}</strong>
+              <span>${escapeHtml(item.label)}</span>
+            </div>
+          `).join("")}
+        </div>
+        <div class="analysis-block">
+          <h3>Quick read</h3>
+          <ul class="insight-list">${insightItems}</ul>
+          <div class="chip-list">${summaryLineChips || '<span class="chip">No summary available yet</span>'}</div>
+        </div>
+        <div class="analysis-block">
+          <h3>Data cautions</h3>
+          ${warningItems
+            ? `<ul class="insight-list">${warningItems}</ul>`
+            : '<p class="empty-copy">No major rule-based cautions were detected for the current dataset view.</p>'}
+        </div>
+        <div class="analysis-block">
+          <h3>Strongest relationships</h3>
+          ${relationshipRows
+            ? `<div class="table-wrap"><table class="mini-table"><thead><tr><th>Field A</th><th>Field B</th><th>Correlation</th></tr></thead><tbody>${relationshipRows}</tbody></table></div>`
+            : '<p class="empty-copy">Not enough numeric fields were available to compare relationships.</p>'}
+        </div>
+        <div class="analysis-block">
+          <h3>Group comparison${groupComparison ? ` for ${escapeHtml(groupComparison.group_column)}` : ""}</h3>
+          ${groupRows
+            ? `<div class="table-wrap"><table class="mini-table"><thead><tr><th>Metric</th><th>Highest group</th><th>Lowest group</th><th>Difference</th></tr></thead><tbody>${groupRows}</tbody></table></div>`
+            : '<p class="empty-copy">No categorical split was available for a group comparison in this dataset.</p>'}
+        </div>
+        <div class="analysis-block">
+          <h3>Sample numeric summary</h3>
+          ${numericCards
+            ? `<div class="stats-grid">${numericCards}</div>`
+            : '<p class="empty-copy">No numeric summary was available for the current dataset.</p>'}
+        </div>
+        <div class="analysis-block">
+          <h3>Category counts</h3>
+          ${categoryCards
+            ? `<div class="stats-grid">${categoryCards}</div>`
+            : '<p class="empty-copy">No categorical breakdown was available for the current dataset.</p>'}
+        </div>
+      `;
     }
 
     function updateColumnControls(schema) {
@@ -406,8 +1397,7 @@
       populateSelect(ids.aggregationColumn, columns);
       populateSelect(ids.derivedLeft, columns);
       populateSelect(ids.derivedRight, columns);
-      populateSelect(ids.xColumn, columns, false);
-      populateSelect(ids.yColumn, columns);
+      applyRecommendedChart(schema);
     }
 
     function collectTransformConfig() {
@@ -433,6 +1423,19 @@
       return { selected_columns: selectedColumns, filters, group_by: groupBy, aggregations, derived_columns: derivedColumns };
     }
 
+    function buildChartRequestPayload() {
+      return {
+        dataset_id: state.datasetId,
+        dataset_state: state.datasetState,
+        config: collectTransformConfig(),
+        chart_type: ids.chartType.value,
+        x_column: ids.xColumn.value,
+        y_column: ids.yColumn.value || null,
+        title: ids.chartTitle.value || null,
+        format: ids.chartFormat.value
+      };
+    }
+
     async function fetchJson(url, options) {
       const response = await fetch(url, options);
       const data = await response.json().catch(() => ({}));
@@ -443,6 +1446,7 @@
     async function applyTransformPreview() {
       if (!state.datasetId) {
         setStatus("Upload a dataset first.");
+        setRecommendation("Start by uploading a dataset. The app will prepare a suggested chart automatically.");
         return;
       }
       setStatus("Applying rule-based transformation preview...");
@@ -456,6 +1460,12 @@
       renderPreview(payload.preview);
       renderAnalysis(payload);
       updateColumnControls(payload.schema);
+      state.lastChartUrl = null;
+      state.lastChartFile = null;
+      state.lastChartMime = null;
+      state.lastChartRequest = null;
+      ids.chartFrame.innerHTML = '<p class="subtle">Create a new chart to match the updated preview.</p>';
+      setChartDownloadState(false);
       setStatus(`Preview updated. ${payload.shape.rows} rows and ${payload.shape.columns} columns in the transformed dataset.`);
     }
 
@@ -463,6 +1473,7 @@
       const file = ids.fileInput.files[0];
       if (!file) {
         setStatus("Choose a CSV, XLSX, or JSON file first.");
+        setRecommendation("Choose a dataset file first. CSV is the easiest starting point.");
         return;
       }
       setStatus("Uploading and processing dataset...");
@@ -478,6 +1489,12 @@
         renderPreview(payload.preview);
         renderAnalysis(payload);
         updateColumnControls(payload.schema);
+        state.lastChartUrl = null;
+        state.lastChartFile = null;
+        state.lastChartMime = null;
+        state.lastChartRequest = null;
+        ids.chartFrame.innerHTML = '<p class="subtle">No chart rendered yet.</p>';
+        setChartDownloadState(false);
         setStatus(`Loaded ${payload.filename} with ${payload.shape.rows} rows and ${payload.shape.columns} columns.`);
       } catch (error) {
         setStatus(error.message);
@@ -491,65 +1508,99 @@
     ids.renderChart.addEventListener("click", async () => {
       if (!state.datasetId) {
         setStatus("Upload a dataset first.");
+        setRecommendation("Upload a dataset first so the app can suggest the best chart.");
+        return;
+      }
+      if (!ensureChartSelectionValid()) {
         return;
       }
       try {
         setStatus("Rendering chart...");
+        const chartRequest = buildChartRequestPayload();
         const payload = await fetchJson("/api/visualize", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            dataset_id: state.datasetId,
-            dataset_state: state.datasetState,
-            config: collectTransformConfig(),
-            chart_type: ids.chartType.value,
-            x_column: ids.xColumn.value,
-            y_column: ids.yColumn.value || null,
-            title: ids.chartTitle.value || null,
-            format: ids.chartFormat.value
-          })
+          body: JSON.stringify(chartRequest)
         });
         state.lastChartUrl = payload.chart_data_url;
+        state.lastChartFile = payload.chart_file;
+        state.lastChartMime = payload.mime_type;
+        state.lastChartRequest = chartRequest;
         ids.chartFrame.innerHTML = ids.chartFormat.value === "png"
           ? `<img src="${payload.chart_data_url}" alt="Rendered chart">`
-          : `<p><a href="${payload.chart_data_url}" target="_blank" rel="noreferrer" download="${payload.chart_file}">Open generated PDF chart</a></p>`;
+          : `<iframe src="${payload.chart_data_url}" title="Rendered PDF chart"></iframe>`;
+        ids.downloadChart.textContent = ids.chartFormat.value === "pdf" ? "Download PDF Chart" : "Download PNG Chart";
+        setChartDownloadState(true);
         setStatus(`Chart created as ${payload.chart_file}.`);
+        setRecommendation(`Chart ready. Review it below, then download the chart or export the dataset/report.`);
       } catch (error) {
         setStatus(error.message);
       }
     });
 
-    async function downloadExport(endpoint, format) {
-      if (!state.datasetId) {
-        setStatus("Upload a dataset first.");
-        return;
-      }
-      setStatus(`Preparing ${format.toUpperCase()} export...`);
+    async function downloadBinary(endpoint, payload, fallbackName) {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dataset_id: state.datasetId, dataset_state: state.datasetState, config: collectTransformConfig(), format })
+        body: JSON.stringify(payload)
       });
       if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        setStatus(payload.error || "Export failed.");
-        return;
+        const responsePayload = await response.json().catch(() => ({}));
+        throw new Error(responsePayload.error || "Download failed.");
       }
       const blob = await response.blob();
       const disposition = response.headers.get("Content-Disposition") || "";
-      const filename = disposition.split("filename=")[1]?.replace(/"/g, "") || `export.${format}`;
+      const filename = disposition.split("filename=")[1]?.replace(/"/g, "") || fallbackName;
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
       anchor.download = filename;
       anchor.click();
       URL.revokeObjectURL(url);
-      setStatus(`${filename} downloaded.`);
+      return filename;
+    }
+
+    async function downloadExport(endpoint, format) {
+      if (!state.datasetId) {
+        setStatus("Upload a dataset first.");
+        setRecommendation("Upload a dataset first so there is something to export.");
+        return;
+      }
+      try {
+        setStatus(`Preparing ${format.toUpperCase()} export...`);
+        const filename = await downloadBinary(
+          endpoint,
+          { dataset_id: state.datasetId, dataset_state: state.datasetState, config: collectTransformConfig(), format },
+          `export.${format}`
+        );
+        setStatus(`${filename} downloaded.`);
+      } catch (error) {
+        setStatus(error.message);
+      }
     }
 
     ids.exportCsv.addEventListener("click", () => downloadExport("/api/export/dataset", "csv"));
     ids.exportXlsx.addEventListener("click", () => downloadExport("/api/export/dataset", "xlsx"));
     ids.exportReport.addEventListener("click", () => downloadExport("/api/export/report", "txt"));
+    ids.chartType.addEventListener("change", () => syncChartControls());
+    ids.xColumn.addEventListener("change", () => syncSuggestedTitle());
+    ids.downloadChart.addEventListener("click", async () => {
+      if (!state.datasetId || !state.lastChartRequest) {
+        setStatus("Create a chart first.");
+        return;
+      }
+      try {
+        setStatus(`Preparing ${(state.lastChartRequest.format || "png").toUpperCase()} chart download...`);
+        const filename = await downloadBinary(
+          "/api/export/chart",
+          state.lastChartRequest,
+          state.lastChartFile || `chart.${state.lastChartRequest.format || "png"}`
+        );
+        setStatus(`${filename} downloaded.`);
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
   </script>
 </body>
 </html>

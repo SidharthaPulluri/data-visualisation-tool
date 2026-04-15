@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visualize Dataset</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <aside class="nav-shell">
+      <div class="brand">
+        <span class="eyebrow">Rule-based analytics</span>
+        <strong>Data Visualisation Tool</strong>
+      </div>
+      <div class="nav-steps">
+        <a class="nav-step" href="/">1. Upload</a>
+        <a class="nav-step" href="/prepare">2. Prepare</a>
+        <span class="nav-step active">3. Visualize</span>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <section class="visual-hero">
+        <div class="visual-hero-copy">
+          <span class="eyebrow">Step 3</span>
+          <h1 id="datasetName">Turn it into a visual.</h1>
+          <p id="datasetMeta" class="helper">Loading saved visualization session...</p>
+        </div>
+        <div class="visual-hero-side">
+          <div class="hero-chip-group">
+            <span class="hero-chip">Prepared dataset loaded</span>
+            <span class="hero-chip hero-chip-muted">Deterministic chart logic</span>
+          </div>
+          <div class="hero-actions">
+            <a class="action-link subtle-link" href="/prepare">Back To Preparation</a>
+            <a class="action-link subtle-link" href="/">Upload Another File</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="visualize-workspace">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">Chart Setup</span>
+            <h2>Create a visual</h2>
+          </div>
+          <div class="hero-actions">
+            <div class="grid-density-control">
+              <label for="gridColumns">Grid</label>
+              <select id="gridColumns">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+            <button id="singleViewButton" class="ghost" type="button">Single View</button>
+            <button id="gridViewButton" class="ghost" type="button">Grid View</button>
+            <span class="badge neutral" id="chartBadge">No chart yet</span>
+          </div>
+        </div>
+
+        <div class="workspace-toolbar">
+          <div class="workspace-intro">
+            <p id="recommendationText" class="workspace-copy">The app will recommend a chart based on the prepared dataset.</p>
+            <div id="status" class="status">Loading prepared dataset...</div>
+          </div>
+
+          <div class="control-grid">
+            <div>
+              <label for="chartType">Chart type</label>
+              <select id="chartType">
+                <option value="bar">bar</option>
+                <option value="pie">pie</option>
+                <option value="histogram">histogram</option>
+                <option value="box">box</option>
+                <option value="line">line</option>
+                <option value="scatter">scatter</option>
+                <option value="heatmap">heatmap</option>
+              </select>
+            </div>
+            <div>
+              <label for="chartFormat">File format</label>
+              <select id="chartFormat">
+                <option value="png">png</option>
+                <option value="pdf">pdf</option>
+              </select>
+            </div>
+            <div>
+              <label for="xColumn">X column</label>
+              <select id="xColumn"></select>
+            </div>
+            <div id="rowColumnWrap">
+              <label for="rowColumn">Row column</label>
+              <select id="rowColumn"></select>
+            </div>
+            <div>
+              <label id="yColumnLabel" for="yColumn">Y column</label>
+              <select id="yColumn"></select>
+            </div>
+            <div class="control-grid-span">
+              <label for="chartTitle">Chart title</label>
+              <input id="chartTitle" type="text" placeholder="Optional chart title">
+            </div>
+            <div id="aggregationWrap">
+              <label for="aggregation">Aggregation</label>
+              <select id="aggregation">
+                <option value="auto">auto</option>
+                <option value="sum">sum</option>
+                <option value="mean">mean</option>
+                <option value="median">median</option>
+                <option value="count">count</option>
+                <option value="latest">latest</option>
+              </select>
+            </div>
+            <div id="sortOrderWrap">
+              <label for="sortOrder">Sort order</label>
+              <select id="sortOrder">
+                <option value="desc">largest first</option>
+                <option value="asc">smallest first</option>
+                <option value="none">dataset order</option>
+              </select>
+            </div>
+            <div id="topNWrap">
+              <label for="topN">Top rows or groups</label>
+              <input id="topN" type="number" min="1" max="50" value="12">
+            </div>
+            <div id="binsWrap">
+              <label for="bins">Histogram bins</label>
+              <input id="bins" type="number" min="5" max="60" value="20">
+            </div>
+          </div>
+
+          <div class="workspace-actions">
+            <button id="renderChart" class="secondary" type="button">Create Chart</button>
+            <button id="downloadChart" class="ghost" type="button">Download Chart</button>
+            <button id="exportDashboard" class="ghost" type="button">Download Dashboard PDF</button>
+            <button id="exportCsv" class="ghost" type="button">Download CSV</button>
+            <button id="exportXlsx" class="ghost" type="button">Download Excel</button>
+            <button id="exportReport" class="ghost" type="button">Download Report</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="visual-layout">
+        <article class="section visual-stage">
+          <div class="section-head">
+            <div>
+              <span class="section-kicker">Chart Library</span>
+              <h2>Saved visuals</h2>
+            </div>
+            <div class="hero-actions">
+              <button id="backToGrid" class="ghost" type="button">Back To Grid</button>
+            </div>
+          </div>
+          <div id="chartTabs" class="chart-tabs"></div>
+          <div id="chartLibraryActions" class="chart-library-bar">
+            <div class="chart-library-name">
+              <label for="chartNameInput">Active chart name</label>
+              <input id="chartNameInput" type="text" placeholder="Name this saved chart">
+            </div>
+            <div class="chart-library-buttons">
+              <button id="saveChartName" class="ghost" type="button">Save Name</button>
+              <button id="duplicateChart" class="ghost" type="button">Duplicate</button>
+              <button id="moveChartLeft" class="ghost" type="button">Move Left</button>
+              <button id="moveChartRight" class="ghost" type="button">Move Right</button>
+              <button id="removeChart" class="ghost" type="button">Delete</button>
+            </div>
+            <div class="chart-library-note">
+              <label for="chartNoteInput">Chart note</label>
+              <textarea id="chartNoteInput" rows="3" placeholder="Add a short note about what this chart means or why it matters."></textarea>
+            </div>
+            <div class="chart-library-buttons chart-library-buttons-note">
+              <button id="saveChartNote" class="ghost" type="button">Save Note</button>
+            </div>
+          </div>
+          <div id="chartFrame" class="chart-frame chart-stage">
+            <p class="empty-copy">Choose a chart and render it here.</p>
+          </div>
+          <div id="chartGrid" class="chart-grid"></div>
+          <div id="chartEmpty" class="empty-copy">Create your first chart to start building a small dashboard.</div>
+          <div class="helper" id="chartLibraryMeta"></div>
+        </article>
+
+        <article class="section">
+          <div class="section-head">
+            <div>
+              <span class="section-kicker">Saved Views</span>
+              <h2>How to use multiple charts</h2>
+            </div>
+          </div>
+          <div class="grid-3">
+            <div class="option-card">
+              <h3>Create several charts</h3>
+              <p class="helper">Every time you create a chart, it is added to this session instead of replacing the old one.</p>
+            </div>
+            <div class="option-card">
+              <h3>Switch with tabs</h3>
+              <p class="helper">Use the chart tabs above to reopen a saved visual and keep working on it.</p>
+            </div>
+            <div class="option-card">
+              <h3>Use grid view</h3>
+              <p class="helper">Grid view lays out all saved charts together so you can compare them like a mini dashboard.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="section visual-support">
+          <div class="section-head">
+            <div>
+              <span class="section-kicker">Prepared View</span>
+              <h2>What you are charting</h2>
+            </div>
+          </div>
+          <div id="activeChartSummary" class="chip-list"></div>
+          <div id="chartMeaning" class="meaning-stack">
+            <div class="meaning-panel">
+              <strong>What this chart shows</strong>
+              <p class="helper">Pick or create a chart to see a plain-English explanation here.</p>
+            </div>
+            <div class="meaning-panel">
+              <strong>How to read it</strong>
+              <p class="helper">The app will explain how to interpret the selected chart.</p>
+            </div>
+            <div class="meaning-panel">
+              <strong>Things to note</strong>
+              <p class="helper">Important cautions and interpretation notes will appear here when needed.</p>
+            </div>
+          </div>
+          <p id="previewMeta" class="helper">Showing the prepared preview that feeds the chart.</p>
+          <div class="table-wrap preview preview-wide">
+            <table>
+              <thead id="previewHead"></thead>
+              <tbody id="previewBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+    </div>
+  </main>
+
+  <script src="/static/shared.js"></script>
+  <script>
+    const session = window.dataTool.requireSession("/");
+    const state = session
+      ? {
+          ...session,
+          charts: [],
+          activeChartId: session.activeChartId || null,
+          dashboardMode: session.dashboardMode || "single",
+          dashboardColumns: Number(session.dashboardColumns || 2),
+          lastSuggestedTitle: "",
+          hydratingCharts: false
+        }
+      : null;
+
+    const ids = {
+      datasetName: document.getElementById("datasetName"),
+      datasetMeta: document.getElementById("datasetMeta"),
+      recommendationText: document.getElementById("recommendationText"),
+      chartType: document.getElementById("chartType"),
+      chartFormat: document.getElementById("chartFormat"),
+      xColumn: document.getElementById("xColumn"),
+      rowColumnWrap: document.getElementById("rowColumnWrap"),
+      rowColumn: document.getElementById("rowColumn"),
+      yColumnLabel: document.getElementById("yColumnLabel"),
+      yColumn: document.getElementById("yColumn"),
+      chartTitle: document.getElementById("chartTitle"),
+      aggregationWrap: document.getElementById("aggregationWrap"),
+      aggregation: document.getElementById("aggregation"),
+      sortOrderWrap: document.getElementById("sortOrderWrap"),
+      sortOrder: document.getElementById("sortOrder"),
+      topNWrap: document.getElementById("topNWrap"),
+      topN: document.getElementById("topN"),
+      binsWrap: document.getElementById("binsWrap"),
+      bins: document.getElementById("bins"),
+      renderChart: document.getElementById("renderChart"),
+      downloadChart: document.getElementById("downloadChart"),
+      exportDashboard: document.getElementById("exportDashboard"),
+      exportCsv: document.getElementById("exportCsv"),
+      exportXlsx: document.getElementById("exportXlsx"),
+      exportReport: document.getElementById("exportReport"),
+      singleViewButton: document.getElementById("singleViewButton"),
+      gridViewButton: document.getElementById("gridViewButton"),
+      backToGrid: document.getElementById("backToGrid"),
+      gridColumns: document.getElementById("gridColumns"),
+      chartTabs: document.getElementById("chartTabs"),
+      chartLibraryActions: document.getElementById("chartLibraryActions"),
+      chartNameInput: document.getElementById("chartNameInput"),
+      chartNoteInput: document.getElementById("chartNoteInput"),
+      saveChartName: document.getElementById("saveChartName"),
+      saveChartNote: document.getElementById("saveChartNote"),
+      duplicateChart: document.getElementById("duplicateChart"),
+      moveChartLeft: document.getElementById("moveChartLeft"),
+      moveChartRight: document.getElementById("moveChartRight"),
+      removeChart: document.getElementById("removeChart"),
+      chartFrame: document.getElementById("chartFrame"),
+      chartGrid: document.getElementById("chartGrid"),
+      chartEmpty: document.getElementById("chartEmpty"),
+      chartLibraryMeta: document.getElementById("chartLibraryMeta"),
+      chartBadge: document.getElementById("chartBadge"),
+      activeChartSummary: document.getElementById("activeChartSummary"),
+      chartMeaning: document.getElementById("chartMeaning"),
+      previewMeta: document.getElementById("previewMeta"),
+      previewHead: document.getElementById("previewHead"),
+      previewBody: document.getElementById("previewBody"),
+      status: document.getElementById("status")
+    };
+
+    function setStatus(message) {
+      ids.status.textContent = message;
+    }
+
+    function setRecommendation(message) {
+      ids.recommendationText.textContent = message;
+    }
+
+    function toChartId() {
+      return `chart_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function defaultChartOptions() {
+      return {
+        aggregation: "auto",
+        sort_order: "desc",
+        top_n: 12,
+        row_column: "",
+        bins: 20
+      };
+    }
+
+    function getSavedCharts() {
+      return state.charts || [];
+    }
+
+    function getActiveChart() {
+      return getSavedCharts().find((chart) => chart.id === state.activeChartId) || null;
+    }
+
+    function persistState() {
+      state.chartConfig = getActiveChart() || null;
+      state.activeChartId = state.activeChartId || null;
+      state.dashboardMode = state.dashboardMode || "single";
+      state.dashboardColumns = Number(state.dashboardColumns || 2);
+      window.dataTool.saveSession(state);
+    }
+
+    function normaliseLegacyCharts() {
+      const existingCharts = Array.isArray(session?.charts) ? session.charts : [];
+      const legacyChart = session?.chartConfig && (session.chartConfig.chart_data_url || session.chartConfig.chart_type)
+        ? [{
+            ...session.chartConfig,
+            id: session.chartConfig.id || session.chartConfig.chart_id || toChartId(),
+            label: session.chartConfig.title || session.chartConfig.chart_file || "Saved chart"
+          }]
+        : [];
+      state.charts = [...existingCharts, ...legacyChart].filter((chart, index, array) =>
+        chart?.chart_type && chart?.x_column && array.findIndex((candidate) => candidate.id === chart.id) === index
+      ).map((chart) => ({
+        ...chart,
+        note: chart.note || "",
+        chart_options: { ...defaultChartOptions(), ...(chart.chart_options || {}) }
+      }));
+      if (!state.activeChartId && state.charts.length) {
+        state.activeChartId = state.charts[state.charts.length - 1].id;
+      }
+    }
+
+    function renderChartMarkup(chart) {
+      if (!chart.chart_data_url) {
+        return '<div class="empty-copy">Restoring chart preview...</div>';
+      }
+      const chartFormat = chart.format || "png";
+      return chartFormat === "png"
+        ? `<img src="${chart.chart_data_url}" alt="${window.dataTool.escapeHtml(chart.label || chart.title || 'Rendered chart')}">`
+        : `<iframe src="${chart.chart_data_url}" title="${window.dataTool.escapeHtml(chart.label || chart.title || 'Rendered PDF chart')}"></iframe>`;
+    }
+
+    function updateViewModeButtons() {
+      ids.singleViewButton.classList.toggle("secondary", state.dashboardMode === "single");
+      ids.gridViewButton.classList.toggle("secondary", state.dashboardMode === "grid");
+      ids.singleViewButton.classList.toggle("ghost", state.dashboardMode !== "single");
+      ids.gridViewButton.classList.toggle("ghost", state.dashboardMode !== "grid");
+      ids.gridColumns.value = String(state.dashboardColumns || 2);
+      ids.gridColumns.disabled = state.dashboardMode !== "grid";
+      ids.backToGrid.style.display = state.dashboardMode === "single" && getSavedCharts().length > 1 ? "inline-flex" : "none";
+    }
+
+    function populateFormFromChart(chart) {
+      if (!chart) return;
+      ids.chartType.value = chart.chart_type || ids.chartType.value;
+      ids.chartFormat.value = chart.format || ids.chartFormat.value;
+      const chartOptions = { ...defaultChartOptions(), ...(chart.chart_options || {}) };
+      ids.aggregation.value = chartOptions.aggregation || "auto";
+      ids.sortOrder.value = chartOptions.sort_order || "desc";
+      ids.topN.value = chartOptions.top_n || 12;
+      ids.bins.value = chartOptions.bins || 20;
+      syncChartControls(true);
+      if (chart.x_column) ids.xColumn.value = chart.x_column;
+      ids.rowColumn.value = chartOptions.row_column || "";
+      ids.yColumn.value = chart.y_column || "";
+      ids.chartTitle.value = chart.title || chart.label || ids.chartTitle.value;
+      ids.chartNoteInput.value = chart.note || "";
+    }
+
+    function updateChartOptionVisibility() {
+      const chartType = ids.chartType.value;
+      const showRowColumn = chartType === "heatmap";
+      const showAggregation = ["bar", "pie", "line", "heatmap"].includes(chartType);
+      const showSorting = ["bar", "pie", "heatmap"].includes(chartType);
+      const showTopN = ["bar", "pie", "heatmap"].includes(chartType);
+      const showBins = chartType === "histogram";
+
+      ids.rowColumnWrap.style.display = showRowColumn ? "block" : "none";
+      ids.aggregationWrap.style.display = showAggregation ? "block" : "none";
+      ids.sortOrderWrap.style.display = showSorting ? "block" : "none";
+      ids.topNWrap.style.display = showTopN ? "block" : "none";
+      ids.binsWrap.style.display = showBins ? "block" : "none";
+      ids.yColumnLabel.textContent = chartType === "heatmap" ? "Value column" : "Y column";
+    }
+
+    function getColumnMeta(columnName) {
+      return state.schema?.[columnName] || {};
+    }
+
+    function describeColumn(columnName) {
+      if (!columnName) return "selected field";
+      const meta = getColumnMeta(columnName);
+      const roleLabels = {
+        time: "time field",
+        geography: "place or region field",
+        rate: "rate or percentage measure",
+        count: "count measure",
+        measure: "numeric measure",
+        category: "category field",
+        descriptor: "label field",
+        identifier: "identifier field",
+        constant: "constant field"
+      };
+      const roleText = roleLabels[meta.role] || (meta.type ? `${meta.type} field` : "field");
+      return `${columnName} (${roleText})`;
+    }
+
+    function buildChartExplanation(chart) {
+      if (!chart) {
+        return {
+          shows: "Pick or create a chart to see a plain-English explanation here.",
+          read: "The app will explain how to interpret the selected chart.",
+          notes: []
+        };
+      }
+
+      const xDescription = describeColumn(chart.x_column);
+      const yDescription = chart.y_column ? describeColumn(chart.y_column) : "";
+      const chartOptions = { ...defaultChartOptions(), ...(chart.chart_options || {}) };
+      const rowDescription = chartOptions.row_column ? describeColumn(chartOptions.row_column) : "";
+      const xMeta = getColumnMeta(chart.x_column);
+      const yMeta = getColumnMeta(chart.y_column);
+      const rowMeta = getColumnMeta(chartOptions.row_column);
+      const extraNotes = [];
+      const noteSet = new Set();
+
+      function addNote(note) {
+        if (!note || noteSet.has(note)) return;
+        noteSet.add(note);
+        extraNotes.push(note);
+      }
+
+      function addMissingNote(meta) {
+        const warning = (meta.warnings || []).find((item) => item.includes("High missing-value rate"));
+        if (warning) {
+          addNote(warning);
+        }
+      }
+
+      if (xMeta.warnings?.length) {
+        addMissingNote(xMeta);
+      }
+      if (yMeta.warnings?.length) {
+        addMissingNote(yMeta);
+      }
+
+      let shows = "";
+      let read = "";
+      switch (chart.chart_type) {
+        case "bar":
+          shows = chart.y_column
+            ? `This bar chart compares ${yDescription} across ${xDescription}. Each bar represents one group from ${chart.x_column}, and the bar height shows the plotted value for ${chart.y_column}.`
+            : `This bar chart compares categories in ${xDescription}. Each bar represents one group from ${chart.x_column}.`;
+          read = "Compare bar heights from left to right. Taller bars indicate larger values or larger group totals.";
+          if (xMeta.role === "geography") {
+            addNote("Because the X axis is a place or region field, this chart is useful for comparing locations side by side.");
+          }
+          if (yMeta.role === "rate") {
+            addNote("Because the measure is a rate or percentage, compare relative levels rather than trying to add the values together.");
+          } else if (yMeta.role === "count") {
+            addNote("Because the measure is a count, taller bars generally mean more cases, records, or total volume.");
+          }
+          break;
+        case "pie":
+          shows = chart.y_column
+            ? `This pie chart shows how ${yDescription} is split across ${xDescription}. Each slice is one ${chart.x_column} group, and the slice size shows that group's share of the total.`
+            : `This pie chart shows how the categories in ${xDescription} are divided into parts of a whole.`;
+          read = "Look at the relative slice sizes rather than exact angles. Larger slices contribute more to the overall total.";
+          if ((xMeta.warnings || []).some((item) => item.includes("Many unique labels"))) {
+            addNote("This field has many labels, so pie charts can become hard to read unless you keep only the top categories.");
+          }
+          if (yMeta.role === "rate") {
+            addNote("Pie charts work best when the values represent meaningful parts of one whole, so check that these percentages are comparable.");
+          } else if (yMeta.role === "count") {
+            addNote("Because the measure is a count, each slice shows that group's share of the total count.");
+          }
+          break;
+        case "histogram":
+          shows = `This histogram shows the distribution of ${xDescription}. The horizontal axis shows ranges of values, and the vertical axis shows how many rows fall into each range.`;
+          read = "Read it by looking for where the bars cluster, where the distribution thins out, and whether there is a long tail on either side.";
+          if (xMeta.role === "rate") {
+            addNote("Because this is a rate or percentage field, the chart helps you see whether most rows stay low, cluster in the middle, or spread toward high values.");
+          }
+          break;
+        case "box":
+          shows = `This box plot summarizes the spread of ${xDescription}. Use it to see the typical range, the middle values, and whether there are possible outliers.`;
+          read = "Focus on the middle box for the usual range, the center line for the median, and isolated points for possible outliers.";
+          if (xMeta.role === "rate") {
+            addNote("Because this is a rate or percentage field, the box plot is useful for spotting unusually high or low values.");
+          }
+          break;
+        case "line":
+          shows = chart.y_column
+            ? `This line chart shows how ${yDescription} changes across ${xDescription}. Read it from left to right to understand the trend over time or sequence.`
+            : `This line chart shows how the selected values move across ${xDescription}.`;
+          read = "Follow the line from left to right and watch for upward moves, downward moves, flat periods, and sudden jumps.";
+          if (xMeta.role === "time") {
+            addNote("The X axis is a time field, so this chart is mainly useful for spotting trends, rises, and drops over time.");
+          }
+          if (yMeta.role === "rate") {
+            addNote("Because the measure is a rate or percentage, focus on whether the line rises, falls, or stays stable over time.");
+          } else if (yMeta.role === "count") {
+            addNote("Because the measure is a count, higher points on the line mean more total volume at that point in time.");
+          }
+          break;
+        case "scatter":
+          shows = `This scatter plot shows the relationship between ${xDescription} and ${yDescription}. Each point represents one row from the prepared dataset.`;
+          read = "Look for whether the points rise together, fall apart, cluster into groups, or contain unusual outliers.";
+          if (xMeta.role === "rate" || yMeta.role === "rate") {
+            addNote("Use this scatter plot to see whether higher values in one measure tend to appear alongside higher or lower values in the other.");
+          }
+          break;
+        case "heatmap":
+          shows = `This heatmap compares ${rowDescription} against ${xDescription}${chart.y_column ? ` using ${yDescription} to color each cell` : " by counting how many rows fall into each combination"}.`;
+          read = "Read across rows and columns and compare color intensity. Darker cells indicate larger values or denser combinations.";
+          if (rowMeta.role === "geography" || xMeta.role === "geography") {
+            addNote("Heatmaps work well here because place-based comparisons can be scanned quickly across many rows and columns.");
+          }
+          if (yMeta.role === "rate") {
+            addNote("Because the cell values are rates or percentages, compare relative intensity rather than adding cells together.");
+          }
+          break;
+        default:
+          shows = `This chart uses ${xDescription}${chart.y_column ? ` and ${yDescription}` : ""} to visualize the prepared data.`;
+          read = "Use the axes and labels to understand which fields are being compared and how values change across the chart.";
+      }
+
+      return {
+        shows,
+        read,
+        notes: extraNotes.slice(0, 3)
+      };
+    }
+
+    function renderActiveChartSummary() {
+      const activeChart = getActiveChart();
+      if (!activeChart) {
+        ids.activeChartSummary.innerHTML = "";
+        ids.chartMeaning.innerHTML = `
+          <div class="meaning-panel">
+            <strong>What this chart shows</strong>
+            <p class="helper">Pick or create a chart to see a plain-English explanation here.</p>
+          </div>
+          <div class="meaning-panel">
+            <strong>How to read it</strong>
+            <p class="helper">The app will explain how to interpret the selected chart.</p>
+          </div>
+          <div class="meaning-panel">
+            <strong>Things to note</strong>
+            <p class="helper">Important cautions and interpretation notes will appear here when needed.</p>
+          </div>
+        `;
+        ids.previewMeta.textContent = "Showing the prepared preview that feeds the chart.";
+        return;
+      }
+
+      const chips = [
+        `Chart: ${activeChart.label || activeChart.title || "Saved chart"}`,
+        `Type: ${activeChart.chart_type || "unknown"}`,
+        `X: ${activeChart.x_column || "n/a"}`
+      ];
+      const chartOptions = { ...defaultChartOptions(), ...(activeChart.chart_options || {}) };
+      if (chartOptions.row_column) {
+        chips.push(`Row: ${chartOptions.row_column}`);
+      }
+      if (activeChart.y_column) {
+        chips.push(`Y: ${activeChart.y_column}`);
+      }
+      if (chartOptions.aggregation && chartOptions.aggregation !== "auto") {
+        chips.push(`Aggregation: ${chartOptions.aggregation}`);
+      }
+
+      ids.activeChartSummary.innerHTML = chips
+        .map((chip) => `<span class="chip">${window.dataTool.escapeHtml(chip)}</span>`)
+        .join("");
+
+      const explanation = buildChartExplanation(activeChart);
+      ids.chartMeaning.innerHTML = `
+        <div class="meaning-panel">
+          <strong>What this chart shows</strong>
+          <p class="helper">${window.dataTool.escapeHtml(explanation.shows)}</p>
+        </div>
+        <div class="meaning-panel">
+          <strong>How to read it</strong>
+          <p class="helper">${window.dataTool.escapeHtml(explanation.read)}</p>
+        </div>
+        <div class="meaning-panel">
+          <strong>Things to note</strong>
+          ${explanation.notes.length
+            ? `<ul class="meaning-notes">${explanation.notes.map((note) => `<li>${window.dataTool.escapeHtml(note)}</li>`).join("")}</ul>`
+            : `<p class="helper">No special cautions for this chart.</p>`}
+        </div>
+      `;
+      ids.previewMeta.textContent = `Showing the first ${state.preview?.length || 0} rows from the current processed dataset for the selected chart.`;
+    }
+
+    function setActiveChart(chartId, syncForm = true) {
+      state.activeChartId = chartId;
+      const activeChart = getActiveChart();
+      if (syncForm && activeChart) {
+        populateFormFromChart(activeChart);
+      }
+      renderSavedCharts();
+      renderActiveChartSummary();
+      persistState();
+      if (activeChart && !activeChart.chart_data_url) {
+        ensureChartRendered(activeChart)
+          .then(() => renderSavedCharts())
+          .catch((error) => setStatus(error.message));
+      }
+    }
+
+    function removeChart(chartId) {
+      state.charts = getSavedCharts().filter((chart) => chart.id !== chartId);
+      if (state.activeChartId === chartId) {
+        state.activeChartId = state.charts[0]?.id || null;
+      }
+      renderSavedCharts();
+      persistState();
+      setStatus(state.charts.length ? "Chart removed from this session." : "Chart removed. No saved charts left.");
+    }
+
+    function renameActiveChart() {
+      const activeChart = getActiveChart();
+      const nextName = ids.chartNameInput.value.trim();
+      if (!activeChart) {
+        setStatus("Choose a chart first.");
+        return;
+      }
+      if (!nextName) {
+        setStatus("Enter a chart name before saving.");
+        return;
+      }
+      activeChart.label = nextName;
+      activeChart.title = nextName;
+      renderSavedCharts();
+      persistState();
+      setStatus(`Renamed chart to ${nextName}.`);
+    }
+
+    function saveActiveChartNote() {
+      const activeChart = getActiveChart();
+      if (!activeChart) {
+        setStatus("Choose a chart first.");
+        return;
+      }
+      activeChart.note = ids.chartNoteInput.value.trim();
+      renderSavedCharts();
+      persistState();
+      setStatus(activeChart.note ? "Saved note for the active chart." : "Cleared the note for the active chart.");
+    }
+
+    function duplicateActiveChart() {
+      const activeChart = getActiveChart();
+      if (!activeChart) {
+        setStatus("Choose a chart first.");
+        return;
+      }
+      const duplicate = {
+        ...activeChart,
+        id: toChartId(),
+        label: `${activeChart.label || activeChart.title || "Saved chart"} copy`,
+        title: `${activeChart.label || activeChart.title || "Saved chart"} copy`
+      };
+      const activeIndex = getSavedCharts().findIndex((chart) => chart.id === activeChart.id);
+      const charts = [...getSavedCharts()];
+      charts.splice(activeIndex + 1, 0, duplicate);
+      state.charts = charts;
+      state.activeChartId = duplicate.id;
+      renderSavedCharts();
+      persistState();
+      setStatus("Duplicated the active chart.");
+    }
+
+    function moveActiveChart(direction) {
+      const activeChart = getActiveChart();
+      if (!activeChart) {
+        setStatus("Choose a chart first.");
+        return;
+      }
+      const charts = [...getSavedCharts()];
+      const currentIndex = charts.findIndex((chart) => chart.id === activeChart.id);
+      const targetIndex = currentIndex + direction;
+      if (targetIndex < 0 || targetIndex >= charts.length) {
+        setStatus(direction < 0 ? "This chart is already first." : "This chart is already last.");
+        return;
+      }
+      const [movedChart] = charts.splice(currentIndex, 1);
+      charts.splice(targetIndex, 0, movedChart);
+      state.charts = charts;
+      renderSavedCharts();
+      persistState();
+      setStatus(direction < 0 ? "Moved chart left." : "Moved chart right.");
+    }
+
+    function buildSuggestedTitle() {
+      if (!ids.chartType.value || !ids.xColumn.value) return "";
+      return `${ids.chartType.value.charAt(0).toUpperCase() + ids.chartType.value.slice(1)} of ${ids.xColumn.value}`;
+    }
+
+    function syncSuggestedTitle(force = false) {
+      const suggestedTitle = buildSuggestedTitle();
+      if (!suggestedTitle) return;
+      if (force || !ids.chartTitle.value || ids.chartTitle.value === state.lastSuggestedTitle) {
+        ids.chartTitle.value = suggestedTitle;
+      }
+      state.lastSuggestedTitle = suggestedTitle;
+    }
+
+    function syncChartControls(force = false) {
+      const compatibility = window.dataTool.getChartCompatibility(ids.chartType.value, state.schema || {});
+      const previousX = ids.xColumn.value;
+      const previousRow = ids.rowColumn.value;
+      const previousY = ids.yColumn.value;
+      window.dataTool.populateSelect(ids.xColumn, compatibility.xColumns, false);
+      window.dataTool.populateSelect(ids.rowColumn, compatibility.rowColumns || [], compatibility.rowOptional !== false);
+      window.dataTool.populateSelect(ids.yColumn, compatibility.yColumns, compatibility.yOptional);
+
+      if (!compatibility.xColumns.includes(previousX)) {
+        ids.xColumn.value = compatibility.xColumns[0] || "";
+      }
+
+      if ((compatibility.rowColumns || []).includes(previousRow)) {
+        ids.rowColumn.value = previousRow;
+      } else if (compatibility.rowOptional === false) {
+        ids.rowColumn.value = (compatibility.rowColumns || []).find((column) => column !== ids.xColumn.value) || "";
+      } else {
+        ids.rowColumn.value = "";
+      }
+
+      if (compatibility.yOptional) {
+        ids.yColumn.value = compatibility.yColumns.includes(previousY) ? previousY : "";
+      } else if (!compatibility.yColumns.includes(previousY) || previousY === ids.xColumn.value) {
+        ids.yColumn.value = compatibility.yColumns.find((column) => column !== ids.xColumn.value) || "";
+      }
+
+      updateChartOptionVisibility();
+      syncSuggestedTitle(force);
+      setRecommendation(compatibility.hint);
+    }
+
+    function applyRecommendation() {
+      const recommendation = window.dataTool.recommendChartConfig(state.schema || {});
+      ids.chartType.value = recommendation.chartType;
+      syncChartControls(true);
+      if (recommendation.xColumn && Array.from(ids.xColumn.options).some((option) => option.value === recommendation.xColumn)) {
+        ids.xColumn.value = recommendation.xColumn;
+      }
+      if (recommendation.yColumn !== undefined && Array.from(ids.yColumn.options).some((option) => option.value === recommendation.yColumn)) {
+        ids.yColumn.value = recommendation.yColumn;
+      }
+      syncSuggestedTitle(true);
+      setRecommendation(recommendation.message);
+    }
+
+    function renderSavedCharts() {
+      const charts = getSavedCharts();
+      const activeChart = getActiveChart();
+      ids.chartTabs.innerHTML = "";
+      ids.chartGrid.innerHTML = "";
+      ids.chartGrid.style.setProperty("--chart-columns", String(state.dashboardColumns || 2));
+
+      charts.forEach((chart, index) => {
+        const tab = document.createElement("div");
+        tab.className = `chart-tab${chart.id === state.activeChartId ? " active" : ""}`;
+        tab.innerHTML = `
+          <button type="button" class="chart-tab-main">${window.dataTool.escapeHtml(chart.label || chart.title || `Chart ${index + 1}`)}</button>
+          <button type="button" class="chart-tab-close" aria-label="Remove chart">&times;</button>
+        `;
+        tab.querySelector(".chart-tab-main").addEventListener("click", () => setActiveChart(chart.id));
+        tab.querySelector(".chart-tab-close").addEventListener("click", () => removeChart(chart.id));
+        ids.chartTabs.appendChild(tab);
+
+        const card = document.createElement("article");
+        card.className = `chart-card${chart.id === state.activeChartId ? " active" : ""}`;
+        card.innerHTML = `
+          <div class="chart-card-head">
+            <div>
+              <strong>${window.dataTool.escapeHtml(chart.label || chart.title || `Chart ${index + 1}`)}</strong>
+              <span>${window.dataTool.escapeHtml(chart.chart_type)}${chart.y_column ? ` | ${window.dataTool.escapeHtml(chart.x_column)} vs ${window.dataTool.escapeHtml(chart.y_column)}` : ` | ${window.dataTool.escapeHtml(chart.x_column)}`}</span>
+              ${chart.note ? `<p class="chart-card-note">${window.dataTool.escapeHtml(chart.note)}</p>` : ""}
+            </div>
+            <div class="mini-nav">
+              <button type="button" class="ghost chart-card-open">Focus</button>
+            </div>
+          </div>
+          <div class="chart-card-frame">${renderChartMarkup(chart)}</div>
+        `;
+        card.querySelector(".chart-card-open").addEventListener("click", () => {
+          state.dashboardMode = "single";
+          updateViewModeButtons();
+          setActiveChart(chart.id);
+        });
+        card.querySelector(".chart-card-frame").addEventListener("click", () => {
+          setActiveChart(chart.id);
+        });
+        ids.chartGrid.appendChild(card);
+      });
+
+      ids.chartLibraryMeta.textContent = charts.length
+        ? `${charts.length} chart${charts.length === 1 ? "" : "s"} saved in this session.`
+        : "";
+
+      ids.chartEmpty.style.display = charts.length ? "none" : "block";
+      ids.chartTabs.style.display = charts.length ? "flex" : "none";
+      ids.chartLibraryActions.style.display = charts.length ? "grid" : "none";
+      ids.chartFrame.style.display = charts.length && state.dashboardMode === "single" ? "grid" : "none";
+      ids.chartGrid.style.display = charts.length && state.dashboardMode === "grid" ? "grid" : "none";
+
+      if (activeChart && state.dashboardMode === "single") {
+        ids.chartFrame.innerHTML = renderChartMarkup(activeChart);
+        ids.chartBadge.textContent = activeChart.chart_file || activeChart.label || "Chart ready";
+      } else if (charts.length && state.dashboardMode === "grid") {
+        ids.chartBadge.textContent = `${charts.length} charts`;
+      } else if (!activeChart) {
+        ids.chartFrame.innerHTML = '<p class="empty-copy">Choose a chart and render it here.</p>';
+        ids.chartBadge.textContent = "No chart yet";
+      }
+
+      ids.chartNameInput.value = activeChart?.label || activeChart?.title || "";
+      ids.chartNoteInput.value = activeChart?.note || "";
+      ids.chartNameInput.disabled = !activeChart;
+      ids.chartNoteInput.disabled = !activeChart;
+      ids.saveChartName.disabled = !activeChart;
+      ids.saveChartNote.disabled = !activeChart;
+      ids.duplicateChart.disabled = !activeChart;
+      ids.moveChartLeft.disabled = !activeChart || getSavedCharts().findIndex((chart) => chart.id === activeChart.id) <= 0;
+      ids.moveChartRight.disabled = !activeChart || getSavedCharts().findIndex((chart) => chart.id === activeChart.id) === getSavedCharts().length - 1;
+      ids.removeChart.disabled = !activeChart;
+      ids.exportDashboard.disabled = !charts.length;
+
+      updateViewModeButtons();
+      renderActiveChartSummary();
+    }
+
+    function renderPage() {
+      ids.datasetName.textContent = state.filename || "Dataset";
+      ids.datasetMeta.textContent = `${window.dataTool.formatNumber(state.shape?.rows || 0, 0)} rows and ${window.dataTool.formatNumber(state.shape?.columns || 0, 0)} columns in the prepared dataset.`;
+      window.dataTool.renderPreview(ids.previewHead, ids.previewBody, ids.previewMeta, state.preview || []);
+      applyRecommendation();
+      if (getActiveChart()) {
+        populateFormFromChart(getActiveChart());
+      }
+      renderSavedCharts();
+      hydrateSavedCharts();
+    }
+
+    function buildChartRequestPayload() {
+      const chartOptions = {
+        aggregation: ids.aggregation.value,
+        sort_order: ids.sortOrder.value,
+        top_n: Number(ids.topN.value || 12),
+        row_column: ids.rowColumn.value || null,
+        bins: Number(ids.bins.value || 20)
+      };
+      return {
+        dataset_id: state.datasetId,
+        dataset_state: state.datasetState,
+        config: state.transformConfig || {},
+        chart_type: ids.chartType.value,
+        x_column: ids.xColumn.value,
+        y_column: ids.yColumn.value || null,
+        title: ids.chartTitle.value || null,
+        format: ids.chartFormat.value,
+        note: ids.chartNoteInput.value.trim() || "",
+        chart_options: chartOptions
+      };
+    }
+
+    function createSavedChart(payload, requestPayload) {
+      const label = requestPayload.title || `${requestPayload.chart_type} | ${requestPayload.x_column}${requestPayload.y_column ? ` vs ${requestPayload.y_column}` : ""}`;
+      return {
+        ...payload,
+        ...requestPayload,
+        id: toChartId(),
+        label,
+        note: requestPayload.note || "",
+        chart_options: { ...defaultChartOptions(), ...(requestPayload.chart_options || {}) }
+      };
+    }
+
+    function buildStoredChartPayload(chart) {
+      return {
+        dataset_id: state.datasetId,
+        dataset_state: state.datasetState || null,
+        config: state.transformConfig || {},
+        chart_type: chart.chart_type,
+        x_column: chart.x_column,
+        y_column: chart.y_column || null,
+        title: chart.title || chart.label || null,
+        format: chart.format || "png",
+        note: chart.note || "",
+        chart_options: { ...defaultChartOptions(), ...(chart.chart_options || {}) }
+      };
+    }
+
+    async function ensureChartRendered(chart) {
+      if (!chart || chart.chart_data_url) {
+        return chart;
+      }
+      const payload = await window.dataTool.fetchJson("/api/visualize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildStoredChartPayload(chart))
+      });
+      chart.chart_data_url = payload.chart_data_url;
+      chart.chart_file = payload.chart_file || chart.chart_file;
+      chart.mime_type = payload.mime_type || chart.mime_type;
+      return chart;
+    }
+
+    async function hydrateSavedCharts() {
+      if (!state || state.hydratingCharts) {
+        return;
+      }
+      const missingCharts = getSavedCharts().filter((chart) => !chart.chart_data_url);
+      if (!missingCharts.length) {
+        return;
+      }
+      state.hydratingCharts = true;
+      setStatus("Restoring saved chart previews...");
+      try {
+        for (const chart of missingCharts) {
+          await ensureChartRendered(chart);
+        }
+        renderSavedCharts();
+        setStatus("Saved chart previews restored.");
+      } catch (error) {
+        setStatus(error.message);
+      } finally {
+        state.hydratingCharts = false;
+      }
+    }
+
+    async function renderChart() {
+      try {
+        setStatus("Rendering chart...");
+        const requestPayload = buildChartRequestPayload();
+        const payload = await window.dataTool.fetchJson("/api/visualize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestPayload)
+        });
+        const savedChart = createSavedChart(payload, requestPayload);
+        state.charts = [...getSavedCharts(), savedChart];
+        state.activeChartId = savedChart.id;
+        state.dashboardMode = state.dashboardMode || "single";
+        renderSavedCharts();
+        persistState();
+        setStatus(`Chart created as ${payload.chart_file} and added to this session.`);
+      } catch (error) {
+        setStatus(error.message);
+      }
+    }
+
+    async function downloadChart() {
+      const activeChart = getActiveChart();
+      if (!activeChart) {
+        setStatus("Create a chart first.");
+        return;
+      }
+      try {
+        const filename = await window.dataTool.downloadBinary(
+          "/api/export/chart",
+          {
+            dataset_id: state.datasetId,
+            dataset_state: state.datasetState,
+            config: state.transformConfig || {},
+            chart_type: activeChart.chart_type,
+            x_column: activeChart.x_column,
+            y_column: activeChart.y_column || null,
+            title: activeChart.title || null,
+            format: activeChart.format || "png",
+            chart_options: activeChart.chart_options || defaultChartOptions()
+          },
+          activeChart.chart_file || `chart.${activeChart.format || ids.chartFormat.value}`
+        );
+        setStatus(`${filename} downloaded.`);
+      } catch (error) {
+        setStatus(error.message);
+      }
+    }
+
+    async function downloadExport(endpoint, format) {
+      try {
+        const filename = await window.dataTool.downloadBinary(
+          endpoint,
+          { dataset_id: state.datasetId, dataset_state: state.datasetState, config: state.transformConfig || {}, format, charts: getSavedCharts() },
+          `export.${format}`
+        );
+        setStatus(`${filename} downloaded.`);
+      } catch (error) {
+        setStatus(error.message);
+      }
+    }
+
+    async function downloadDashboard() {
+      try {
+        const charts = getSavedCharts();
+        if (!charts.length) {
+          setStatus("Save at least one chart before exporting a dashboard.");
+          return;
+        }
+        const filename = await window.dataTool.downloadBinary(
+          "/api/export/dashboard",
+          { dataset_id: state.datasetId, dataset_state: state.datasetState, config: state.transformConfig || {}, charts },
+          "dashboard.pdf"
+        );
+        setStatus(`${filename} downloaded.`);
+      } catch (error) {
+        setStatus(error.message);
+      }
+    }
+
+    ids.chartType.addEventListener("change", () => syncChartControls());
+    ids.xColumn.addEventListener("change", () => syncSuggestedTitle());
+    ids.renderChart.addEventListener("click", renderChart);
+    ids.downloadChart.addEventListener("click", downloadChart);
+    ids.exportDashboard.addEventListener("click", downloadDashboard);
+    ids.singleViewButton.addEventListener("click", () => {
+      state.dashboardMode = "single";
+      renderSavedCharts();
+      persistState();
+    });
+    ids.gridViewButton.addEventListener("click", () => {
+      state.dashboardMode = "grid";
+      renderSavedCharts();
+      persistState();
+    });
+    ids.backToGrid.addEventListener("click", () => {
+      state.dashboardMode = "grid";
+      renderSavedCharts();
+      persistState();
+      setStatus("Showing all saved charts.");
+    });
+    ids.gridColumns.addEventListener("change", () => {
+      state.dashboardColumns = Number(ids.gridColumns.value || 2);
+      renderSavedCharts();
+      persistState();
+    });
+    ids.saveChartName.addEventListener("click", renameActiveChart);
+    ids.saveChartNote.addEventListener("click", saveActiveChartNote);
+    ids.chartNameInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        renameActiveChart();
+      }
+    });
+    ids.chartNoteInput.addEventListener("blur", () => {
+      if (getActiveChart()) {
+        saveActiveChartNote();
+      }
+    });
+    ids.duplicateChart.addEventListener("click", duplicateActiveChart);
+    ids.moveChartLeft.addEventListener("click", () => moveActiveChart(-1));
+    ids.moveChartRight.addEventListener("click", () => moveActiveChart(1));
+    ids.removeChart.addEventListener("click", () => {
+      const activeChart = getActiveChart();
+      if (activeChart) {
+        removeChart(activeChart.id);
+      }
+    });
+    ids.exportCsv.addEventListener("click", () => downloadExport("/api/export/dataset", "csv"));
+    ids.exportXlsx.addEventListener("click", () => downloadExport("/api/export/dataset", "xlsx"));
+    ids.exportReport.addEventListener("click", () => downloadExport("/api/export/report", "txt"));
+
+    if (state) {
+      normaliseLegacyCharts();
+      renderPage();
+      setStatus("Prepared dataset loaded. Choose a chart and render it.");
+    }
+  </script>
+</body>
+</html>
