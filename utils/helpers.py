@@ -50,7 +50,7 @@ def chart_options_for_type(column_type: str) -> list[str]:
     mapping = {
         "numeric": ["histogram", "box", "scatter"],
         "categorical": ["bar", "pie"],
-        "datetime": ["line"],
+        "datetime": ["line", "area"],
         "text": ["bar", "pie"],
     }
     return mapping.get(column_type, [])

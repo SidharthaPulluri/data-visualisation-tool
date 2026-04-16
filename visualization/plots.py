@@ -47,6 +47,14 @@ def _safe_int(value: Any, default: int) -> int:
         return default
 
 
+def _safe_nonnegative_int(value: Any, default: int) -> int:
+    try:
+        parsed = int(value)
+        return parsed if parsed >= 0 else default
+    except (TypeError, ValueError):
+        return default
+
+
 def _normalise_chart_options(chart_options: dict[str, Any] | None) -> dict[str, Any]:
     options = chart_options or {}
     aggregation = str(options.get("aggregation", "auto")).lower()
@@ -63,7 +71,42 @@ def _normalise_chart_options(chart_options: dict[str, Any] | None) -> dict[str, 
         "top_n": _safe_int(options.get("top_n"), 12),
         "row_column": options.get("row_column") or None,
         "bins": _safe_int(options.get("bins"), 20),
+        "palette": str(options.get("palette", "blue")).lower(),
+        "label_rotation": options.get("label_rotation", "auto"),
+        "decimal_places": min(_safe_nonnegative_int(options.get("decimal_places"), 2), 4),
+        "show_value_labels": bool(options.get("show_value_labels", False)),
     }
+
+
+def _palette_colors(name: str) -> tuple[str, str]:
+    palettes = {
+        "blue": ("#2f67ff", "#9db8ff"),
+        "green": ("#1f8f5f", "#97d6b8"),
+        "coral": ("#dc6a4d", "#f0b5a5"),
+        "slate": ("#42526e", "#a8b3c5"),
+    }
+    return palettes.get(name, palettes["blue"])
+
+
+def _resolve_rotation(value: Any, default: int) -> int:
+    if value == "auto":
+        return default
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _add_value_labels(axis: plt.Axes, decimals: int = 2, horizontal: bool = False) -> None:
+    for patch in axis.patches:
+        if horizontal:
+            width = patch.get_width()
+            y = patch.get_y() + patch.get_height() / 2
+            axis.text(width, y, f" {width:.{decimals}f}".rstrip("0").rstrip("."), va="center", ha="left", fontsize=8.5, color="#42526e")
+        else:
+            height = patch.get_height()
+            x = patch.get_x() + patch.get_width() / 2
+            axis.text(x, height, f"{height:.{decimals}f}".rstrip("0").rstrip("."), va="bottom", ha="center", fontsize=8.5, color="#42526e")
 
 
 def _aggregation_function(name: str) -> str:
@@ -286,6 +329,212 @@ def _prepare_heatmap_table(
     return pivot
 
 
+def _to_serialisable_scalar(value: Any) -> Any:
+    if isinstance(value, pd.Timestamp):
+        return value.isoformat()
+    if pd.isna(value):
+        return None
+    if hasattr(value, "item"):
+        try:
+            return value.item()
+        except Exception:
+            return str(value)
+    return value
+
+
+def _format_value_label(value: Any, decimals: int = 2) -> str:
+    if value is None:
+        return "n/a"
+    if isinstance(value, pd.Timestamp):
+        return value.strftime("%Y-%m-%d")
+    if isinstance(value, float):
+        if value.is_integer():
+            return str(int(value))
+        return f"{value:.{decimals}f}".rstrip("0").rstrip(".")
+    return str(value)
+
+
+def describe_chart_data(
+    df: pd.DataFrame,
+    schema: dict[str, dict[str, str]],
+    chart_type: str,
+    x_column: str,
+    y_column: str | None,
+    chart_options: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    options = _normalise_chart_options(chart_options)
+    row_column = options["row_column"]
+    _validate_chart(schema, chart_type, x_column, y_column, row_column=row_column)
+
+    if chart_type == "bar":
+        if y_column and y_column in df.columns and schema[x_column]["type"] in {"categorical", "text", "datetime"}:
+            grouped = _series_from_grouped_data(df, schema, x_column, y_column, "bar", options)
+            grouped = _sort_and_trim_series(grouped, options["sort_order"], options["top_n"])
+            return {
+                "mode": "category",
+                "summary": f"Click a category to filter the preview table to rows that contributed to this bar chart.",
+                "items": [
+                    {
+                        "id": f"bar-{index}",
+                        "label": f"{x_column}: {_format_value_label(category)}",
+                        "value_text": f"{y_column or 'Value'}: {_format_value_label(value, 4)}",
+                        "filter_label": f"{x_column} = {_format_value_label(category)}",
+                        "conditions": [
+                            {
+                                "type": "equals",
+                                "column": x_column,
+                                "value": _to_serialisable_scalar(category),
+                            }
+                        ],
+                    }
+                    for index, (category, value) in enumerate(grouped.items())
+                ],
+            }
+        if not y_column:
+            counts = _series_from_grouped_data(df, schema, x_column, None, "bar", options)
+            counts = _sort_and_trim_series(counts, options["sort_order"], options["top_n"])
+            return {
+                "mode": "category",
+                "summary": f"Click a category to filter the preview table to matching rows from this count view.",
+                "items": [
+                    {
+                        "id": f"bar-{index}",
+                        "label": f"{x_column}: {_format_value_label(category)}",
+                        "value_text": f"Count: {_format_value_label(value, 0)}",
+                        "filter_label": f"{x_column} = {_format_value_label(category)}",
+                        "conditions": [
+                            {
+                                "type": "equals",
+                                "column": x_column,
+                                "value": _to_serialisable_scalar(category),
+                            }
+                        ],
+                    }
+                    for index, (category, value) in enumerate(counts.items())
+                ],
+            }
+        return {
+            "mode": "unsupported",
+            "summary": "This bar chart uses raw numeric positions, so there is no clean category filter to apply back to the table.",
+            "items": [],
+        }
+
+    if chart_type == "pie":
+        series = _prepare_pie_series(df, schema, x_column, y_column, options)
+        items = []
+        for index, (category, value) in enumerate(series.items()):
+            is_other = str(category) == "Other"
+            items.append(
+                {
+                    "id": f"pie-{index}",
+                    "label": f"{x_column}: {_format_value_label(category)}",
+                    "value_text": f"{y_column or 'Value'}: {_format_value_label(value, 4)}",
+                    "filter_label": f"{x_column} = {_format_value_label(category)}",
+                    "conditions": [] if is_other else [{
+                        "type": "equals",
+                        "column": x_column,
+                        "value": _to_serialisable_scalar(category),
+                    }],
+                    "disabled": is_other,
+                }
+            )
+        return {
+            "mode": "category",
+            "summary": "Click a slice label to filter the preview table to that category. 'Other' stays informational because it combines multiple categories.",
+            "items": items,
+        }
+
+    if chart_type in {"line", "area"}:
+        ordered = _prepare_line_frame(df, schema, x_column, y_column, options)
+        return {
+            "mode": "time",
+            "summary": f"Click a point label to filter the preview table to rows from that {x_column} value.",
+            "items": [
+                {
+                    "id": f"line-{index}",
+                    "label": f"{x_column}: {_format_value_label(row[x_column])}",
+                    "value_text": f"{y_column}: {_format_value_label(row[y_column], 4)}",
+                    "filter_label": f"{x_column} = {_format_value_label(row[x_column])}",
+                    "conditions": [
+                        {
+                            "type": "equals",
+                            "column": x_column,
+                            "value": _to_serialisable_scalar(row[x_column]),
+                        }
+                    ],
+                }
+                for index, row in ordered.iterrows()
+            ],
+        }
+
+    if chart_type == "heatmap":
+        heatmap_table = _prepare_heatmap_table(df, schema, x_column, row_column, y_column, options)
+        items: list[dict[str, Any]] = []
+        for row_label, row_values in heatmap_table.iterrows():
+            for column_label, value in row_values.items():
+                if pd.isna(value) or float(value) == 0:
+                    continue
+                items.append(
+                    {
+                        "id": f"heatmap-{len(items)}",
+                        "label": f"{_format_value_label(row_label)} x {_format_value_label(column_label)}",
+                        "value_text": f"{y_column or 'Count'}: {_format_value_label(value, 4)}",
+                        "filter_label": f"{row_column} = {_format_value_label(row_label)} and {x_column} = {_format_value_label(column_label)}",
+                        "conditions": [
+                            {"type": "equals", "column": row_column, "value": _to_serialisable_scalar(row_label)},
+                            {"type": "equals", "column": x_column, "value": _to_serialisable_scalar(column_label)},
+                        ],
+                    }
+                )
+        return {
+            "mode": "heatmap",
+            "summary": "Click a heatmap cell label to filter the preview table to that row and column combination.",
+            "items": items[:48],
+        }
+
+    if chart_type == "histogram":
+        numeric = pd.to_numeric(df[x_column], errors="coerce").dropna()
+        if numeric.empty:
+            return {
+                "mode": "unsupported",
+                "summary": "This histogram has no numeric values available for preview filtering.",
+                "items": [],
+            }
+        binned = pd.cut(numeric, bins=options["bins"], include_lowest=True, duplicates="drop")
+        counts = binned.value_counts(sort=False)
+        items = []
+        non_empty_intervals = [(interval, count) for interval, count in counts.items() if int(count) > 0]
+        for index, (interval, count) in enumerate(non_empty_intervals):
+            items.append(
+                {
+                    "id": f"hist-{index}",
+                    "label": f"{x_column}: {_format_value_label(interval.left)} to {_format_value_label(interval.right)}",
+                    "value_text": f"Rows: {_format_value_label(count, 0)}",
+                    "filter_label": f"{x_column} from {_format_value_label(interval.left)} to {_format_value_label(interval.right)}",
+                    "conditions": [
+                        {
+                            "type": "range",
+                            "column": x_column,
+                            "min": _to_serialisable_scalar(interval.left),
+                            "max": _to_serialisable_scalar(interval.right),
+                            "include_max": index == len(non_empty_intervals) - 1,
+                        }
+                    ],
+                }
+            )
+        return {
+            "mode": "range",
+            "summary": "Click a histogram range to filter the preview table to rows whose values fall inside that bin.",
+            "items": items,
+        }
+
+    return {
+        "mode": "unsupported",
+        "summary": f"{chart_type.title()} charts do not have row-level cross-filtering yet.",
+        "items": [],
+    }
+
+
 def _validate_chart(
     schema: dict[str, dict[str, str]],
     chart_type: str,
@@ -312,6 +561,7 @@ def _validate_chart(
         "histogram": x_type == "numeric",
         "box": x_type == "numeric",
         "line": (x_type == "datetime" or x_role == "time") and y_type == "numeric",
+        "area": (x_type == "datetime" or x_role == "time") and y_type == "numeric",
         "scatter": x_type == "numeric" and y_type == "numeric",
         "heatmap": row_column is not None
         and (row_type in {"categorical", "text", "datetime"} or row_role == "time")
@@ -335,6 +585,7 @@ def create_chart(
     options = _normalise_chart_options(chart_options)
     row_column = options["row_column"]
     _validate_chart(schema, chart_type, x_column, y_column, row_column=row_column)
+    primary_color, secondary_color = _palette_colors(options["palette"])
 
     figure, axis = plt.subplots(figsize=(10, 6))
 
@@ -347,14 +598,20 @@ def create_chart(
             _set_categorical_figure_size(figure, labels, horizontal=use_horizontal)
             formatted_labels = [_wrap_label(label) for label in labels]
             if use_horizontal:
-                sns.barplot(x=grouped.values, y=formatted_labels, ax=axis, orient="h")
+                sns.barplot(x=grouped.values, y=formatted_labels, ax=axis, orient="h", color=primary_color)
                 axis.set_xlabel(y_column if y_column else "count")
                 axis.set_ylabel(x_column)
+                if options["show_value_labels"]:
+                    _add_value_labels(axis, options["decimal_places"], horizontal=True)
             else:
-                sns.barplot(x=formatted_labels, y=grouped.values, ax=axis)
+                sns.barplot(x=formatted_labels, y=grouped.values, ax=axis, color=primary_color)
                 axis.set_ylabel(y_column if y_column else "count")
+                if options["show_value_labels"]:
+                    _add_value_labels(axis, options["decimal_places"])
         elif y_column and y_column in df.columns:
-            sns.barplot(data=df, x=x_column, y=y_column, ax=axis, errorbar=None)
+            sns.barplot(data=df, x=x_column, y=y_column, ax=axis, errorbar=None, color=primary_color)
+            if options["show_value_labels"]:
+                _add_value_labels(axis, options["decimal_places"])
         else:
             counts = _series_from_grouped_data(df, schema, x_column, None, "bar", options)
             counts = _sort_and_trim_series(counts, options["sort_order"], options["top_n"])
@@ -363,36 +620,69 @@ def create_chart(
             _set_categorical_figure_size(figure, labels, horizontal=use_horizontal)
             formatted_labels = [_wrap_label(label) for label in labels]
             if use_horizontal:
-                sns.barplot(x=counts.values, y=formatted_labels, ax=axis, orient="h")
+                sns.barplot(x=counts.values, y=formatted_labels, ax=axis, orient="h", color=primary_color)
                 axis.set_xlabel("count")
                 axis.set_ylabel(x_column)
+                if options["show_value_labels"]:
+                    _add_value_labels(axis, 0, horizontal=True)
             else:
-                sns.barplot(x=formatted_labels, y=counts.values, ax=axis)
+                sns.barplot(x=formatted_labels, y=counts.values, ax=axis, color=primary_color)
                 axis.set_ylabel("count")
+                if options["show_value_labels"]:
+                    _add_value_labels(axis, 0)
     elif chart_type == "pie":
         figure.set_size_inches(9, 9)
         series = _prepare_pie_series(df, schema, x_column, y_column, options)
+        pie_colors = sns.color_palette("blend:" + secondary_color + "," + primary_color, n_colors=max(len(series), 2))
         axis.pie(
             series.values,
             labels=[_wrap_label(label) for label in series.index],
             autopct="%1.1f%%",
             startangle=90,
+            colors=pie_colors,
         )
         axis.axis("equal")
     elif chart_type == "histogram":
-        sns.histplot(data=df, x=x_column, kde=False, bins=options["bins"], ax=axis)
+        sns.histplot(data=df, x=x_column, kde=False, bins=options["bins"], ax=axis, color=primary_color)
     elif chart_type == "box":
-        sns.boxplot(data=df, y=x_column, ax=axis)
+        sns.boxplot(data=df, y=x_column, ax=axis, color=secondary_color)
         axis.set_xlabel("")
     elif chart_type == "line":
         ordered = _prepare_line_frame(df, schema, x_column, y_column, options)
-        sns.lineplot(data=ordered, x=x_column, y=y_column, ax=axis, marker="o")
+        sns.lineplot(data=ordered, x=x_column, y=y_column, ax=axis, marker="o", color=primary_color)
+        if options["show_value_labels"]:
+            for _, row in ordered.iterrows():
+                axis.text(row[x_column], row[y_column], f"{row[y_column]:.{options['decimal_places']}f}".rstrip("0").rstrip("."), fontsize=8.5, color="#42526e", ha="center", va="bottom")
+    elif chart_type == "area":
+        ordered = _prepare_line_frame(df, schema, x_column, y_column, options)
+        x_values = ordered[x_column]
+        y_values = ordered[y_column]
+        axis.plot(x_values, y_values, color=primary_color, linewidth=2.2)
+        axis.fill_between(x_values, y_values, color=secondary_color, alpha=0.6)
+        axis.set_ylabel(y_column)
+        if options["show_value_labels"]:
+            for _, row in ordered.iterrows():
+                axis.text(row[x_column], row[y_column], f"{row[y_column]:.{options['decimal_places']}f}".rstrip("0").rstrip("."), fontsize=8.5, color="#42526e", ha="center", va="bottom")
     elif chart_type == "scatter":
-        sns.scatterplot(data=df, x=x_column, y=y_column, ax=axis)
+        sns.scatterplot(data=df, x=x_column, y=y_column, ax=axis, color=primary_color)
     elif chart_type == "heatmap":
         heatmap_table = _prepare_heatmap_table(df, schema, x_column, row_column, y_column, options)
         figure.set_size_inches(min(max(8.5, 4.8 + len(heatmap_table.columns) * 0.6), 18.0), min(max(5.6, 3.2 + len(heatmap_table.index) * 0.38), 15.0))
-        sns.heatmap(heatmap_table, cmap="Blues", linewidths=0.4, linecolor="white", ax=axis)
+        cmap_map = {
+            "blue": "Blues",
+            "green": "Greens",
+            "coral": "OrRd",
+            "slate": "Purples",
+        }
+        sns.heatmap(
+            heatmap_table,
+            cmap=cmap_map.get(options["palette"], "Blues"),
+            linewidths=0.4,
+            linecolor="white",
+            ax=axis,
+            annot=options["show_value_labels"],
+            fmt=f".{options['decimal_places']}f",
+        )
         axis.set_xlabel(x_column)
         axis.set_ylabel(row_column)
     else:
@@ -400,9 +690,11 @@ def create_chart(
 
     axis.set_title(title or f"{chart_type.title()} chart")
     if chart_type == "bar" and axis.get_xlabel() != "count" and axis.get_ylabel() != x_column:
-        axis.tick_params(axis="x", rotation=25)
-    elif chart_type in {"line", "scatter", "heatmap"}:
-        axis.tick_params(axis="x", rotation=20)
+        axis.tick_params(axis="x", rotation=_resolve_rotation(options["label_rotation"], 25))
+    elif chart_type in {"line", "area", "scatter", "heatmap"}:
+        axis.tick_params(axis="x", rotation=_resolve_rotation(options["label_rotation"], 20))
+    elif chart_type == "histogram":
+        axis.tick_params(axis="x", rotation=_resolve_rotation(options["label_rotation"], 0))
 
     figure.tight_layout()
     buffer = BytesIO()

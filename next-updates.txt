@@ -1,0 +1,144 @@
+Next Updates Backlog
+Project: Data Visualisation Tool
+
+Scoring guide:
+- 10/10 = highest value and strongest next move
+- Scores combine user value, product impact, and implementation leverage
+
+1. Edit existing chart instead of recreating it
+Score: 10/10
+Why:
+- Makes the chart workflow much smoother
+- Reduces duplicate charts and cleanup work
+- Feels like a real analysis tool instead of a trial-and-error generator
+
+2. Better dashboard PDF export with multiple charts per page
+Score: 9.5/10
+Why:
+- Big presentation value
+- Makes the dashboard export actually useful for sharing
+- Strong upgrade on top of the multi-chart work already done
+
+3. Cross-filtering from charts to table
+Score: 9/10
+Why:
+- Makes the app feel interactive and powerful
+- Helps users connect visuals back to actual rows
+- Very strong BI-style feature without using AI
+
+4. Transformation history with undo
+Score: 9/10
+Why:
+- Makes experimentation safer for novice users
+- Reduces fear of breaking the working view
+- Strong usability win for the preparation flow
+
+5. Saved workspaces / reopen sessions
+Score: 8.5/10
+Why:
+- Lets users continue work later
+- Makes the tool more practical for real use
+- Useful once the dashboard/chart system grows
+
+6. Better chart editing controls
+Score: 8.5/10
+Why:
+- Helps users refine visuals quickly
+- Natural extension of editable saved charts
+- Makes chart setup feel less rigid
+
+7. More chart types
+Score: 8/10
+Examples:
+- stacked bar
+- grouped bar
+- area chart
+- correlation heatmap
+- violin plot
+Why:
+- Expands analytical range
+- Good value after core workflow feels stable
+
+8. Data quality center
+Score: 8/10
+Why:
+- Makes preparation more transparent
+- Helps novice users trust the tool
+- Good fit for the deterministic rule-based concept
+
+9. Preview table upgrades
+Score: 7.5/10
+Examples:
+- sorting
+- searching
+- column pinning
+- quick column summaries
+Why:
+- Makes the data itself easier to inspect
+- Useful, but slightly lower priority than chart workflow improvements
+
+10. Guided rule-based recommendations and warnings
+Score: 7.5/10
+Examples:
+- too many categories for pie
+- better as line than scatter
+- try top 10 only
+Why:
+- Strong UX improvement
+- Helpful for beginners
+- We already started this, so it can keep improving over time
+
+11. Per-chart legends, labels, and formatting controls
+Score: 7/10
+Examples:
+- label rotation
+- value labels
+- decimal precision
+- color palette choice
+Why:
+- Improves chart polish
+- Less important than workflow and persistence improvements
+
+12. Better dashboard layouts
+Score: 7/10
+Examples:
+- 2x2 preset
+- 3-up
+- drag-and-drop placement
+Why:
+- Useful once users create many charts
+- Strong design/interaction improvement
+
+13. Share-ready reports with chart notes and summaries
+Score: 7/10
+Why:
+- Good professional value
+- Useful after export flow becomes richer
+
+14. Performance improvements for larger datasets
+Score: 6.5/10
+Examples:
+- cached transformed views
+- faster preview sampling
+- lighter front-end state
+Why:
+- Important as usage grows
+- Should be tackled after the main workflow features are solid
+
+15. Accessibility and responsive polish
+Score: 6.5/10
+Why:
+- Important product quality work
+- Ongoing improvement area rather than one isolated feature
+
+Recommended order for tomorrow:
+1. Edit existing chart instead of recreating it
+2. Better dashboard PDF export with multiple charts per page
+3. Cross-filtering from charts to table
+4. Transformation history with undo
+
+Suggested first build batch:
+- editable saved chart
+- replace chart instead of duplicate
+- cleaner dashboard PDF
+

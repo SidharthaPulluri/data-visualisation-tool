@@ -9,26 +9,33 @@ from werkzeug.datastructures import FileStorage
 
 from utils.helpers import normalize_headers
 
-SUPPORTED_EXTENSIONS = {".csv", ".xlsx", ".json"}
+SUPPORTED_EXTENSIONS = {".csv", ".tsv", ".xlsx", ".xls", ".json"}
 
 
-def _read_csv(file: FileStorage) -> pd.DataFrame:
+def _read_delimited(file: FileStorage, separator: str = ",") -> pd.DataFrame:
     file.stream.seek(0)
     raw_bytes = file.read()
     file.stream.seek(0)
 
     for encoding in ("utf-8", "utf-8-sig", "latin1"):
         try:
-            return pd.read_csv(BytesIO(raw_bytes), encoding=encoding)
+            return pd.read_csv(BytesIO(raw_bytes), encoding=encoding, sep=separator)
         except UnicodeDecodeError:
             continue
 
-    return pd.read_csv(BytesIO(raw_bytes))
+    return pd.read_csv(BytesIO(raw_bytes), sep=separator)
 
 
-def _read_excel(file: FileStorage) -> pd.DataFrame:
+def _read_excel(file: FileStorage, extension: str) -> pd.DataFrame:
     file.stream.seek(0)
-    return pd.read_excel(file.stream)
+    try:
+        if extension == ".xls":
+            return pd.read_excel(file.stream, engine="xlrd")
+        return pd.read_excel(file.stream)
+    except ImportError as error:
+        if extension == ".xls":
+            raise ValueError("Older Excel .xls files need the 'xlrd' package installed before they can be uploaded.") from error
+        raise
 
 
 def _read_json(file: FileStorage) -> pd.DataFrame:
@@ -43,12 +50,14 @@ def _read_json(file: FileStorage) -> pd.DataFrame:
 def load_uploaded_dataset(file: FileStorage) -> tuple[pd.DataFrame, dict[str, Any]]:
     extension = Path(file.filename or "").suffix.lower()
     if extension not in SUPPORTED_EXTENSIONS:
-        raise ValueError("Unsupported file type. Use CSV, XLSX, or JSON.")
+        raise ValueError("Unsupported file type. Use CSV, TSV, XLSX, XLS, or JSON.")
 
     if extension == ".csv":
-        df = _read_csv(file)
-    elif extension == ".xlsx":
-        df = _read_excel(file)
+        df = _read_delimited(file, separator=",")
+    elif extension == ".tsv":
+        df = _read_delimited(file, separator="\t")
+    elif extension in {".xlsx", ".xls"}:
+        df = _read_excel(file, extension)
     else:
         df = _read_json(file)
 

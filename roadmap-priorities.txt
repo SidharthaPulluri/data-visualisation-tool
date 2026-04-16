@@ -1,0 +1,198 @@
+Data Visualisation Tool - Roadmap Priorities
+
+Goal
+Build the strongest possible product around transparent, upload-first analytics for structured files.
+
+Priority Framework
+Each item is scored on:
+- product value
+- differentiation value
+- implementation leverage
+
+Top Priority Themes
+- make explanations clearer
+- improve trust and validation
+- strengthen chart guidance
+- deepen workflow value after upload
+
+
+Tier 1 - Highest Priority
+
+1. Domain rule packs
+Score: 10/10
+Why it matters
+This is the strongest way to increase product intelligence without AI and create a real moat.
+Examples
+- crime tables
+- health tables
+- education tables
+- finance and budget tables
+- census and population tables
+Outcome
+Better metric selection, better summaries, better warnings, and better recommendations within familiar data domains.
+
+2. Stronger consistency checks
+Score: 9.5/10
+Why it matters
+Trust is one of the product’s biggest advantages. Strong validation reinforces that.
+Examples
+- total row validation
+- percentage consistency checks
+- duplicate summary detection
+- summary-vs-detail mismatch warnings
+- suspicious rate/count combinations
+Outcome
+Users trust the tool more because it does not just explain the data; it also checks whether the dataset behaves as expected.
+
+3. Better chart recommendation scoring
+Score: 9/10
+Why it matters
+Chart choice is one of the most important beginner pain points.
+Examples
+- stronger top-N triggers
+- automatic rejection of weak pie charts
+- improved timeline chart selection
+- horizontal bars for long labels
+- heatmap detection for row-column-value layouts
+Outcome
+The tool feels much smarter and safer during the first charting experience.
+
+4. More human explanation quality
+Score: 9/10
+Why it matters
+The app is already smart enough to say useful things. The next step is saying them more naturally and with less noise.
+Examples
+- shorter summaries
+- fewer repetitive cautions
+- better phrasing for panel datasets
+- volume-aware wording
+- stronger “what matters most” emphasis
+Outcome
+The product feels more polished and more trustworthy.
+
+
+Tier 2 - Strong Product Expansion
+
+5. Explainable recommendation details
+Score: 8.5/10
+Why it matters
+This makes the “transparent intelligence” promise even stronger.
+Examples
+- why this field was chosen
+- why this chart was recommended
+- what rule triggered a warning
+- what aggregation was applied
+Outcome
+A major differentiator versus AI tools and opaque BI helpers.
+
+6. Better report outputs
+Score: 8.5/10
+Why it matters
+Reports are one of the easiest ways to turn the tool into something shareable and useful beyond the app.
+Examples
+- executive summary section
+- chart explanations in exported reports
+- cleaner ranking sections
+- domain-aware report language
+Outcome
+Users can share findings without rewriting everything manually.
+
+7. Panel-dataset intelligence
+Score: 8/10
+Why it matters
+Many public and operational datasets are country-year, state-year, or category-time panels.
+Examples
+- latest-year snapshot mode
+- growth over time summaries
+- strongest risers and decliners
+- stable vs volatile groups
+Outcome
+The tool becomes especially strong on real-world longitudinal datasets.
+
+8. Smarter data quality center
+Score: 8/10
+Why it matters
+The quality center should feel like guidance, not a wall of warnings.
+Examples
+- grouped caution summaries
+- better missingness explanation
+- suspicious-field highlights
+- field-priority scoring
+Outcome
+Better usability and less noise.
+
+
+Tier 3 - Workflow Strengthening
+
+9. Saved analysis templates
+Score: 7.5/10
+Why it matters
+Users often repeat the same analysis patterns across similar files.
+Outcome
+Faster repeat usage and better workflow retention.
+
+10. More chart types
+Score: 7.5/10
+Why it matters
+Useful, but only after chart recommendation quality is strong enough to guide them well.
+Examples
+- stacked bar
+- grouped bar
+- area comparison
+- density plot
+- correlation heatmap
+
+11. Better dashboard composition
+Score: 7/10
+Why it matters
+Improves presentation and comparison workflows.
+Examples
+- drag-to-reorder
+- chart resizing
+- cleaner grid presets
+- dashboard annotations
+
+12. Performance improvements for larger files
+Score: 7/10
+Why it matters
+Important as real usage grows.
+Examples
+- cached profiling
+- smarter sampling
+- incremental preview rendering
+- faster repeated transformations
+
+
+Suggested Build Order
+
+Phase 1
+- domain rule packs
+- stronger consistency checks
+- better chart recommendation scoring
+
+Phase 2
+- more human explanation quality
+- explainable recommendation details
+- better report outputs
+
+Phase 3
+- panel-dataset intelligence
+- smarter data quality center
+- saved analysis templates
+
+Phase 4
+- more chart types
+- dashboard composition improvements
+- performance optimization
+
+
+Most Important Strategic Principle
+Do not try to become a weaker version of AI analytics tools.
+Become the strongest possible transparent, deterministic analytics layer for uploaded structured files.
+
+
+Definition of Success
+The product should make a user say:
+
+"I uploaded a file, immediately understood what it contained, got useful chart guidance, and trusted the reasoning because it was clear and repeatable."
+

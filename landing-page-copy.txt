@@ -1,0 +1,190 @@
+Data Visualisation Tool - Landing Page Copy
+
+Hero
+
+Eyebrow
+Transparent, rule-based analytics
+
+Headline
+Understand structured files without AI guesswork.
+
+Subheadline
+Upload a CSV, TSV, Excel, or JSON file and get a clear explanation of what it contains, what to compare, which charts make sense, and what stands out using deterministic logic you can trust.
+
+Primary CTA
+Upload a Dataset
+
+Secondary CTA
+See How It Works
+
+Trust Line
+No black-box insights. No machine learning. Same file, same explanation, every time.
+
+
+Section 1 - The Problem
+
+Heading
+Most file-based analysis starts with confusion.
+
+Body
+When someone gets a spreadsheet or CSV, the hardest part is not creating a chart. It is understanding the dataset itself.
+
+People usually do not know:
+- which column is the main category
+- which fields are counts versus rates
+- whether a pie chart or bar chart makes sense
+- what metric should be used first
+- whether the summary they are seeing is misleading
+
+This tool helps users get oriented before they make bad charts or shaky conclusions.
+
+
+Section 2 - The Promise
+
+Heading
+From upload to understanding in minutes.
+
+Body
+The tool reads structured datasets with deterministic rules and guides users through:
+- dataset explanation
+- data quality checks
+- chart recommendations
+- plain-English insights
+- dashboard-style exploration
+- exportable outputs
+
+Everything is designed to help users move from raw file to useful understanding quickly and safely.
+
+
+Section 3 - Key Benefits
+
+Heading
+Why this feels different
+
+Benefit 1
+Upload-first by design
+Built for people who start with files, not databases. Just upload and begin.
+
+Benefit 2
+Transparent recommendations
+Every chart suggestion and dataset explanation comes from visible rules, not hidden AI logic.
+
+Benefit 3
+Safer analysis defaults
+The tool warns against common mistakes like summing percentages, overusing pie charts, or comparing the wrong fields.
+
+Benefit 4
+Beginner-friendly guidance
+Users do not need SQL, notebooks, or BI modeling experience to get useful results.
+
+Benefit 5
+Repeatable outputs
+Because the system is deterministic, the same input produces the same explanation and chart guidance every time.
+
+
+Section 4 - How It Works
+
+Heading
+How it works
+
+Step 1
+Upload a file
+Start with CSV, TSV, Excel, or JSON data.
+
+Step 2
+Understand the dataset
+See what the dataset appears to track, what can be compared, and which fields matter most.
+
+Step 3
+Prepare the view
+Review structure, preview the table, apply transformations, and inspect data quality.
+
+Step 4
+Build visuals
+Create charts, compare multiple views, and move between single-chart and grid layouts.
+
+Step 5
+Export results
+Download cleaned data, chart outputs, reports, and dashboard PDFs.
+
+
+Section 5 - What Makes It Trustworthy
+
+Heading
+Built for trust, not magic.
+
+Body
+Many analytics products are becoming black-box assistants. This product takes a different path.
+
+It is built on:
+- deterministic schema detection
+- rule-based metric selection
+- transparent chart logic
+- explainable dataset interpretation
+- repeatable results
+
+That makes it a strong fit for users who want guidance without losing control.
+
+
+Section 6 - Best Fit Users
+
+Heading
+Who it is for
+
+Body
+This tool is especially useful for:
+- students
+- researchers
+- junior analysts
+- operations teams
+- journalists
+- public-data users
+- anyone who needs to understand a structured file quickly
+
+
+Section 7 - Comparison Framing
+
+Heading
+Not another BI platform. Not another AI assistant.
+
+Body
+Traditional BI tools are powerful, but often heavy and setup-driven.
+AI analytics tools can feel fast, but often hide how they reached a conclusion.
+
+This tool is different:
+- easier to start than BI tools
+- more guided than raw plotting tools
+- more explainable than AI copilots
+
+
+Section 8 - Closing
+
+Heading
+Clearer data understanding starts here.
+
+Body
+If you have a structured file and want a fast, understandable, and trustworthy way to explore it, this tool gives you a better starting point.
+
+Primary CTA
+Upload a Dataset
+
+Secondary CTA
+Start Exploring
+
+
+Short Product Description
+
+Data Visualisation Tool is a deterministic, upload-first analytics assistant for structured files. It helps users understand a dataset, choose meaningful charts, surface rule-based insights, and export results without relying on AI or machine learning.
+
+
+Short Pitch Variants
+
+Variant 1
+Understand any structured file with transparent, rule-based analytics.
+
+Variant 2
+Upload a dataset and get clear chart guidance, plain-English explanation, and repeatable insights without AI.
+
+Variant 3
+A file-first analytics workspace built for clarity, trust, and better chart decisions.
+

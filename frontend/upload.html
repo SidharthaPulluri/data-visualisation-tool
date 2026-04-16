@@ -6,101 +6,209 @@
   <title>Upload Dataset</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
-<body>
-  <main class="shell">
-    <aside class="nav-shell">
-      <div class="brand">
-        <span class="eyebrow">Rule-based analytics</span>
-        <strong>Data Visualisation Tool</strong>
+<body class="landing-body">
+  <main class="landing-page">
+    <header class="landing-topbar">
+      <div class="landing-topbar-inner">
+        <div class="landing-brand-lockup">
+          <img class="landing-logo" src="/static/assets/vysri-services-wordmark.png" alt="VySri Services logo">
+          <div class="landing-brand">
+            <span class="eyebrow">Rule-based analytics</span>
+            <strong>Sidhartha Utilities</strong>
+            <span class="landing-brand-subtitle">A utility workspace from the VySri Services brand.</span>
+          </div>
+        </div>
+        <div class="landing-topbar-meta">
+          <span class="landing-topbar-chip">Upload-first workflow</span>
+          <span class="landing-topbar-chip">No AI or ML</span>
+          <span class="landing-topbar-chip">Deterministic outputs</span>
+        </div>
       </div>
-      <div class="nav-steps">
-        <span class="nav-step active">1. Upload</span>
-        <span class="nav-step">2. Prepare</span>
-        <span class="nav-step">3. Visualize</span>
-      </div>
-    </aside>
+    </header>
 
-    <div class="app-main">
-      <section class="hero">
-        <div class="hero-copy">
+    <section class="landing-hero">
+      <div class="landing-hero-inner">
+        <div class="landing-hero-copy">
           <span class="eyebrow">Step 1</span>
-          <h1>Bring in the dataset.</h1>
-          <p>Upload one CSV, Excel, or JSON file and the app will clean it with fixed rules, detect column roles, and prepare a guided workspace for analysis. No AI, no hidden inference, no black-box behavior.</p>
-        </div>
-        <div class="hero-side">
-          <div class="metric-card"><strong>Supported files</strong><span>CSV, Excel (.xlsx), JSON</span></div>
-          <div class="metric-card"><strong>Session flow</strong><span>Upload -> prepare -> visualize -> export</span></div>
-          <div class="metric-card"><strong>Logic style</strong><span>Deterministic rules based on data type, structure, and your selections.</span></div>
-        </div>
-      </section>
-
-      <section class="page-grid">
-        <aside class="sidebar">
-          <div class="stack">
-            <span class="section-kicker">Upload</span>
-            <h2>Start a new session</h2>
-            <p class="helper">Choose a single dataset and move straight into preparation.</p>
-            <div>
-              <label for="fileInput">Choose file</label>
-              <input id="fileInput" type="file" accept=".csv,.xlsx,.json">
-            </div>
-            <button id="uploadButton" class="secondary">Upload And Continue</button>
+          <p class="landing-kicker">Transparent, rule-based analytics</p>
+          <h1>Understand structured files without AI guesswork.</h1>
+          <p class="landing-lead">Upload a CSV, TSV, Excel, or JSON file and get a clear explanation of what it contains, what to compare, which charts make sense, and what stands out using logic you can actually trust.</p>
+          <div class="landing-hero-actions">
+            <a class="action-link" href="#upload-start">Upload a dataset</a>
+            <a class="button-link ghost" href="#workflow">See how it works</a>
           </div>
+          <p class="landing-trust">Same file. Same explanation. Every time.</p>
+        </div>
 
-          <div class="stack">
-            <span class="section-kicker">Saved Session</span>
-            <h3>Resume where you left off</h3>
-            <div id="sessionSummary" class="empty-copy">No saved dataset session yet.</div>
-            <div class="button-row">
-              <a id="resumeButton" class="button-link ghost" href="/prepare">Open Preparation</a>
-              <button id="clearButton" class="ghost" type="button">Clear Saved Session</button>
-            </div>
-          </div>
-
-          <div id="status" class="status">Choose a file to begin.</div>
-        </aside>
-
-        <section class="content">
-          <article class="section">
-            <div class="section-head">
+        <div class="landing-hero-visual" aria-hidden="true">
+          <div class="landing-visual-stage">
+            <div class="landing-visual-ribbon">File -> Explain -> Chart -> Export</div>
+            <div class="landing-visual-grid">
               <div>
-                <span class="section-kicker">Workflow</span>
-                <h2>What happens after upload</h2>
+                <span>Dataset type</span>
+                <strong>Panel comparison</strong>
+              </div>
+              <div>
+                <span>Main field</span>
+                <strong>Country / territory</strong>
+              </div>
+              <div>
+                <span>Primary metric</span>
+                <strong>Incident cases</strong>
+              </div>
+              <div>
+                <span>First chart</span>
+                <strong>Top-N bar</strong>
               </div>
             </div>
-            <div class="grid-3">
-              <div class="option-card">
-                <h3>Parse</h3>
-                <p class="helper">The file type is detected and your data is loaded into one consistent table shape.</p>
-              </div>
-              <div class="option-card">
-                <h3>Clean</h3>
-                <p class="helper">Missing values, duplicates, and data types are handled with explicit, repeatable rules.</p>
-              </div>
-              <div class="option-card">
-                <h3>Label roles</h3>
-                <p class="helper">Fields are tagged as time, geography, count, rate, measure, category, or identifier to guide the next steps.</p>
-              </div>
+            <div class="landing-visual-caption">
+              <p>Built for people who start with files, not databases.</p>
             </div>
-          </article>
-        </section>
-      </section>
-    </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="upload-start" class="landing-upload-band">
+      <div class="landing-upload-copy">
+        <span class="section-kicker">Start here</span>
+        <h2>Drop in one structured file and move straight into analysis.</h2>
+        <p class="helper">The tool parses the file, applies deterministic cleanup, detects field roles, and opens a guided workspace for preparation and charting.</p>
+      </div>
+      <div class="landing-upload-controls">
+        <div class="file-picker landing-file-picker">
+          <input id="fileInput" class="file-input-native" type="file" accept=".csv,.tsv,.xlsx,.xls,.json">
+          <label for="fileInput" class="file-picker-shell">
+            <span class="file-picker-button">Browse dataset</span>
+            <span id="fileName" class="file-picker-name">No file selected yet</span>
+          </label>
+          <p class="helper file-picker-help">Accepted formats: CSV, TSV, Excel (.xlsx, .xls), JSON</p>
+        </div>
+        <button id="uploadButton" class="landing-upload-button" type="button">Upload and continue</button>
+        <div id="status" class="status landing-status">Choose a file to begin.</div>
+      </div>
+    </section>
+
+    <section class="landing-proof-strip">
+      <div>
+        <span>Upload-first</span>
+        <strong>No SQL, warehouse, or modeling required.</strong>
+      </div>
+      <div>
+        <span>Transparent logic</span>
+        <strong>Every recommendation comes from visible rules.</strong>
+      </div>
+      <div>
+        <span>Safer defaults</span>
+        <strong>Warnings help prevent weak charts and bad aggregation.</strong>
+      </div>
+    </section>
+
+    <section id="workflow" class="landing-section">
+      <div class="landing-section-head">
+        <span class="section-kicker">Workflow</span>
+        <h2>From upload to understanding in minutes.</h2>
+      </div>
+      <div class="landing-steps">
+        <article>
+          <span>01</span>
+          <h3>Upload the file</h3>
+          <p>Start with one CSV, TSV, Excel, or JSON dataset.</p>
+        </article>
+        <article>
+          <span>02</span>
+          <h3>Understand the structure</h3>
+          <p>See what the dataset appears to track, what can be compared, and which metrics matter first.</p>
+        </article>
+        <article>
+          <span>03</span>
+          <h3>Prepare the view</h3>
+          <p>Review schema, preview the table, apply transformations, and inspect data quality.</p>
+        </article>
+        <article>
+          <span>04</span>
+          <h3>Build visuals and export</h3>
+          <p>Create charts, compare saved views, and export the data, charts, or reports you need.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="landing-section landing-two-column">
+      <div>
+        <div class="landing-section-head">
+          <span class="section-kicker">Why it feels different</span>
+          <h2>Built for trust, not magic.</h2>
+        </div>
+        <div class="landing-bullets">
+          <div>
+            <h3>Transparent recommendations</h3>
+            <p>Dataset explanations, metric choices, and chart suggestions are driven by deterministic rules instead of hidden AI logic.</p>
+          </div>
+          <div>
+            <h3>Beginner-friendly guidance</h3>
+            <p>The tool helps users understand a file before they try to chart it, which makes the first useful visual much easier to reach.</p>
+          </div>
+          <div>
+            <h3>Repeatable outputs</h3>
+            <p>The same file produces the same explanation and guidance every time, which is valuable for trust, compliance, and review.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="landing-right-rail">
+        <div class="landing-mini-section">
+          <span class="section-kicker">Saved session</span>
+          <h3>Resume where you left off</h3>
+          <div id="sessionSummary" class="empty-copy">No saved dataset session yet.</div>
+          <div class="button-row">
+            <a id="resumeButton" class="button-link ghost" href="/prepare">Open preparation</a>
+            <button id="clearButton" class="ghost" type="button">Clear saved session</button>
+          </div>
+        </div>
+
+        <div class="landing-mini-section">
+          <span class="section-kicker">Saved workspaces</span>
+          <h3>Open a previous analysis</h3>
+          <div id="workspaceList" class="workspace-list">
+            <div class="empty-copy">No saved workspaces yet.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-section landing-close">
+      <div class="landing-section-head">
+        <span class="section-kicker">For people with data</span>
+        <h2>A better starting point than blank spreadsheets, raw plotting, or black-box assistants.</h2>
+      </div>
+      <p class="landing-close-copy">If you have a structured file and want a fast, understandable, and trustworthy way to explore it, this tool gives you a stronger first step.</p>
+      <div class="landing-hero-actions">
+        <a class="action-link" href="#upload-start">Upload a dataset</a>
+        <a class="button-link ghost" href="/prepare">Open saved preparation</a>
+      </div>
+    </section>
   </main>
 
   <script src="/static/shared.js"></script>
   <script>
     const ids = {
       fileInput: document.getElementById("fileInput"),
+      fileName: document.getElementById("fileName"),
       uploadButton: document.getElementById("uploadButton"),
       status: document.getElementById("status"),
       sessionSummary: document.getElementById("sessionSummary"),
       clearButton: document.getElementById("clearButton"),
-      resumeButton: document.getElementById("resumeButton")
+      resumeButton: document.getElementById("resumeButton"),
+      workspaceList: document.getElementById("workspaceList")
     };
 
     function setStatus(message) {
       ids.status.textContent = message;
+    }
+
+    function renderSelectedFile() {
+      const file = ids.fileInput.files[0];
+      ids.fileName.textContent = file ? file.name : "No file selected yet";
     }
 
     function renderSessionSummary() {
@@ -119,10 +227,53 @@
       `;
     }
 
+    function renderWorkspaceList() {
+      const workspaces = window.dataTool.loadWorkspaces();
+      if (!workspaces.length) {
+        ids.workspaceList.innerHTML = '<div class="empty-copy">No saved workspaces yet.</div>';
+        return;
+      }
+
+      ids.workspaceList.innerHTML = workspaces.map((workspace) => `
+        <article class="workspace-card">
+          <div>
+            <strong>${window.dataTool.escapeHtml(workspace.name || "Saved workspace")}</strong>
+            <p class="helper">${window.dataTool.escapeHtml(workspace.filename || "dataset")} • ${window.dataTool.formatNumber(workspace.shape?.rows || 0, 0)} rows • ${window.dataTool.formatNumber(workspace.shape?.columns || 0, 0)} columns</p>
+            <span class="workspace-time">Saved ${new Date(workspace.savedAt).toLocaleString()}</span>
+          </div>
+          <div class="mini-nav workspace-actions-inline">
+            <button type="button" class="ghost" data-open-workspace="${workspace.id}">Open</button>
+            <button type="button" class="ghost" data-delete-workspace="${workspace.id}">Delete</button>
+          </div>
+        </article>
+      `).join("");
+
+      ids.workspaceList.querySelectorAll("[data-open-workspace]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const workspace = window.dataTool.getWorkspace(button.dataset.openWorkspace);
+          if (!workspace) {
+            setStatus("That saved workspace is no longer available.");
+            renderWorkspaceList();
+            return;
+          }
+          window.dataTool.saveSession({ ...workspace.session, lastPage: workspace.lastPage || "/prepare" });
+          window.location.href = workspace.lastPage || "/prepare";
+        });
+      });
+
+      ids.workspaceList.querySelectorAll("[data-delete-workspace]").forEach((button) => {
+        button.addEventListener("click", () => {
+          window.dataTool.deleteWorkspace(button.dataset.deleteWorkspace);
+          renderWorkspaceList();
+          setStatus("Saved workspace removed.");
+        });
+      });
+    }
+
     ids.uploadButton.addEventListener("click", async () => {
       const file = ids.fileInput.files[0];
       if (!file) {
-        setStatus("Choose a CSV, XLSX, or JSON file first.");
+        setStatus("Choose a CSV, TSV, XLSX, XLS, or JSON file first.");
         return;
       }
 
@@ -140,6 +291,8 @@
           preview: payload.preview,
           analysis: payload.analysis,
           transformConfig: {},
+          transformHistory: [{ label: "Original cleaned view", config: {} }],
+          transformHistoryIndex: 0,
           chartConfig: null
         });
         window.location.href = "/prepare";
@@ -154,7 +307,11 @@
       setStatus("Saved browser session cleared.");
     });
 
+    ids.fileInput.addEventListener("change", renderSelectedFile);
+
     renderSessionSummary();
+    renderWorkspaceList();
+    renderSelectedFile();
   </script>
 </body>
 </html>

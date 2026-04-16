@@ -1,0 +1,178 @@
+Data Visualisation Tool - Product Positioning
+
+Core Idea
+This product is a deterministic, upload-first analytics assistant for structured files.
+It helps users understand a dataset, choose meaningful charts, spot important patterns, and export useful outputs without relying on AI or machine learning.
+
+One-Line Positioning
+A transparent analytics tool that explains uploaded datasets and recommends charts using rules instead of AI.
+
+Expanded Positioning
+This tool is built for people who have a file and want to understand it quickly.
+Instead of asking users to model data, write SQL, or trust a black-box AI assistant, it reads the dataset with deterministic rules:
+- detect structure
+- identify likely dimensions and measures
+- recommend chart types
+- explain what the dataset appears to contain
+- surface rule-based insights
+- warn against misleading chart choices
+
+Why It Is Different
+Most existing tools split into three groups:
+
+1. Traditional BI tools
+- Power BI
+- Tableau
+- Metabase
+- Strong dashboards and reporting
+- Usually heavier setup
+- Often database-first, not file-first
+
+2. Raw plotting / notebook tools
+- Python notebooks
+- spreadsheet charting
+- Flexible, but not guided
+- User must already know what to do
+
+3. AI analytics assistants
+- feel smart
+- but can be opaque, inconsistent, and hard to validate
+
+This tool sits in a different space:
+- file-first
+- guided
+- deterministic
+- explainable
+- lightweight
+
+Primary USP
+Upload a structured file and get a clear, repeatable explanation of what the dataset contains, what can be compared, which charts make sense, and what stands out, without using AI.
+
+Secondary USPs
+- Same input produces the same explanation every time
+- Safer for trust, auditability, and compliance-sensitive use cases
+- Easier for novice users than notebooks or BI modeling tools
+- More explainable than AI-generated analytics
+- Faster to start than database-oriented analytics platforms
+
+Best-Fit Users
+- students
+- researchers
+- junior analysts
+- operations teams
+- public policy / government data users
+- journalists working with tabular files
+- anyone who receives CSV or Excel datasets and needs to understand them quickly
+
+Best-Fit Use Cases
+- first-pass exploration of an unfamiliar dataset
+- comparing categories, regions, countries, or states
+- understanding year-over-year trends
+- identifying likely counts vs rates
+- building charts from uploaded files
+- exporting a readable report for review or sharing
+
+What Problem It Solves
+Most people with a file do not know:
+- what the main dimension is
+- which fields are counts vs rates
+- whether a chart is meaningful
+- what metric should be used first
+- what the dataset is really saying
+
+This tool reduces that uncertainty through rule-based guidance.
+
+Product Pillars
+
+1. Transparent Intelligence
+The tool should always be able to explain:
+- why a field was chosen
+- why a chart was recommended
+- why a warning was shown
+- how a metric was aggregated
+
+2. Upload-First Simplicity
+The product should feel useful within minutes of uploading a file.
+No SQL, no warehouse, no semantic modeling required.
+
+3. Deterministic Trust
+No black-box inference.
+Users should be able to trust that results come from visible rules and reproducible logic.
+
+4. Guided Exploration
+The product should not just show charts.
+It should guide users through:
+- dataset explanation
+- preparation
+- visualization
+- insights
+- export
+
+5. Misuse Prevention
+The product should stop or warn against weak analysis patterns such as:
+- summing percentages
+- unreadable pie charts
+- charting identifier fields
+- drawing strong conclusions from tiny samples
+
+Differentiation Against Major Tools
+
+Against Power BI
+- easier local file-first start
+- more explicit rule-based explanation
+- no AI/ML dependency
+
+Against Tableau
+- simpler onboarding for novice file users
+- clearer deterministic explanation layer
+- less expert-oriented setup
+
+Against Metabase
+- stronger upload-first workflow
+- more beginner guidance on what the dataset means
+- more explicit chart reasoning
+
+Against AI assistants
+- repeatable
+- auditable
+- controllable
+- lower hallucination risk
+
+Product Identity Statement
+This is not just a chart maker.
+It is a deterministic dataset-understanding and guided-visualization tool.
+
+Suggested Messaging
+
+Short marketing line
+Understand any structured file with transparent, rule-based analytics.
+
+Homepage-style line
+Upload a CSV, Excel, TSV, or JSON file and get a clear explanation of what it contains, what to compare, which charts make sense, and what stands out, without relying on AI.
+
+Trust-focused line
+No black-box insights. Every recommendation comes from visible rules and repeatable logic.
+
+Beginner-focused line
+Built for people who have data, but do not want to fight with BI tools.
+
+Strategic Direction
+The strongest long-term direction is not to imitate AI analytics.
+It is to become the best transparent, deterministic analysis layer for uploaded structured files.
+
+Highest-Value Next Differentiators
+- richer domain rule packs
+  crime, health, education, finance, public data
+- stronger consistency checks
+  totals, rates, duplicates, suspicious summaries
+- more human explanation quality
+  shorter, clearer, less noisy summaries
+- better chart recommendation scoring
+- more powerful misuse prevention
+- report outputs that read like analyst-ready briefings
+
+Simple Positioning Summary
+If Power BI and Tableau are broad BI platforms, and AI tools are black-box assistants, this product can own:
+
+"transparent, upload-first analytics for structured files"
+

@@ -1,5 +1,6 @@
 (function () {
   const STORAGE_KEY = "data_visualisation_tool_session";
+  const WORKSPACES_KEY = "data_visualisation_tool_workspaces";
 
   function createStorageSafeSession(session) {
     const charts = Array.isArray(session?.charts)
@@ -41,6 +42,8 @@
       datasetState: null,
       dataset_state: null,
       transformConfig: session?.transformConfig || {},
+      transformHistory: session?.transformHistory || [],
+      transformHistoryIndex: session?.transformHistoryIndex ?? 0,
       charts: Array.isArray(session?.charts)
         ? session.charts.map((chart) => ({
             id: chart.id,
@@ -53,6 +56,10 @@
             chart_file: chart.chart_file,
             note: chart.note || "",
             chart_options: chart.chart_options || {},
+            plot_data: chart.plot_data || null,
+            preview_filter: chart.preview_filter || null,
+            filtered_preview: chart.filtered_preview || null,
+            filtered_preview_shape: chart.filtered_preview_shape || null,
           }))
         : [],
       activeChartId: session?.activeChartId || null,
@@ -98,6 +105,85 @@
     localStorage.removeItem(STORAGE_KEY);
   }
 
+  function loadWorkspaces() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(WORKSPACES_KEY) || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveWorkspaces(workspaces) {
+    localStorage.setItem(WORKSPACES_KEY, JSON.stringify(workspaces));
+  }
+
+  function createWorkspaceSnapshot(session, name) {
+    const datasetState = session?.datasetState || session?.dataset_state || null;
+    const charts = Array.isArray(session?.charts)
+      ? session.charts.map((chart) => {
+          if (!chart) return chart;
+          const clone = { ...chart };
+          delete clone.chart_data_url;
+          delete clone.mime_type;
+          return clone;
+        })
+      : [];
+    const chartConfig = session?.chartConfig
+      ? (() => {
+          const clone = { ...session.chartConfig };
+          delete clone.chart_data_url;
+          delete clone.mime_type;
+          return clone;
+        })()
+      : null;
+
+    const snapshot = {
+      datasetId: session?.datasetId || null,
+      datasetState,
+      dataset_state: datasetState,
+      filename: session?.filename || null,
+      shape: session?.shape || null,
+      schema: session?.schema || null,
+      preview: session?.preview || [],
+      analysis: session?.analysis || null,
+      transformConfig: session?.transformConfig || {},
+      transformHistory: session?.transformHistory || [],
+      transformHistoryIndex: session?.transformHistoryIndex ?? 0,
+      charts,
+      activeChartId: session?.activeChartId || null,
+      dashboardMode: session?.dashboardMode || "single",
+      dashboardColumns: session?.dashboardColumns || 2,
+      chartConfig,
+      lastPage: session?.lastPage || "/prepare",
+    };
+    return {
+      id: `workspace_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      name: name || session?.filename || "Saved workspace",
+      filename: session?.filename || null,
+      shape: session?.shape || null,
+      savedAt: new Date().toISOString(),
+      lastPage: session?.lastPage || "/prepare",
+      session: snapshot,
+    };
+  }
+
+  function storeWorkspace(session, name) {
+    const workspaces = loadWorkspaces();
+    const snapshot = createWorkspaceSnapshot(session, name);
+    workspaces.unshift(snapshot);
+    saveWorkspaces(workspaces.slice(0, 8));
+    return snapshot;
+  }
+
+  function deleteWorkspace(workspaceId) {
+    saveWorkspaces(loadWorkspaces().filter((workspace) => workspace.id !== workspaceId));
+  }
+
+  function getWorkspace(workspaceId) {
+    return loadWorkspaces().find((workspace) => workspace.id === workspaceId) || null;
+  }
+
   function escapeHtml(value) {
     return String(value)
       .replaceAll("&", "&amp;")
@@ -118,6 +204,76 @@
     const compact = String(value ?? "-").replace(/\s+/g, " ").trim();
     if (compact.length <= limit) return compact || "-";
     return `${compact.slice(0, limit - 3)}...`;
+  }
+
+  function humanizeFieldName(value) {
+    const base = String(value || "")
+      .replace(/__col_\d+\b/gi, "")
+      .replace(/_col[\d_]+/gi, "")
+      .replace(/StateUT/g, "State/UT")
+      .replace(/Invsgnat/g, "Investigation at")
+      .replace(/Invsgn/g, "Investigation")
+      .replace(/_/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return base || String(value || "");
+  }
+
+  function getPreviewColumns(rows) {
+    return rows.length ? Object.keys(rows[0]) : [];
+  }
+
+  function filterPreviewRows(rows, options = {}) {
+    const searchTerm = String(options.searchTerm || "").trim().toLowerCase();
+    const sortColumn = options.sortColumn || "";
+    const sortDirection = options.sortDirection === "desc" ? "desc" : "asc";
+
+    let filtered = [...rows];
+    if (searchTerm) {
+      filtered = filtered.filter((row) =>
+        Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(searchTerm))
+      );
+    }
+
+    if (sortColumn) {
+      filtered.sort((left, right) => {
+        const leftValue = left?.[sortColumn];
+        const rightValue = right?.[sortColumn];
+        const leftNumber = Number(leftValue);
+        const rightNumber = Number(rightValue);
+        let comparison = 0;
+
+        if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber)) {
+          comparison = leftNumber - rightNumber;
+        } else {
+          comparison = String(leftValue ?? "").localeCompare(String(rightValue ?? ""), undefined, { numeric: true, sensitivity: "base" });
+        }
+
+        return sortDirection === "desc" ? comparison * -1 : comparison;
+      });
+    }
+
+    return filtered;
+  }
+
+  function summarizePreviewColumns(rows, limit = 6) {
+    const columns = getPreviewColumns(rows);
+    return columns.slice(0, limit).map((column) => {
+      const values = rows.map((row) => row?.[column]).filter((value) => value !== null && value !== undefined && value !== "");
+      if (!values.length) {
+        return { column, label: `${column}: no values` };
+      }
+
+      const numericValues = values.map((value) => Number(value)).filter((value) => Number.isFinite(value));
+      if (numericValues.length === values.length) {
+        const min = Math.min(...numericValues);
+        const max = Math.max(...numericValues);
+        return { column, label: `${column}: ${formatNumber(min, 2)} to ${formatNumber(max, 2)}` };
+      }
+
+      const unique = new Set(values.map((value) => String(value))).size;
+      return { column, label: `${column}: ${formatNumber(unique, 0)} unique value${unique === 1 ? "" : "s"}` };
+    });
   }
 
   function populateSelect(select, columns, includeEmpty = true) {
@@ -197,8 +353,193 @@
     });
   }
 
-  function renderAnalysis(container, analysis, shape) {
+  function renderDatasetExplanation(container, context) {
+    const schema = context?.schema || {};
+    const analysis = context?.analysis || {};
+    const shape = context?.shape || {};
+    const story = analysis.dataset_story || {};
+    const intent = story.intent || {};
+    const consistencyChecks = story.consistency_checks || [];
+    const anomalyFlags = story.anomaly_flags || [];
+    const schemaEntries = Object.entries(schema);
+    const countFields = schemaEntries.filter(([, meta]) => meta.role === "count").map(([name]) => name);
+    const rateFields = schemaEntries.filter(([, meta]) => meta.role === "rate").map(([name]) => name);
+    const timeFields = schemaEntries.filter(([, meta]) => meta.role === "time" || meta.type === "datetime").map(([name]) => name);
+    const categoryFields = schemaEntries.filter(([, meta]) => ["category", "geography"].includes(meta.role)).map(([name]) => name);
+
+    const dimension = story.focus_dimension ? humanizeFieldName(story.focus_dimension) : null;
+    const metricChoices = story.metric_choices || [];
+    const primaryCountChoice = metricChoices.find((item) => item.slot === "primary_count");
+    const primaryRateChoice = metricChoices.find((item) => item.slot === "primary_rate");
+    const pendingCountChoice = metricChoices.find((item) => item.slot === "pending_count");
+
+    const whatItTracks = [];
+    if (intent.label) {
+      whatItTracks.push(`This looks like a ${intent.label.toLowerCase()}.`);
+    }
+    if (dimension) {
+      whatItTracks.push(`This dataset is mainly organized by ${dimension}.`);
+    }
+    if (shape.rows || shape.columns) {
+      whatItTracks.push(`It currently contains ${formatNumber(shape.rows || 0, 0)} rows and ${formatNumber(shape.columns || 0, 0)} columns in the working view.`);
+    }
+    if (countFields.length) {
+      whatItTracks.push(`It includes count-style fields such as ${countFields.slice(0, 3).map(humanizeFieldName).join(", ")}.`);
+    }
+    if (rateFields.length) {
+      whatItTracks.push(`It also includes rate or percentage fields such as ${rateFields.slice(0, 2).map(humanizeFieldName).join(", ")}.`);
+    }
+
+    const compareItems = [];
+    if (dimension && primaryCountChoice) {
+      compareItems.push(`Compare ${dimension} values using ${humanizeFieldName(primaryCountChoice.column)}.`);
+    }
+    if (pendingCountChoice) {
+      compareItems.push("Check which groups have the largest backlog and highest pendency.");
+    }
+    if (primaryRateChoice) {
+      compareItems.push(`Compare groups using ${humanizeFieldName(primaryRateChoice.column)} rather than raw volume alone.`);
+    }
+    if (timeFields.length) {
+      compareItems.push(`Track changes over time with ${humanizeFieldName(timeFields[0])}.`);
+    }
+
+    const goodFirstCharts = [];
+    if (dimension && primaryCountChoice) {
+      const volumeLabel = humanizeFieldName(primaryCountChoice.column);
+      const needsTopN = Number(schema[story.focus_dimension || ""]?.unique || 0) > 20;
+      goodFirstCharts.push(
+        needsTopN
+          ? `Bar chart: top ${dimension} values by ${volumeLabel}.`
+          : `Bar chart: ${dimension} vs ${volumeLabel}.`
+      );
+    }
+    if (dimension && pendingCountChoice) {
+      goodFirstCharts.push(`Bar chart: ${dimension} vs ${humanizeFieldName(pendingCountChoice.column)}.`);
+    }
+    if (timeFields.length && primaryCountChoice) {
+      goodFirstCharts.push(`Line chart: ${humanizeFieldName(timeFields[0])} over ${humanizeFieldName(primaryCountChoice.column)}.`);
+    }
+    if (!goodFirstCharts.length && categoryFields.length && countFields.length) {
+      goodFirstCharts.push(`Bar chart: ${humanizeFieldName(categoryFields[0])} vs ${humanizeFieldName(countFields[0])}.`);
+    }
+
+    const plainEnglish = story.takeaways?.length
+      ? story.takeaways.slice(0, 2)
+      : analysis.key_insights?.slice(0, 2) || [];
+    const whyThisReading = intent.reasons || [];
+    const chosenMetrics = (story.metric_choices || []).slice(0, 3);
+    const validationItems = consistencyChecks.map((item) => `
+      <li><strong>${escapeHtml(item.title)}:</strong> ${escapeHtml(item.message)}</li>
+    `).join("");
+    const anomalyItems = anomalyFlags.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+
+    container.innerHTML = `
+      <div class="analysis-card">
+        <h3>What this dataset tracks</h3>
+        ${whatItTracks.length
+          ? `<ul class="insight-list">${whatItTracks.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+          : '<p class="empty-copy">Upload a dataset to see a plain-English explanation here.</p>'}
+      </div>
+      <div class="analysis-card">
+        <h3>What you can compare</h3>
+        ${compareItems.length
+          ? `<ul class="insight-list">${compareItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+          : '<p class="empty-copy">The app will list the most useful comparisons after it profiles the dataset structure.</p>'}
+      </div>
+      <div class="analysis-card">
+        <h3>Why the app reads it this way</h3>
+        ${whyThisReading.length
+          ? `
+              <p class="empty-copy">Confidence: ${escapeHtml(formatNumber((intent.confidence || 0) * 100, 0))}%</p>
+              <ul class="insight-list">${whyThisReading.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+            `
+          : '<p class="empty-copy">The app will explain its dataset reading here after it profiles the table shape.</p>'}
+        ${chosenMetrics.length
+          ? `
+              <div class="analysis-subsection">
+                <h4>Chosen focus metrics</h4>
+                <ul class="insight-list">
+                  ${chosenMetrics.map((item) => `<li><strong>${escapeHtml(item.slot_label)}:</strong> ${escapeHtml(humanizeFieldName(item.column))}</li>`).join("")}
+                </ul>
+              </div>
+            `
+          : ""}
+      </div>
+      <div class="analysis-card">
+        <h3>Good first charts</h3>
+        ${goodFirstCharts.length
+          ? `<ul class="insight-list">${goodFirstCharts.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+          : '<p class="empty-copy">Once the app finds clear dimensions and measures, this section will suggest chart starting points.</p>'}
+      </div>
+      <div class="analysis-card">
+        <h3>Plain-English takeaway</h3>
+        ${plainEnglish.length
+          ? `<ul class="insight-list">${plainEnglish.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+          : '<p class="empty-copy">No clear dataset takeaway is available yet for this view.</p>'}
+      </div>
+      <div class="analysis-card">
+        <h3>Checks and anomalies</h3>
+        ${validationItems
+          ? `<ul class="insight-list">${validationItems}</ul>`
+          : '<p class="empty-copy">No built-in totals or formula rows were available, so consistency checks are limited for this dataset view.</p>'}
+        ${anomalyItems
+          ? `
+              <div class="analysis-subsection">
+                <h4>Things to watch</h4>
+                <ul class="insight-list">${anomalyItems}</ul>
+              </div>
+            `
+          : ""}
+      </div>
+    `;
+  }
+
+function renderAnalysis(container, analysis, shape) {
     const typeCounts = analysis.type_counts || {};
+    const datasetStory = analysis.dataset_story || {};
+    const storyIntent = datasetStory.intent || {};
+    function summarizeWarnings(warnings) {
+      const items = Array.isArray(warnings) ? warnings.filter(Boolean) : [];
+      if (!items.length) {
+        return [];
+      }
+
+      const summaries = [];
+      const used = new Set();
+      const labelWarnings = items.filter((item) => item.includes(": Many unique labels; prefer bar charts with filters over pie charts."));
+
+      if (labelWarnings.length) {
+        const labels = labelWarnings.map((item) => item.split(":")[0]).filter(Boolean);
+        const sample = labels.slice(0, 3);
+        const extra = Math.max(labels.length - sample.length, 0);
+        summaries.push(
+          `${sample.join(", ")}${extra ? ` and ${extra} more` : ""}: High-cardinality labels are easier to read with top-N bar charts than full pie charts.`
+        );
+        labelWarnings.forEach((item) => used.add(item));
+      }
+
+      const geographyWarning = items.find((item) => item.startsWith("Geography-like columns such as "));
+      if (geographyWarning) {
+        summaries.push(geographyWarning);
+        used.add(geographyWarning);
+      }
+
+      const timelineWarning = items.find((item) => item.includes("Very low numeric variety") && item.startsWith("Year:"));
+      if (timelineWarning) {
+        summaries.push("Year has a limited set of distinct values here, so it behaves more like a timeline or category than a continuous measure.");
+        used.add(timelineWarning);
+      }
+
+      items.forEach((item) => {
+        if (!used.has(item) && summaries.length < 4) {
+          summaries.push(item);
+        }
+      });
+
+      return summaries.slice(0, 4);
+    }
+
     const summaryCards = [
       { label: "Rows analyzed", value: formatNumber(analysis.row_count ?? shape?.rows, 0) },
       { label: "Columns analyzed", value: formatNumber(analysis.column_count ?? shape?.columns, 0) },
@@ -255,7 +596,35 @@
       .map((line) => `<span class="chip">${escapeHtml(line)}</span>`)
       .join("");
 
-    const warningItems = (analysis.warnings || []).slice(0, 5).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    const warningItems = summarizeWarnings(analysis.warnings || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    const storyOverview = (datasetStory.overview || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    const storyTakeaways = (datasetStory.takeaways || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    const storyChecks = (datasetStory.consistency_checks || []).map((item) => `
+      <li><strong>${escapeHtml(item.title)}:</strong> ${escapeHtml(item.message)}</li>
+    `).join("");
+    const storyFlags = (datasetStory.anomaly_flags || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    const headlineMetricCards = (datasetStory.headline_metrics || []).map((item) => `
+      <div class="summary-card">
+        <strong>${escapeHtml(item.formatted_value || formatNumber(item.value, 1))}</strong>
+        <span>${escapeHtml(item.label)}</span>
+      </div>
+    `).join("");
+    const rankingSections = (datasetStory.ranking_sections || []).map((section) => {
+      const items = (section.items || []).map((item, index) => `
+        <li>
+          <strong>${index + 1}. ${escapeHtml(item.label)}</strong>
+          <span>${escapeHtml(item.formatted_value || formatNumber(item.value, 1))}${item.formatted_secondary ? ` | ${escapeHtml(item.formatted_secondary)}` : ""}</span>
+        </li>
+      `).join("");
+      return `
+        <div class="analysis-card">
+          <h3>${escapeHtml(section.title)}</h3>
+          ${items
+            ? `<ol class="insight-list ranked-list">${items}</ol>`
+            : '<p class="empty-copy">No ranked values are available for this section.</p>'}
+        </div>
+      `;
+    }).join("");
 
     container.innerHTML = `
       <div class="summary-grid">
@@ -266,7 +635,33 @@
           </div>
         `).join("")}
       </div>
+      ${headlineMetricCards
+        ? `<div class="summary-grid story-grid">${headlineMetricCards}</div>`
+        : ""}
       <div class="analysis-stack">
+        ${storyOverview || storyTakeaways || rankingSections
+          ? `
+            <div class="analysis-card">
+              <h3>Dataset story</h3>
+              ${storyIntent.label
+                ? `<p class="empty-copy">Detected dataset shape: <strong>${escapeHtml(storyIntent.label)}</strong>.</p>`
+                : ""}
+              ${datasetStory.focus_dimension
+                ? `<p class="empty-copy">The app is reading this as a comparison dataset organized by <strong>${escapeHtml(humanizeFieldName(datasetStory.focus_dimension))}</strong>.</p>`
+                : ""}
+              ${storyOverview ? `<ul class="insight-list">${storyOverview}</ul>` : ""}
+              ${storyTakeaways
+                ? `
+                  <div class="analysis-subsection">
+                    <h4>What stands out</h4>
+                    <ul class="insight-list">${storyTakeaways}</ul>
+                  </div>
+                `
+                : ""}
+            </div>
+            ${rankingSections}
+          `
+          : ""}
         <div class="analysis-card">
           <h3>Quick read</h3>
           <ul class="insight-list">${insightItems}</ul>
@@ -277,6 +672,20 @@
           ${warningItems
             ? `<ul class="insight-list">${warningItems}</ul>`
             : '<p class="empty-copy">No major rule-based cautions were detected for the current dataset view.</p>'}
+        </div>
+        <div class="analysis-card">
+          <h3>Validation and anomalies</h3>
+          ${storyChecks
+            ? `<ul class="insight-list">${storyChecks}</ul>`
+            : '<p class="empty-copy">No built-in totals or formula rows were available, so consistency checks are limited for this dataset view.</p>'}
+          ${storyFlags
+            ? `
+                <div class="analysis-subsection">
+                  <h4>Standout flags</h4>
+                  <ul class="insight-list">${storyFlags}</ul>
+                </div>
+              `
+            : ""}
         </div>
         <div class="analysis-card">
           <h3>Strongest relationships</h3>
@@ -370,6 +779,7 @@
             : "You need at least two numeric columns for a scatter plot.",
         };
       case "line":
+      case "area":
         return {
           xColumns: datetime,
           yColumns: lineMeasures,
@@ -377,8 +787,8 @@
           yOptional: false,
           rowOptional: true,
           hint: datetime.length && lineMeasures.length
-            ? "Line charts need a date/time column on X and a numeric column on Y."
-            : "You need one datetime column and one numeric column for a line chart.",
+            ? `${chartType === "area" ? "Area" : "Line"} charts need a date/time column on X and a numeric column on Y.`
+            : `You need one datetime column and one numeric column for an ${chartType} chart.`,
         };
       case "pie":
         return {
@@ -533,11 +943,19 @@
     populateMultiSelect,
     renderSchema,
     renderPreview,
+    filterPreviewRows,
+    summarizePreviewColumns,
+    getPreviewColumns,
+    renderDatasetExplanation,
     renderAnalysis,
     getChartCompatibility,
     recommendChartConfig,
     fetchJson,
     downloadBinary,
     requireSession,
+    loadWorkspaces,
+    storeWorkspace,
+    deleteWorkspace,
+    getWorkspace,
   };
 })();

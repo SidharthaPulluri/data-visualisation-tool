@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 from io import BytesIO, StringIO
+from textwrap import fill
 from typing import Any
 from uuid import uuid4
 
@@ -16,7 +17,7 @@ from ingestion.loader import load_uploaded_dataset
 from schema.detect import detect_schema
 from transformation.transform import apply_transformations
 from utils.helpers import dataframe_preview, make_json_safe, sanitize_filename_stem
-from visualization.plots import create_chart
+from visualization.plots import create_chart, describe_chart_data
 
 BASE_DIR = __import__("pathlib").Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR / "frontend"
@@ -113,6 +114,59 @@ def _normalise_chart_items(payload: dict[str, Any]) -> list[dict[str, Any]]:
     if not isinstance(charts, list):
         return []
     return [chart for chart in charts if isinstance(chart, dict) and chart.get("chart_type") and chart.get("x_column")]
+
+
+def _safe_dashboard_columns(value: Any, default: int = 2) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+    return max(1, min(parsed, 3))
+
+
+def _chunked(items: list[dict[str, Any]], size: int) -> list[list[dict[str, Any]]]:
+    return [items[index:index + size] for index in range(0, len(items), size)]
+
+
+def _coerce_preview_filter_value(series: pd.Series, raw_value: Any) -> Any:
+    if pd.api.types.is_datetime64_any_dtype(series):
+        return pd.to_datetime(raw_value, errors="coerce", format="mixed")
+    if pd.api.types.is_numeric_dtype(series):
+        return pd.to_numeric(raw_value, errors="coerce")
+    return str(raw_value)
+
+
+def _apply_preview_filter(df: pd.DataFrame, preview_filter: dict[str, Any] | None) -> pd.DataFrame:
+    if not preview_filter:
+        return df
+
+    filtered = df.copy()
+    for condition in preview_filter.get("conditions", []):
+        column = condition.get("column")
+        if column not in filtered.columns:
+            continue
+
+        condition_type = condition.get("type")
+        series = filtered[column]
+
+        if condition_type == "equals":
+            typed_value = _coerce_preview_filter_value(series, condition.get("value"))
+            if pd.api.types.is_datetime64_any_dtype(series):
+                filtered = filtered[pd.to_datetime(series, errors="coerce", format="mixed") == typed_value]
+            elif pd.api.types.is_numeric_dtype(series):
+                filtered = filtered[pd.to_numeric(series, errors="coerce") == typed_value]
+            else:
+                filtered = filtered[series.astype(str) == str(condition.get("value"))]
+        elif condition_type == "range":
+            numeric_series = pd.to_numeric(series, errors="coerce")
+            lower = pd.to_numeric(condition.get("min"), errors="coerce")
+            upper = pd.to_numeric(condition.get("max"), errors="coerce")
+            include_max = bool(condition.get("include_max"))
+            mask = numeric_series >= lower
+            mask &= numeric_series <= upper if include_max else numeric_series < upper
+            filtered = filtered[mask]
+
+    return filtered
 
 
 @app.get("/")
@@ -239,6 +293,35 @@ def visualize_dataset() -> Any:
                 "shape": {"rows": int(transformed_df.shape[0]), "columns": int(transformed_df.shape[1])},
                 "schema": transformed_schema,
                 "chart_options": chart_options,
+                "plot_data": describe_chart_data(
+                    df=transformed_df,
+                    schema=transformed_schema,
+                    chart_type=chart_type,
+                    x_column=x_column,
+                    y_column=y_column,
+                    chart_options=chart_options,
+                ),
+            }
+        )
+    except ValueError as error:
+        return _json_response({"error": str(error)}, 400)
+
+
+@app.post("/api/preview")
+def filtered_preview() -> Any:
+    payload = request.get_json(silent=True) or {}
+    config = payload.get("config") or {}
+    preview_filter = payload.get("preview_filter") or {}
+
+    try:
+        _, clean_df, _, _ = _resolve_dataset(payload)
+        transformed_df, _ = apply_transformations(clean_df, config)
+        filtered_df = _apply_preview_filter(transformed_df, preview_filter)
+        return _json_response(
+            {
+                "preview": dataframe_preview(filtered_df),
+                "shape": {"rows": int(filtered_df.shape[0]), "columns": int(filtered_df.shape[1])},
+                "filter_label": preview_filter.get("filter_label") or preview_filter.get("label"),
             }
         )
     except ValueError as error:
@@ -319,6 +402,8 @@ def export_dashboard() -> Any:
     payload = request.get_json(silent=True) or {}
     config = payload.get("config") or {}
     charts = _normalise_chart_items(payload)
+    dashboard_columns = _safe_dashboard_columns(payload.get("dashboard_columns"), default=2)
+    charts_per_page = dashboard_columns * 2
 
     if not charts:
         return _json_response({"error": "Save at least one chart before exporting a dashboard."}, 400)
@@ -336,9 +421,10 @@ def export_dashboard() -> Any:
         cover.text(0.08, 0.88, "Dashboard Export", fontsize=20, fontweight="bold")
         cover.text(0.08, 0.82, f"Source file: {filename}", fontsize=11)
         cover.text(0.08, 0.78, f"Saved charts included: {len(charts)}", fontsize=11)
+        cover.text(0.08, 0.74, f"Layout: {dashboard_columns} chart(s) per row, up to {charts_per_page} per page", fontsize=11)
         cover.text(
             0.08,
-            0.71,
+            0.67,
             "\n".join(
                 f"{index + 1}. {chart.get('label') or chart.get('title') or chart.get('chart_type')}"
                 for index, chart in enumerate(charts[:12])
@@ -350,40 +436,66 @@ def export_dashboard() -> Any:
         pdf.savefig(cover, bbox_inches="tight")
         plt.close(cover)
 
-        for chart in charts:
-            title = chart.get("title") or chart.get("label") or chart["chart_type"].title()
-            chart_bytes = create_chart(
-                df=transformed_df,
-                schema=transformed_schema,
-                chart_type=chart["chart_type"],
-                x_column=chart["x_column"],
-                y_column=chart.get("y_column"),
-                title=title,
-                output_format="png",
-                chart_options=chart.get("chart_options") or {},
-            )
-            image = plt.imread(BytesIO(chart_bytes))
+        for page_index, page_charts in enumerate(_chunked(charts, charts_per_page), start=1):
             page = plt.figure(figsize=(11, 8.5))
-            page.suptitle(title, fontsize=16, fontweight="bold", y=0.96)
-            page.text(
-                0.08,
-                0.915,
-                f"{chart['chart_type']} | {chart['x_column']}"
-                + (f" vs {chart.get('y_column')}" if chart.get("y_column") else ""),
-                fontsize=10,
-                color="#4a5d75",
+            page.suptitle(
+                f"Dashboard Page {page_index}",
+                fontsize=16,
+                fontweight="bold",
+                y=0.97,
             )
-            axis = page.add_axes([0.08, 0.2, 0.84, 0.64])
-            axis.imshow(image)
-            axis.axis("off")
-            note = (chart.get("note") or "").strip()
-            page.text(
-                0.08,
-                0.08,
-                f"Note: {note}" if note else "Note: No note added for this chart.",
-                fontsize=10,
-                wrap=True,
+            grid = page.add_gridspec(
+                2,
+                dashboard_columns,
+                left=0.05,
+                right=0.97,
+                top=0.90,
+                bottom=0.07,
+                wspace=0.16,
+                hspace=0.22,
             )
+
+            for chart_index, chart in enumerate(page_charts):
+                title = chart.get("title") or chart.get("label") or chart["chart_type"].title()
+                chart_bytes = create_chart(
+                    df=transformed_df,
+                    schema=transformed_schema,
+                    chart_type=chart["chart_type"],
+                    x_column=chart["x_column"],
+                    y_column=chart.get("y_column"),
+                    title=title,
+                    output_format="png",
+                    chart_options=chart.get("chart_options") or {},
+                )
+                image = plt.imread(BytesIO(chart_bytes))
+
+                cell = grid[chart_index // dashboard_columns, chart_index % dashboard_columns]
+                subgrid = cell.subgridspec(2, 1, height_ratios=[4.4, 1.1], hspace=0.02)
+                axis = page.add_subplot(subgrid[0])
+                info = page.add_subplot(subgrid[1])
+
+                axis.imshow(image)
+                axis.axis("off")
+                axis.set_title(fill(title, width=max(24, 42 - dashboard_columns * 4)), fontsize=10.5, fontweight="bold", loc="left", pad=6)
+
+                info.axis("off")
+                subtitle = f"{chart['chart_type']} | {chart['x_column']}" + (f" vs {chart.get('y_column')}" if chart.get("y_column") else "")
+                note = (chart.get("note") or "").strip()
+                info.text(0.0, 0.9, fill(subtitle, width=max(28, 50 - dashboard_columns * 6)), fontsize=8.7, color="#4a5d75", va="top")
+                info.text(
+                    0.0,
+                    0.46,
+                    fill(f"Note: {note}" if note else "Note: No note added for this chart.", width=max(28, 50 - dashboard_columns * 6)),
+                    fontsize=8.3,
+                    color="#5c6c80",
+                    va="top",
+                )
+
+            total_slots = charts_per_page
+            for empty_index in range(len(page_charts), total_slots):
+                placeholder = page.add_subplot(grid[empty_index // dashboard_columns, empty_index % dashboard_columns])
+                placeholder.axis("off")
+
             pdf.savefig(page, bbox_inches="tight")
             plt.close(page)
 
@@ -396,6 +508,7 @@ def export_dashboard() -> Any:
 def export_report() -> Any:
     payload = request.get_json(silent=True) or {}
     config = payload.get("config") or {}
+    charts = _normalise_chart_items(payload)
 
     try:
         filename, clean_df, load_report, cleaning_report = _resolve_dataset(payload)
@@ -436,6 +549,32 @@ def export_report() -> Any:
     report_lines.extend(
         f"- {insight}" for insight in analysis.get("key_insights", []) or ["No standout insights were generated."]
     )
+    dataset_story = analysis.get("dataset_story") or {}
+    if dataset_story.get("headline_metrics") or dataset_story.get("takeaways") or dataset_story.get("ranking_sections"):
+        report_lines.extend(["", "Dataset Story", "-" * 13])
+        story_intent = dataset_story.get("intent") or {}
+        if story_intent.get("label"):
+            report_lines.append(f"- Detected dataset shape: {story_intent['label']}")
+        if story_intent.get("reasons"):
+            report_lines.extend(f"- {item}" for item in story_intent["reasons"][:3])
+        report_lines.extend(f"- {item}" for item in dataset_story.get("overview", [])[:3])
+        for metric in dataset_story.get("headline_metrics", [])[:5]:
+            report_lines.append(f"- {metric['label']}: {metric['formatted_value']}")
+        for choice in dataset_story.get("metric_choices", [])[:3]:
+            report_lines.append(
+                f"- {choice['slot_label']}: {choice.get('formatted_column') or choice['column']}"
+            )
+        for check in dataset_story.get("consistency_checks", [])[:5]:
+            report_lines.append(f"- {check['title']}: {check['message']}")
+        for item in dataset_story.get("anomaly_flags", [])[:5]:
+            report_lines.append(f"- {item}")
+        report_lines.extend(f"- {item}" for item in dataset_story.get("takeaways", [])[:4])
+        for section in dataset_story.get("ranking_sections", [])[:4]:
+            report_lines.append(f"- {section['title']}:")
+            for index, item in enumerate(section.get("items", [])[:5], start=1):
+                secondary = f" | {item.get('formatted_secondary')}" if item.get("formatted_secondary") else ""
+                report_lines.append(f"  {index}. {item['label']}: {item['formatted_value']}{secondary}")
+
     report_lines.extend(
         [
             "",
@@ -474,6 +613,20 @@ def export_report() -> Any:
     )
     if not analysis.get("warnings"):
         report_lines.append("- No major rule-based cautions were detected.")
+
+    report_lines.extend(["", "Saved Visuals", "-" * 13])
+    if charts:
+        report_lines.append(f"- Saved charts included in this workspace: {len(charts)}")
+        for index, chart in enumerate(charts[:10], start=1):
+            report_lines.append(
+                f"- {index}. {chart.get('label') or chart.get('title') or chart.get('chart_type')} "
+                f"({chart['chart_type']} | {chart['x_column']}" + (f" vs {chart.get('y_column')}" if chart.get("y_column") else "") + ")"
+            )
+            note = (chart.get("note") or "").strip()
+            if note:
+                report_lines.append(f"  Note: {note}")
+    else:
+        report_lines.append("- No saved charts were attached to this report export.")
 
     report_lines.extend(
         [
