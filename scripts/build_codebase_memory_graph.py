@@ -945,7 +945,7 @@ def render_html(graph: dict[str, Any]) -> str:
         </div>
         <div class="controls">
           <input id="searchInput" class="search" type="text" placeholder="Search a file or function">
-          <button id="resetViewButton" class="reset-button" type="button">Reset focus</button>
+          <button id="resetViewButton" class="reset-button" type="button">Back to overview / drag mode</button>
         </div>
       </div>
       <div class="graph-wrap">
@@ -956,7 +956,7 @@ def render_html(graph: dict[str, Any]) -> str:
         </div>
         <canvas id="graphCanvas" width="1500" height="760"></canvas>
         <div class="legend" id="legend"></div>
-        <div class="graph-help">Drag stars in overview to save your own layout · click a star to focus its orbit · click a strand to inspect the connection</div>
+        <div class="graph-help">Overview mode lets you drag stars and save the layout · clicking a star enters focus mode · use Back to overview / drag mode to rearrange again</div>
       </div>
     </section>
 
@@ -1735,10 +1735,13 @@ def render_html(graph: dict[str, Any]) -> str:
       const file = fileLookup.get(nodeId);
       if (file) {{
         const related = connectedEdgesForFile(file.path);
+        const isolatedHint = related.length
+          ? "Click a strand to inspect why that file is connected."
+          : "This file has no cross-file strands right now. Use Back to overview / drag mode to return to the draggable map.";
         selectionPill.innerHTML = `
           <span class="eyebrow">File star</span>
           <h3>${{escapeHtml(file.name)}}</h3>
-          <p>${{escapeHtml(file.folder)}} · ${{file.functions.length}} functions · ${{related.length}} visible connections</p>
+          <p>${{escapeHtml(file.folder)}} · ${{file.functions.length}} functions · ${{related.length}} visible connections<br><span class="muted">${{escapeHtml(isolatedHint)}}</span></p>
         `;
         return;
       }}
@@ -1792,6 +1795,7 @@ def render_html(graph: dict[str, Any]) -> str:
           <h2>${{escapeHtml(file.path)}}</h2>
           <p class="detail-meta">${{file.lines}} lines · ${{file.functions.length}} functions · ${{file.classes.length}} classes · ${{file.degree || 0}} connected strands</p>
           <ul class="detail-list">
+            <li><span class="detail-key">Mode</span>${{related.length ? "Focused cluster mode is active for this file." : "This is an isolated file star. Use Back to overview / drag mode to return to the rearrangeable map."}}</li>
             <li><span class="detail-key">Functions</span>${{file.functions.length ? file.functions.map((fn) => escapeHtml(fn.name)).join(", ") : "No functions extracted"}}</li>
             <li><span class="detail-key">Imports / outbound links</span>${{file.imports.length ? file.imports.map((item) => escapeHtml(item)).join(", ") : "None"}}</li>
             <li><span class="detail-key">Shared helper refs</span>${{file.helper_refs.length ? file.helper_refs.map((item) => `<code>${{escapeHtml(item)}}</code>`).join(", ") : "None"}}</li>
