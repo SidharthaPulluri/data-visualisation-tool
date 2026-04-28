@@ -29,6 +29,10 @@ DATA_TOOL_RE = re.compile(r"window\.dataTool\.([A-Za-z_]\w*)")
 API_RE = re.compile(r"['\"](/api/[^'\"#?]+)['\"]")
 PAGE_RE = re.compile(r"""(?:href|window\.location\.href)\s*=\s*["'](/[^"'#?]+)["']""")
 SCRIPT_SRC_RE = re.compile(r"""<script[^>]+src=["'](/static/[^"'#?]+)["']""", re.IGNORECASE)
+STYLESHEET_HREF_RE = re.compile(
+    r"""<link[^>]+rel=["'][^"']*stylesheet[^"']*["'][^>]+href=["'](/static/[^"'#?]+)["']""",
+    re.IGNORECASE,
+)
 JS_IMPORT_RE = re.compile(
     r"""^\s*import\s+(?:[^;]*?\s+from\s+)?["'](\.[^"']+)["']""",
     re.MULTILINE,
@@ -332,12 +336,15 @@ def parse_html(path: Path, text: str) -> dict[str, Any]:
         "api_refs": set(),
         "page_refs": set(),
         "script_refs": set(),
+        "style_refs": set(),
         "routes": [],
     }
     for src in SCRIPT_SRC_RE.findall(text):
         rel = src.replace("/static/", "frontend/")
-        info["imports"].add(rel)
         info["script_refs"].add(rel)
+    for href in STYLESHEET_HREF_RE.findall(text):
+        rel = href.replace("/static/", "frontend/")
+        info["style_refs"].add(rel)
 
     inline_scripts = re.findall(r"<script>([\s\S]*?)</script>", text, flags=re.IGNORECASE)
     for script in inline_scripts:
@@ -373,6 +380,7 @@ def parse_css(path: Path, text: str) -> dict[str, Any]:
         "api_refs": set(),
         "page_refs": set(),
         "script_refs": set(),
+        "style_refs": set(),
         "routes": [],
     }
 
@@ -389,6 +397,7 @@ def parse_file(path: Path) -> dict[str, Any]:
         parser_output = parse_js_like(text) | {
             "classes": [],
             "script_refs": set(),
+            "style_refs": set(),
             "routes": [],
         }
     else:
@@ -415,6 +424,7 @@ def parse_file(path: Path) -> dict[str, Any]:
         "api_refs": sorted(set(parser_output.get("api_refs", set()))),
         "page_refs": sorted(set(parser_output.get("page_refs", set()))),
         "script_refs": sorted(set(parser_output.get("script_refs", set()))),
+        "style_refs": sorted(set(parser_output.get("style_refs", set()))),
         "routes": parser_output.get("routes", []),
     }
 
@@ -632,6 +642,17 @@ def build_graph(files: list[dict[str, Any]]) -> dict[str, Any]:
                     detail=f"Loads script asset {script_ref} into the page runtime.",
                 )
 
+        for style_ref in file_info.get("style_refs", []):
+            if style_ref in by_path:
+                add_edge(
+                    edges,
+                    file_info["path"],
+                    style_ref,
+                    "loads stylesheet",
+                    kind="stylesheet-load",
+                    detail=f"Loads stylesheet asset {style_ref} into the page.",
+                )
+
         for route in file_info.get("routes", []):
             served = route.get("serves")
             if served and served in by_path:
@@ -647,6 +668,16 @@ def build_graph(files: list[dict[str, Any]]) -> dict[str, Any]:
                     kind="page-serve",
                     detail=f"Route {route_paths_text} ({route_methods_text}) serves frontend file {served}.",
                 )
+
+    if "scripts/build_codebase_memory_graph.py" in by_path and "tools/codebase_memory_graph/index.html" in by_path:
+        add_edge(
+            edges,
+            "scripts/build_codebase_memory_graph.py",
+            "tools/codebase_memory_graph/index.html",
+            "generates viewer",
+            kind="build-artifact",
+            detail="Generates the standalone HTML viewer for the codebase memory graph.",
+        )
 
     degrees = defaultdict(int)
     for edge in edges.values():
@@ -1478,8 +1509,14 @@ def render_html(graph: dict[str, Any]) -> str:
       if (kind === "script-load") {{
         return "The source file explicitly loads the target script asset into the browser runtime.";
       }}
+      if (kind === "stylesheet-load") {{
+        return "The source file explicitly loads the target stylesheet asset into the page shell.";
+      }}
       if (kind === "page-serve") {{
         return "The target page is served by a route implemented in the source file.";
+      }}
+      if (kind === "build-artifact") {{
+        return "The source file generates or materializes the target artifact as part of the repo tooling workflow.";
       }}
       return `This strand exists because of ${{kind}}.`;
     }}
