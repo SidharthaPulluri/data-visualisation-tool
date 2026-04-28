@@ -16,6 +16,28 @@ The graph now highlights:
 - repeated function names
 - deterministic similarity clusters for “same logic, different file” cases
 
+## Future Graph Concept
+
+Keep this idea for a later standalone graph pass. Do not build it yet.
+
+- Treat every feature or column as a node with the feature name visible inside the node.
+- Connect nodes using dependency strength rather than simple file ownership.
+- Stronger dependency should pull nodes closer together.
+- Weak or no dependency should leave nodes independent or loosely connected.
+- Important features should have larger node size.
+- Use a gravity-style or force-based placement model so the layout explains itself instead of looking manually arranged.
+- Favor clarity over density:
+  - reduce strand noise
+  - allow importance-based sizing
+  - surface clusters naturally
+  - make weakly related nodes visibly drift apart
+
+Why this matters:
+
+- it could become a cleaner way to reason about feature relationships than static folder placement
+- it would help spot core features, isolated features, and misleading placements faster
+- it can evolve from the current mapping work once the current file/function graph is stable
+
 ## Current Flow
 
 ```mermaid

@@ -7354,7 +7354,7 @@
       "name": "build_codebase_memory_graph.py",
       "folder": "scripts",
       "extension": ".py",
-      "lines": 1540,
+      "lines": 1604,
       "functions": [
         {
           "name": "discover_source_files",
@@ -8028,30 +8028,30 @@
           "keywords": [
             "span",
             "node",
+            "edge",
             "ctx",
-            "state",
             "planet",
+            "detail",
             "math",
-            "map",
-            "detail"
+            "map"
           ],
           "fingerprint": [
             "ctx",
             "detail",
+            "edge",
             "html",
             "map",
             "math",
             "node",
             "planet",
             "render",
-            "span",
-            "state"
+            "span"
           ],
           "stem": "render html"
         },
         {
           "name": "main",
-          "line": 1528,
+          "line": 1592,
           "kind": "function",
           "keywords": [
             "graph",
@@ -8441,12 +8441,12 @@
       "name": "index.html",
       "folder": "tools",
       "extension": ".html",
-      "lines": 635,
+      "lines": 905,
       "functions": [
         {
           "name": "escapeHtml",
           "kind": "function",
-          "line": 31,
+          "line": 42,
           "keywords": [
             "all",
             "replace",
@@ -8465,64 +8465,9 @@
           "stem": "escape html"
         },
         {
-          "name": "groupFilesByFolder",
-          "kind": "function",
-          "line": 40,
-          "keywords": [
-            "groups",
-            "folder",
-            "files",
-            "compare",
-            "each",
-            "entries",
-            "for",
-            "get"
-          ],
-          "fingerprint": [
-            "compare",
-            "each",
-            "entries",
-            "files",
-            "folder",
-            "for",
-            "get",
-            "group",
-            "groups"
-          ],
-          "stem": "group files folder"
-        },
-        {
-          "name": "buildPositions",
-          "kind": "function",
-          "line": 51,
-          "keywords": [
-            "math",
-            "folder",
-            "group",
-            "angle",
-            "files",
-            "radius",
-            "length",
-            "index"
-          ],
-          "fingerprint": [
-            "angle",
-            "build",
-            "files",
-            "folder",
-            "group",
-            "index",
-            "length",
-            "math",
-            "positions",
-            "radius"
-          ],
-          "stem": "build positions"
-        },
-        {
           "name": "attachDegrees",
           "kind": "function",
-          "line": 104,
+          "line": 51,
           "keywords": [
             "map",
             "degree",
@@ -8548,90 +8493,427 @@
           "stem": "attach degrees"
         },
         {
-          "name": "buildLookups",
+          "name": "groupFilesByFolder",
           "kind": "function",
-          "line": 116,
+          "line": 60,
           "keywords": [
-            "map",
-            "planet",
-            "new",
-            "node",
-            "nodes",
+            "groups",
+            "folder",
             "files",
-            "positions",
-            "build"
+            "compare",
+            "each",
+            "entries",
+            "for",
+            "get"
+          ],
+          "fingerprint": [
+            "compare",
+            "each",
+            "entries",
+            "files",
+            "folder",
+            "for",
+            "get",
+            "group",
+            "groups"
+          ],
+          "stem": "group files folder"
+        },
+        {
+          "name": "normalizeText",
+          "kind": "function",
+          "line": 71,
+          "keywords": [
+            "case",
+            "lower",
+            "normalize"
+          ],
+          "fingerprint": [
+            "case",
+            "lower",
+            "normalize",
+            "text"
+          ],
+          "stem": "normalize text"
+        },
+        {
+          "name": "buildPositions",
+          "kind": "function",
+          "line": 75,
+          "keywords": [
+            "math",
+            "group",
+            "cols",
+            "max",
+            "height",
+            "width",
+            "index",
+            "files"
           ],
           "fingerprint": [
             "build",
+            "cols",
             "files",
-            "lookups",
-            "map",
-            "new",
-            "node",
-            "nodes",
-            "planet",
-            "positions"
+            "group",
+            "height",
+            "index",
+            "math",
+            "max",
+            "positions",
+            "width"
           ],
-          "stem": "build lookups"
+          "stem": "build positions"
         },
         {
-          "name": "isVisible",
+          "name": "isFunctionMatch",
           "kind": "function",
-          "line": 126,
+          "line": 161,
+          "keywords": [
+            "planet",
+            "haystack",
+            "search",
+            "state",
+            "case",
+            "includes",
+            "join",
+            "keywords"
+          ],
+          "fingerprint": [
+            "case",
+            "function",
+            "haystack",
+            "includes",
+            "join",
+            "keywords",
+            "match",
+            "planet",
+            "search",
+            "state"
+          ],
+          "stem": "function match"
+        },
+        {
+          "name": "isVisibleFile",
+          "kind": "function",
+          "line": 167,
           "keywords": [
             "node",
             "haystack",
             "search",
             "state",
             "case",
-            "includes",
-            "label",
-            "lower"
+            "folder",
+            "get",
+            "includes"
           ],
           "fingerprint": [
             "case",
+            "file",
+            "folder",
+            "get",
             "haystack",
             "includes",
-            "label",
-            "lower",
             "node",
             "search",
             "state",
             "visible"
           ],
-          "stem": "visible"
+          "stem": "visible file"
+        },
+        {
+          "name": "activeParentId",
+          "kind": "function",
+          "line": 174,
+          "keywords": [
+            "selected",
+            "state",
+            "lookup",
+            "parent",
+            "active",
+            "get",
+            "has",
+            "node"
+          ],
+          "fingerprint": [
+            "active",
+            "get",
+            "has",
+            "lookup",
+            "node",
+            "parent",
+            "selected",
+            "state"
+          ],
+          "stem": "active parent"
+        },
+        {
+          "name": "shouldShowPlanets",
+          "kind": "function",
+          "line": 181,
+          "keywords": [
+            "node",
+            "parent",
+            "active",
+            "planets",
+            "search",
+            "should",
+            "show",
+            "state"
+          ],
+          "fingerprint": [
+            "active",
+            "node",
+            "parent",
+            "planets",
+            "search",
+            "should",
+            "show",
+            "state"
+          ],
+          "stem": "should show planets"
+        },
+        {
+          "name": "toWorld",
+          "kind": "function",
+          "line": 188,
+          "keywords": [
+            "rect",
+            "scale",
+            "client",
+            "screen",
+            "state",
+            "canvas",
+            "height",
+            "offset"
+          ],
+          "fingerprint": [
+            "canvas",
+            "client",
+            "height",
+            "offset",
+            "rect",
+            "scale",
+            "screen",
+            "state",
+            "world"
+          ],
+          "stem": "world"
+        },
+        {
+          "name": "resetView",
+          "kind": "function",
+          "line": 200,
+          "keywords": [
+            "state",
+            "offset",
+            "reset",
+            "scale",
+            "view"
+          ],
+          "fingerprint": [
+            "offset",
+            "reset",
+            "scale",
+            "state",
+            "view"
+          ],
+          "stem": "reset view"
+        },
+        {
+          "name": "drawGroupZones",
+          "kind": "function",
+          "line": 206,
+          "keywords": [
+            "ctx",
+            "zone",
+            "fill",
+            "color",
+            "folder",
+            "style",
+            "group",
+            "label"
+          ],
+          "fingerprint": [
+            "color",
+            "ctx",
+            "draw",
+            "fill",
+            "folder",
+            "group",
+            "label",
+            "style",
+            "zone",
+            "zones"
+          ],
+          "stem": "draw group zones"
+        },
+        {
+          "name": "connectedEdgesForFile",
+          "kind": "function",
+          "line": 223,
+          "keywords": [
+            "edge",
+            "edges",
+            "connected",
+            "filter",
+            "for",
+            "graph",
+            "source",
+            "target"
+          ],
+          "fingerprint": [
+            "connected",
+            "edge",
+            "edges",
+            "filter",
+            "for",
+            "graph",
+            "source",
+            "target"
+          ],
+          "stem": "connected edges for"
+        },
+        {
+          "name": "drawEdges",
+          "kind": "function",
+          "line": 227,
+          "keywords": [
+            "source",
+            "target",
+            "ctx",
+            "control",
+            "edge",
+            "focused",
+            "selected",
+            "state"
+          ],
+          "fingerprint": [
+            "control",
+            "ctx",
+            "draw",
+            "edge",
+            "edges",
+            "focused",
+            "selected",
+            "source",
+            "state",
+            "target"
+          ],
+          "stem": "draw edges"
+        },
+        {
+          "name": "drawPlanets",
+          "kind": "function",
+          "line": 244,
+          "keywords": [
+            "ctx",
+            "node",
+            "planet",
+            "planets",
+            "selected",
+            "stroke",
+            "begin",
+            "rgba"
+          ],
+          "fingerprint": [
+            "begin",
+            "ctx",
+            "draw",
+            "node",
+            "planet",
+            "planets",
+            "rgba",
+            "selected",
+            "stroke"
+          ],
+          "stem": "draw planets"
+        },
+        {
+          "name": "drawStars",
+          "kind": "function",
+          "line": 270,
+          "keywords": [
+            "node",
+            "ctx",
+            "color",
+            "fill",
+            "selected",
+            "shadow",
+            "blur",
+            "folder"
+          ],
+          "fingerprint": [
+            "blur",
+            "color",
+            "ctx",
+            "draw",
+            "fill",
+            "folder",
+            "node",
+            "selected",
+            "shadow",
+            "stars"
+          ],
+          "stem": "draw stars"
         },
         {
           "name": "draw",
           "kind": "function",
-          "line": 132,
+          "line": 289,
           "keywords": [
             "ctx",
-            "source",
-            "target",
-            "planet",
-            "selected",
+            "draw",
+            "canvas",
             "state",
+            "scale",
             "fill",
-            "style"
+            "height",
+            "offset"
           ],
           "fingerprint": [
+            "canvas",
             "ctx",
             "draw",
             "fill",
-            "planet",
-            "selected",
-            "source",
-            "state",
-            "style",
-            "target"
+            "height",
+            "offset",
+            "scale",
+            "state"
           ],
           "stem": "draw"
         },
         {
+          "name": "hitTest",
+          "kind": "function",
+          "line": 304,
+          "keywords": [
+            "node",
+            "nodes",
+            "visible",
+            "index",
+            "parent",
+            "event",
+            "planet",
+            "planets"
+          ],
+          "fingerprint": [
+            "event",
+            "hit",
+            "index",
+            "node",
+            "nodes",
+            "parent",
+            "planet",
+            "planets",
+            "test",
+            "visible"
+          ],
+          "stem": "hit test"
+        },
+        {
           "name": "renderHeroStats",
           "kind": "function",
-          "line": 196,
+          "line": 322,
           "keywords": [
             "span",
             "summary",
@@ -8658,7 +8940,7 @@
         {
           "name": "renderLegend",
           "kind": "function",
-          "line": 207,
+          "line": 333,
           "keywords": [
             "folder",
             "legend",
@@ -8685,7 +8967,7 @@
         {
           "name": "renderHotspots",
           "kind": "function",
-          "line": 217,
+          "line": 343,
           "keywords": [
             "span",
             "escape",
@@ -8712,7 +8994,7 @@
         {
           "name": "renderSimilarityClusters",
           "kind": "function",
-          "line": 227,
+          "line": 353,
           "keywords": [
             "similarity",
             "span",
@@ -8739,7 +9021,7 @@
         {
           "name": "renderDuplicates",
           "kind": "function",
-          "line": 242,
+          "line": 368,
           "keywords": [
             "span",
             "duplicate",
@@ -8764,35 +9046,36 @@
           "stem": "render duplicates"
         },
         {
-          "name": "connectedEdgesForFile",
+          "name": "renderSelectionPill",
           "kind": "function",
-          "line": 255,
+          "line": 381,
           "keywords": [
-            "edge",
-            "edges",
-            "connected",
-            "filter",
-            "for",
-            "graph",
-            "source",
-            "target"
+            "planet",
+            "span",
+            "node",
+            "selection",
+            "escape",
+            "pill",
+            "eyebrow",
+            "functions"
           ],
           "fingerprint": [
-            "connected",
-            "edge",
-            "edges",
-            "filter",
-            "for",
-            "graph",
-            "source",
-            "target"
+            "escape",
+            "eyebrow",
+            "functions",
+            "node",
+            "pill",
+            "planet",
+            "render",
+            "selection",
+            "span"
           ],
-          "stem": "connected edges for"
+          "stem": "render selection pill"
         },
         {
           "name": "renderDetails",
           "kind": "function",
-          "line": 259,
+          "line": 409,
           "keywords": [
             "span",
             "detail",
@@ -8801,15 +9084,15 @@
             "planet",
             "related",
             "key",
-            "member"
+            "join"
           ],
           "fingerprint": [
             "cluster",
             "detail",
             "details",
             "escape",
+            "join",
             "key",
-            "member",
             "planet",
             "related",
             "render",
@@ -8818,32 +9101,31 @@
           "stem": "render details"
         },
         {
-          "name": "hitTest",
+          "name": "updateSelection",
           "kind": "function",
-          "line": 314,
+          "line": 465,
           "keywords": [
-            "rect",
             "node",
-            "nodes",
-            "index",
-            "scale",
-            "canvas",
-            "client",
-            "event"
+            "render",
+            "selection",
+            "details",
+            "draw",
+            "pill",
+            "selected",
+            "state"
           ],
           "fingerprint": [
-            "canvas",
-            "client",
-            "event",
-            "hit",
-            "index",
+            "details",
+            "draw",
             "node",
-            "nodes",
-            "rect",
-            "scale",
-            "test"
+            "pill",
+            "render",
+            "selected",
+            "selection",
+            "state",
+            "update"
           ],
-          "stem": "hit test"
+          "stem": "update selection"
         }
       ],
       "classes": [],
@@ -10393,7 +10675,7 @@
           "id": "tools/codebase_memory_graph/index.html::escapeHtml",
           "file": "tools/codebase_memory_graph/index.html",
           "name": "escapeHtml",
-          "line": 31,
+          "line": 42,
           "kind": "function"
         }
       ],
@@ -11556,7 +11838,7 @@
   ],
   "summary": {
     "files": 20,
-    "functions": 330,
+    "functions": 341,
     "edges": 34,
     "folders": 11,
     "similarity_clusters": 31

@@ -764,10 +764,7 @@ def render_html(graph: dict[str, Any]) -> str:
       width: 100%;
       height: 760px;
       display: block;
-      cursor: grab;
-    }}
-    #graphCanvas.dragging {{
-      cursor: grabbing;
+      cursor: default;
     }}
     .selection-pill {{
       position: absolute;
@@ -932,7 +929,7 @@ def render_html(graph: dict[str, Any]) -> str:
         <div class="workspace-copy">
           <span class="eyebrow">Constellation view</span>
           <h2>Files, functions, and cross-file strands</h2>
-          <p>Folders are laid out as separate domains, stars stay readable, and functions stay collapsed until a file is selected or searched so the map stays cleaner.</p>
+          <p>Folders stay separated as constellations, stars stay readable, and functions stay collapsed until a file is selected or searched so the map keeps the star-field feel without drowning in noise.</p>
         </div>
         <div class="controls">
           <input id="searchInput" class="search" type="text" placeholder="Search a file or function">
@@ -947,7 +944,7 @@ def render_html(graph: dict[str, Any]) -> str:
         </div>
         <canvas id="graphCanvas" width="1500" height="760"></canvas>
         <div class="legend" id="legend"></div>
-        <div class="graph-help">Drag to pan · wheel to zoom · click a star to reveal its planets</div>
+        <div class="graph-help">Wheel to zoom · click a star to reveal planets · click a strand to inspect the connection</div>
       </div>
     </section>
 
@@ -1015,16 +1012,9 @@ def render_html(graph: dict[str, Any]) -> str:
 
     const state = {{
       selectedId: null,
+      selectedEdgeKey: null,
       search: "",
-      scale: 1,
-      offsetX: 0,
-      offsetY: 0,
-      dragging: false,
-      movedDuringDrag: false,
-      dragStartX: 0,
-      dragStartY: 0,
-      dragOriginX: 0,
-      dragOriginY: 0
+      scale: 1
     }};
 
     function escapeHtml(value) {{
@@ -1093,6 +1083,9 @@ def render_html(graph: dict[str, Any]) -> str:
           y,
           width,
           height,
+          centerX: x + width / 2,
+          centerY: y + height / 2,
+          haloRadius: Math.max(width, height) * 0.38,
           labelX: x + 18,
           labelY: y + 24
         }});
@@ -1138,6 +1131,7 @@ def render_html(graph: dict[str, Any]) -> str:
     const fileLookup = new Map(filesWithDegree.map((file) => [file.path, file]));
     const fileNodeLookup = new Map(positions.fileNodes.map((node) => [node.path, node]));
     const functionLookup = new Map(positions.planetNodes.map((node) => [node.id, node]));
+    const edgeLookup = new Map(GRAPH.edges.map((edge) => [`${{edge.source}}->${{edge.target}}`, edge]));
     const planetsByParent = new Map();
     positions.planetNodes.forEach((planet) => {{
       if (!planetsByParent.has(planet.parentId)) {{
@@ -1179,27 +1173,33 @@ def render_html(graph: dict[str, Any]) -> str:
       const scaleY = canvas.height / rect.height;
       const screenX = (clientX - rect.left) * scaleX;
       const screenY = (clientY - rect.top) * scaleY;
+      const translateX = (canvas.width - canvas.width * state.scale) / 2;
+      const translateY = (canvas.height - canvas.height * state.scale) / 2;
       return {{
-        x: (screenX - state.offsetX) / state.scale,
-        y: (screenY - state.offsetY) / state.scale
+        x: (screenX - translateX) / state.scale,
+        y: (screenY - translateY) / state.scale
       }};
     }}
 
     function resetView() {{
       state.scale = 1;
-      state.offsetX = 0;
-      state.offsetY = 0;
     }}
 
     function drawGroupZones() {{
       positions.groupZones.forEach((zone) => {{
         const color = FOLDER_COLORS[zone.folder] || "#8aa4c8";
-        ctx.fillStyle = color + "10";
-        ctx.strokeStyle = color + "45";
-        ctx.lineWidth = 1.2;
+        const gradient = ctx.createRadialGradient(zone.centerX, zone.centerY, 12, zone.centerX, zone.centerY, zone.haloRadius);
+        gradient.addColorStop(0, color + "22");
+        gradient.addColorStop(0.55, color + "0d");
+        gradient.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.roundRect(zone.x, zone.y, zone.width, zone.height, 24);
+        ctx.arc(zone.centerX, zone.centerY, zone.haloRadius, 0, Math.PI * 2);
         ctx.fill();
+        ctx.strokeStyle = color + "22";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(zone.centerX, zone.centerY, zone.haloRadius * 0.84, 0, Math.PI * 2);
         ctx.stroke();
         ctx.fillStyle = "#dce9ff";
         ctx.font = "700 12px Segoe UI";
@@ -1212,19 +1212,74 @@ def render_html(graph: dict[str, Any]) -> str:
       return GRAPH.edges.filter((edge) => edge.source === path || edge.target === path);
     }}
 
+    function edgeKey(edge) {{
+      return `${{edge.source}}->${{edge.target}}`;
+    }}
+
+    function describeEdgeLabel(label) {{
+      if (label === "imports") {{
+        return "This file directly imports the target file, so the target provides code used by the source.";
+      }}
+      if (label === "uses shared helper") {{
+        return "This file calls shared helpers from the target, so the target supplies reusable frontend logic.";
+      }}
+      if (label === "loads script") {{
+        return "This page explicitly loads the target script as a runtime dependency.";
+      }}
+      if (label.startsWith("/api/")) {{
+        return `This file calls the API route ${{label}}, which is handled in the target file.`;
+      }}
+      if (label.startsWith("/")) {{
+        return `This file links or navigates to ${{label}}, which resolves to the target page file.`;
+      }}
+      return `This connection exists because of: ${{label}}.`;
+    }}
+
+    function edgeExplanation(edge) {{
+      return edge.labels.map((label) => `<li><span class="detail-key">${{escapeHtml(label)}}</span>${{escapeHtml(describeEdgeLabel(label))}}</li>`).join("");
+    }}
+
+    function getVisibleEdgeGeometry(edge) {{
+      const source = fileNodeLookup.get(edge.source);
+      const target = fileNodeLookup.get(edge.target);
+      if (!source || !target || !isVisibleFile(source) || !isVisibleFile(target)) return null;
+      return {{
+        edge,
+        source,
+        target,
+        controlX: (source.x + target.x) / 2,
+        controlY: (source.y + target.y) / 2 - Math.min(80, Math.abs(source.x - target.x) * 0.08)
+      }};
+    }}
+
+    function pointToQuadraticDistance(point, geometry) {{
+      let minDistance = Infinity;
+      for (let step = 0; step <= 32; step += 1) {{
+        const t = step / 32;
+        const inv = 1 - t;
+        const x = inv * inv * geometry.source.x + 2 * inv * t * geometry.controlX + t * t * geometry.target.x;
+        const y = inv * inv * geometry.source.y + 2 * inv * t * geometry.controlY + t * t * geometry.target.y;
+        minDistance = Math.min(minDistance, Math.hypot(point.x - x, point.y - y));
+      }}
+      return minDistance;
+    }}
+
     function drawEdges() {{
       GRAPH.edges.forEach((edge) => {{
-        const source = fileNodeLookup.get(edge.source);
-        const target = fileNodeLookup.get(edge.target);
-        if (!source || !target || !isVisibleFile(source) || !isVisibleFile(target)) return;
-        const focused = state.selectedId && (state.selectedId === source.path || state.selectedId === target.path || activeParentId() === source.path || activeParentId() === target.path);
-        ctx.strokeStyle = focused ? "rgba(110, 197, 255, 0.72)" : "rgba(102, 151, 215, 0.12)";
-        ctx.lineWidth = focused ? 1.8 : 0.8;
+        const geometry = getVisibleEdgeGeometry(edge);
+        if (!geometry) return;
+        const key = edgeKey(edge);
+        const focused = state.selectedId && (state.selectedId === geometry.source.path || state.selectedId === geometry.target.path || activeParentId() === geometry.source.path || activeParentId() === geometry.target.path);
+        const selected = state.selectedEdgeKey === key;
+        ctx.strokeStyle = selected
+          ? "rgba(255, 211, 102, 0.92)"
+          : focused
+            ? "rgba(110, 197, 255, 0.72)"
+            : "rgba(102, 151, 215, 0.12)";
+        ctx.lineWidth = selected ? 2.6 : focused ? 1.8 : 0.8;
         ctx.beginPath();
-        ctx.moveTo(source.x, source.y);
-        const controlX = (source.x + target.x) / 2;
-        const controlY = (source.y + target.y) / 2 - Math.min(80, Math.abs(source.x - target.x) * 0.08);
-        ctx.quadraticCurveTo(controlX, controlY, target.x, target.y);
+        ctx.moveTo(geometry.source.x, geometry.source.y);
+        ctx.quadraticCurveTo(geometry.controlX, geometry.controlY, geometry.target.x, geometry.target.y);
         ctx.stroke();
       }});
     }}
@@ -1280,7 +1335,7 @@ def render_html(graph: dict[str, Any]) -> str:
       ctx.fillStyle = "#07111e";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.save();
-      ctx.translate(state.offsetX, state.offsetY);
+      ctx.translate((canvas.width - canvas.width * state.scale) / 2, (canvas.height - canvas.height * state.scale) / 2);
       ctx.scale(state.scale, state.scale);
       drawGroupZones();
       drawEdges();
@@ -1302,6 +1357,13 @@ def render_html(graph: dict[str, Any]) -> str:
         const distance = Math.hypot(node.x - point.x, node.y - point.y);
         if (distance <= node.r + 4) {{
           return node;
+        }}
+      }}
+      for (let index = GRAPH.edges.length - 1; index >= 0; index -= 1) {{
+        const geometry = getVisibleEdgeGeometry(GRAPH.edges[index]);
+        if (!geometry) continue;
+        if (pointToQuadraticDistance(point, geometry) <= 8) {{
+          return {{ kind: "edge", edge: geometry.edge }};
         }}
       }}
       return null;
@@ -1367,11 +1429,20 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     function renderSelectionPill(nodeId) {{
+      const edge = nodeId ? edgeLookup.get(nodeId) : null;
       if (!nodeId) {{
         selectionPill.innerHTML = `
           <span class="eyebrow">Selection</span>
           <h3>No node selected yet</h3>
-          <p>Click a star to open its functions, or click a planet to inspect a specific function.</p>
+          <p>Click a star to open its functions, click a planet for a specific function, or click a strand to inspect why that connection exists.</p>
+        `;
+        return;
+      }}
+      if (edge) {{
+        selectionPill.innerHTML = `
+          <span class="eyebrow">Connection strand</span>
+          <h3>${{escapeHtml(edge.source)}} → ${{escapeHtml(edge.target)}}</h3>
+          <p>${{edge.labels.length}} reason${{edge.labels.length === 1 ? "" : "s"}} recorded for this connection.</p>
         `;
         return;
       }}
@@ -1395,6 +1466,7 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     function renderDetails(nodeId) {{
+      const edge = nodeId ? edgeLookup.get(nodeId) : null;
       if (!nodeId) {{
         detailCard.innerHTML = `
           <span class="eyebrow">Selection details</span>
@@ -1404,6 +1476,19 @@ def render_html(graph: dict[str, Any]) -> str:
             <li>Stars are files.</li>
             <li>Planets are functions or classes defined in that file.</li>
             <li>Cross-file strands stay faint until you focus a node.</li>
+          </ul>
+        `;
+        return;
+      }}
+      if (edge) {{
+        detailCard.innerHTML = `
+          <span class="eyebrow">Connection strand</span>
+          <h2>${{escapeHtml(edge.source)}} → ${{escapeHtml(edge.target)}}</h2>
+          <p class="detail-meta">This strand exists because the source file depends on or routes to the target file in one or more explicit ways.</p>
+          <ul class="detail-list">
+            <li><span class="detail-key">Source</span>${{escapeHtml(edge.source)}}</li>
+            <li><span class="detail-key">Target</span>${{escapeHtml(edge.target)}}</li>
+            ${{edgeExplanation(edge)}}
           </ul>
         `;
         return;
@@ -1452,52 +1537,31 @@ def render_html(graph: dict[str, Any]) -> str:
 
     function updateSelection(nodeId) {{
       state.selectedId = nodeId;
+      state.selectedEdgeKey = nodeId && edgeLookup.has(nodeId) ? nodeId : null;
+      if (state.selectedEdgeKey) {{
+        state.selectedId = null;
+      }}
       renderSelectionPill(nodeId);
       renderDetails(nodeId);
       draw();
     }}
 
-    canvas.addEventListener("mousedown", (event) => {{
-      state.dragging = true;
-      state.movedDuringDrag = false;
-      state.dragStartX = event.clientX;
-      state.dragStartY = event.clientY;
-      state.dragOriginX = state.offsetX;
-      state.dragOriginY = state.offsetY;
-      canvas.classList.add("dragging");
-    }});
-
-    window.addEventListener("mousemove", (event) => {{
-      if (!state.dragging) return;
-      const dx = event.clientX - state.dragStartX;
-      const dy = event.clientY - state.dragStartY;
-      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {{
-        state.movedDuringDrag = true;
-      }}
-      state.offsetX = state.dragOriginX + dx;
-      state.offsetY = state.dragOriginY + dy;
-      draw();
-    }});
-
-    window.addEventListener("mouseup", () => {{
-      state.dragging = false;
-      canvas.classList.remove("dragging");
-    }});
-
     canvas.addEventListener("click", (event) => {{
-      if (state.movedDuringDrag) return;
       const node = hitTest(event);
-      updateSelection(node ? (node.path || node.id) : null);
+      if (!node) {{
+        updateSelection(null);
+        return;
+      }}
+      if (node.kind === "edge") {{
+        updateSelection(edgeKey(node.edge));
+        return;
+      }}
+      updateSelection(node.path || node.id);
     }});
 
     canvas.addEventListener("wheel", (event) => {{
       event.preventDefault();
-      const point = toWorld(event.clientX, event.clientY);
-      const nextScale = Math.min(2.2, Math.max(0.72, state.scale * (event.deltaY < 0 ? 1.08 : 0.92)));
-      const scaleRatio = nextScale / state.scale;
-      state.offsetX = event.clientX - canvas.getBoundingClientRect().left - point.x * nextScale;
-      state.offsetY = event.clientY - canvas.getBoundingClientRect().top - point.y * nextScale;
-      state.scale = nextScale;
+      state.scale = Math.min(2.0, Math.max(0.82, state.scale * (event.deltaY < 0 ? 1.08 : 0.92)));
       draw();
     }}, {{ passive: false }});
 
