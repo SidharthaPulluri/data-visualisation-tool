@@ -77,6 +77,25 @@ def run() -> int:
         )
         _expect_equal("sales bar chart", chart.status_code, 200, failures)
 
+        feature_chart = client.post(
+            "/api/visualize",
+            json={
+                "dataset_id": sales["dataset_id"],
+                "chart_type": "feature_graph",
+                "x_column": "revenue",
+                "format": "png",
+                "chart_options": {"palette": "blue"},
+            },
+        )
+        _expect_equal("sales feature graph", feature_chart.status_code, 200, failures)
+        if feature_chart.status_code == 200:
+            _expect_in(
+                "sales feature graph summary",
+                "stronger dependencies pull nodes closer together",
+                feature_chart.get_json().get("plot_data", {}).get("summary", ""),
+                failures,
+            )
+
     panel_status, panel = _upload_file(client, FIXTURES / "tb_panel.tsv")
     _expect_equal("panel upload", panel_status, 200, failures)
     if panel_status == 200:
@@ -106,6 +125,17 @@ def run() -> int:
             headerless.get("analysis", {}).get("validation", {}).get("parser_diagnostics", []),
             failures,
         )
+        headerless_feature_chart = client.post(
+            "/api/visualize",
+            json={
+                "dataset_id": headerless["dataset_id"],
+                "chart_type": "feature_graph",
+                "x_column": "party",
+                "format": "png",
+                "chart_options": {"palette": "slate"},
+            },
+        )
+        _expect_equal("headerless feature graph", headerless_feature_chart.status_code, 200, failures)
 
     summary_status, summary = _upload_file(client, FIXTURES / "summary_semicolon.csv")
     _expect_equal("summary upload", summary_status, 200, failures)

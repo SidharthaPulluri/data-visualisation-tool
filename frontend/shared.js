@@ -1059,6 +1059,9 @@ function renderAnalysis(container, analysis, shape) {
     const allColumns = Object.entries(schema)
       .filter(([, meta]) => meta.role !== "identifier")
       .map(([name]) => name);
+    const graphColumns = Object.entries(schema)
+      .filter(([, meta]) => !["identifier", "constant"].includes(meta.role))
+      .map(([name]) => name);
     const preferredNumeric = uniqueColumns(counts.concat(rates).concat(measures).concat(numeric));
 
     switch (chartType) {
@@ -1084,6 +1087,17 @@ function renderAnalysis(container, analysis, shape) {
           hint: numeric.length >= 2
             ? "Scatter plots need two numeric columns."
             : "You need at least two numeric columns for a scatter plot.",
+        };
+      case "feature_graph":
+        return {
+          xColumns: graphColumns,
+          yColumns: [],
+          rowColumns: [],
+          yOptional: true,
+          rowOptional: true,
+          hint: graphColumns.length >= 2
+            ? "Feature relationship graph treats each column as a node. Pick a focus field to anchor the graph, then read node size as importance and distance as dependency strength."
+            : "You need at least two usable columns for a feature relationship graph.",
         };
       case "line":
       case "area":

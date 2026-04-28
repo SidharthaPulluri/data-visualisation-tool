@@ -95,6 +95,7 @@
                 <option value="area">area</option>
                 <option value="scatter">scatter</option>
                 <option value="heatmap">heatmap</option>
+                <option value="feature_graph">feature graph</option>
               </select>
             </div>
             <div>
@@ -104,15 +105,15 @@
                 <option value="pdf">pdf</option>
               </select>
             </div>
-            <div>
-              <label for="xColumn">X column</label>
+            <div id="xColumnWrap">
+              <label id="xColumnLabel" for="xColumn">X column</label>
               <select id="xColumn"></select>
             </div>
             <div id="rowColumnWrap">
               <label for="rowColumn">Row column</label>
               <select id="rowColumn"></select>
             </div>
-            <div>
+            <div id="yColumnWrap">
               <label id="yColumnLabel" for="yColumn">Y column</label>
               <select id="yColumn"></select>
             </div>
@@ -342,9 +343,12 @@
       recommendationText: document.getElementById("recommendationText"),
       chartType: document.getElementById("chartType"),
       chartFormat: document.getElementById("chartFormat"),
+      xColumnWrap: document.getElementById("xColumnWrap"),
+      xColumnLabel: document.getElementById("xColumnLabel"),
       xColumn: document.getElementById("xColumn"),
       rowColumnWrap: document.getElementById("rowColumnWrap"),
       rowColumn: document.getElementById("rowColumn"),
+      yColumnWrap: document.getElementById("yColumnWrap"),
       yColumnLabel: document.getElementById("yColumnLabel"),
       yColumn: document.getElementById("yColumn"),
       chartTitle: document.getElementById("chartTitle"),
@@ -647,12 +651,15 @@
       const showSorting = ["bar", "pie", "heatmap"].includes(chartType);
       const showTopN = ["bar", "pie", "heatmap"].includes(chartType);
       const showBins = chartType === "histogram";
+      const showYColumn = !["histogram", "box", "feature_graph"].includes(chartType);
 
       ids.rowColumnWrap.style.display = showRowColumn ? "block" : "none";
       ids.aggregationWrap.style.display = showAggregation ? "block" : "none";
       ids.sortOrderWrap.style.display = showSorting ? "block" : "none";
       ids.topNWrap.style.display = showTopN ? "block" : "none";
       ids.binsWrap.style.display = showBins ? "block" : "none";
+      ids.yColumnWrap.style.display = showYColumn ? "block" : "none";
+      ids.xColumnLabel.textContent = chartType === "feature_graph" ? "Focus column" : "X column";
       ids.yColumnLabel.textContent = chartType === "heatmap" ? "Value column" : "Y column";
       updateChartEditState();
     }
@@ -787,6 +794,14 @@
             addNote("Use this scatter plot to see whether higher values in one measure tend to appear alongside higher or lower values in the other.");
           }
           break;
+        case "feature_graph":
+          shows = `This feature relationship graph treats dataset columns as nodes. ${chart.x_column} is the current focus field, larger nodes are more important, and closer nodes indicate stronger dependencies or associations.`;
+          read = "Start with the highlighted focus node, then follow nearby nodes and thicker links. Clusters suggest groups of fields that move together, split rows similarly, or share strong categorical association.";
+          addNote("This view compares fields with one another, not individual rows, so it explains dataset structure rather than row-level outliers.");
+          if (xMeta.role === "identifier") {
+            addNote("Identifier-like fields rarely create meaningful relationships here, so choosing a measure, rate, category, geography, or time field as the focus is usually more useful.");
+          }
+          break;
         case "heatmap":
           shows = `This heatmap compares ${rowDescription} against ${xDescription}${chart.y_column ? ` using ${yDescription} to color each cell` : " by counting how many rows fall into each combination"}.`;
           read = "Read across rows and columns and compare color intensity. Darker cells indicate larger values or denser combinations.";
@@ -833,7 +848,7 @@
       const chips = [
         `Chart: ${activeChart.label || activeChart.title || "Saved chart"}`,
         `Type: ${activeChart.chart_type || "unknown"}`,
-        `X: ${activeChart.x_column || "n/a"}`
+        `${activeChart.chart_type === "feature_graph" ? "Focus" : "X"}: ${activeChart.x_column || "n/a"}`
       ];
       const chartOptions = { ...defaultChartOptions(), ...(activeChart.chart_options || {}) };
       if (chartOptions.row_column) {
