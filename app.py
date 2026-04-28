@@ -217,6 +217,11 @@ def guide_page() -> Any:
     return send_from_directory(FRONTEND_DIR, "guide.html")
 
 
+@app.get("/chart-guide")
+def chart_guide_page() -> Any:
+    return send_from_directory(FRONTEND_DIR, "chart-guide.html")
+
+
 @app.get("/visualize")
 def visualize_page() -> Any:
     return send_from_directory(FRONTEND_DIR, "visualize.html")

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chart Guide | Sidhartha Utilities</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="landing-body">
+  <main class="landing-page guide-page chart-guide-page">
+    <header class="landing-topbar">
+      <div class="landing-topbar-inner">
+        <div class="landing-brand-lockup">
+          <img class="landing-logo" src="/static/assets/vysri-reference-mark.png" alt="VySri Services mark">
+          <div class="landing-brand">
+            <span class="eyebrow">VySri Services</span>
+            <strong>Sidhartha Utilities</strong>
+            <span class="landing-brand-subtitle">Software &bull; Tools &bull; Solutions</span>
+          </div>
+        </div>
+        <div class="landing-topbar-meta">
+          <a class="landing-topbar-chip landing-topbar-chip-link" href="/">Back to tool</a>
+          <a class="landing-topbar-chip landing-topbar-chip-link" href="/guide">Workflow guide</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="guide-hero chart-guide-hero">
+      <span class="section-kicker">Chart Guide</span>
+      <h1>What each graph is for, when to use it, and why it helps.</h1>
+      <p class="landing-simple-lead">This page is a practical guide to the chart types inside the tool. Use it when you know your data but want to choose the right visual for the question you are asking.</p>
+    </section>
+
+    <section class="chart-guide-summary">
+      <article class="guide-card">
+        <span class="section-kicker">How to choose</span>
+        <h2>Start from the question, not the chart</h2>
+        <ul class="insight-list">
+          <li>If you want to compare groups, start with bar, grouped bar, or stacked bar.</li>
+          <li>If you want to see change over time, start with line or area.</li>
+          <li>If you want to study distributions, start with histogram, density, box, or beeswarm.</li>
+          <li>If you want to study relationships between measures, start with scatter, bubble, or hexbin.</li>
+          <li>If you want to understand structure between columns, use the feature graph.</li>
+        </ul>
+      </article>
+
+      <article class="guide-card">
+        <span class="section-kicker">How to avoid bad picks</span>
+        <h2>What usually goes wrong</h2>
+        <ul class="insight-list">
+          <li>Pie charts become weak when there are too many categories.</li>
+          <li>Stacked bars are harder than grouped bars when exact segment comparison matters.</li>
+          <li>Scatter plots become noisy when many points overlap; hexbin can help.</li>
+          <li>Density plots show smooth shape, not exact counts.</li>
+          <li>Feature graphs explain field relationships, not row-level stories.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="chart-guide-grid">
+      <article class="chart-guide-card">
+        <span class="section-kicker">Comparison</span>
+        <h2>Bar chart</h2>
+        <p>Best when you want to compare one metric across categories, places, or short time buckets.</p>
+        <div class="chart-guide-points">
+          <p><strong>Used for:</strong> Comparing totals, counts, rates, or averages across groups.</p>
+          <p><strong>How to read it:</strong> Compare bar heights from one group to another.</p>
+          <p><strong>Why use it:</strong> It is usually the clearest first chart for categorical comparison.</p>
+          <p><strong>Common use cases:</strong> Sales by region, crimes by state, revenue by product, cases by year bucket.</p>
+          <p><strong>Avoid when:</strong> You have too many labels or a continuous numeric X axis.</p>
+        </div>
+      </article>
+
+      <article class="chart-guide-card">
+        <span class="section-kicker">Comparison</span>
+        <h2>Grouped bar chart</h2>
+        <p>Best when one category is not enough and you need a second split such as region by quarter or department by gender.</p>
+        <div class="chart-guide-points">
+          <p><strong>Used for:</strong> Side-by-side subgroup comparison within each main category.</p>
+          <p><strong>How to read it:</strong> Compare within each cluster first, then compare the same color across clusters.</p>
+          <p><strong>Why use it:</strong> It preserves direct comparison better than stacked bars.</p>
+          <p><strong>Common use cases:</strong> Revenue by region and quarter, survey counts by group and year.</p>
+          <p><strong>Avoid when:</strong> You have too many subgroup levels, because the bars become crowded fast.</p>
+        </div>
+      </article>
+
+      <article class="chart-guide-card">
+        <span class="section-kicker">Composition</span>
+        <h2>Stacked bar chart</h2>
+        <p>Best when you care about both the total and how that total is made up internally.</p>
+        <div class="chart-guide-points">
+          <p><strong>Used for:</strong> Showing contribution of subgroups inside each category total.</p>
+          <p><strong>How to read it:</strong> First compare full bar height, then compare segment sizes inside each bar.</p>
+          <p><strong>Why use it:</strong> It keeps total and composition in one compact view.</p>
+          <p><strong>Common use cases:</strong> Budget by department and cost type, cases by state and case status.</p>
+          <p><strong>Avoid when:</strong> You need precise subgroup comparison across many categories.</p>
+        </div>
+      </article>
+
+      <article class="chart-guide-card">
+        <span class="section-kicker">Part-to-whole</span>
+        <h2>Pie chart</h2>
+        <p>Best when you have a few categories and want to show share of a total.</p>
+        <div class="chart-guide-points">
+          <p><strong>Used for:</strong> Share or composition with a small category count.</p>
+          <p><strong>How to read it:</strong> Compare slice sizes, not exact angles.</p>
+          <p><strong>Why use it:</strong> It gives a fast part-to-whole message when the category list is short.</p>
+          <p><strong>Common use cases:</strong> Market share, share of records by one short label set.</p>
+          <p><strong>Avoid when:</strong> Categories are many, similar in size, or not parts of one meaningful whole.</p>
+        </div>
+      </article>
+
+      <article class="chart-guide-card">
+        <span class="section-kicker">Time trend</span>
+        <h2>Line chart</h2>
+        <p>Best when you want to show how a metric moves across time or any ordered sequence.</p>
+        <div class="chart-guide-points">
+          <p><strong>Used for:</strong> Trend, growth, decline, seasonality, and turning points.</p>
+          <p><strong>How to read it:</strong> Follow the line left to right and watch slope changes.</p>
+          <p><strong>Why use it:</strong> It is the cleanest chart for showing direction over time.</p>
+          <p><strong>Common use cases:</strong> Cases by year, revenue by month, rates over time.</p>
+          <p><strong>Avoid when:</strong> The X axis is unordered categories rather than a true sequence.</p>
+        </div>
+      </article>
+
+      <article class="chart-guide-card">
+        <span class="section-kicker">Time trend</span>
+        <h2>Area chart</h2>
+        <p>Best when you want a line-like trend but with more visual emphasis on volume or accumulation.</p>
+        <div class="chart-guide-points">
+          <p><strong>Used for:</strong> Trend with stronger emphasis on magnitude.</p>
+          <p><strong>How to read it:</strong> Follow the top edge like a line, but also notice the filled area.</p>
+          <p><strong>Why use it:</strong> It makes the size of the measure feel more present than a plain line.</p>
+          <p><strong>Common use cases:</strong> Revenue over time, prevalence over time, total processed records by month.</p>
+          <p><strong>Avoid when:</strong> You need very precise comparisons or the baseline meaning is weak.</p>
+        </div>
+      </article>
+
+      <article class="chart-guide-card">
+        <span class="section-kicker">Distribution</span>
+        <h2>Histogram</h2>
+        <p>Best when you want to see how a numeric field is distributed across ranges.</p>
+        <div class="chart-guide-points">
+          <p><strong>Used for:</strong> Shape, spread, skew, clustering, and tails.</p>
+          <p><strong>How to read it:</strong> Look for where bars concentrate and where they thin out.</p>
+          <p><strong>Why use it:</strong> It converts a long numeric list into a readable distribution picture.</p>
+          <p><strong>Common use cases:</strong> Income distribution, case duration ranges, rate spread.</p>
+          <p><strong>Avoid when:</strong> The field is categorical or has too few distinct values.</p>
+        </div>
+      </article>
+
+      <article class="chart-guide-card">
+        <span class="section-kicker">Distribution</span>
+        <h2>Density plot</h2>
+        <p>Best when you want a smoother view of distribution shape, optionally compared across groups.</p>
+        <div class="chart-guide-points">
+          <p><strong>Used for:</strong> Smooth distribution comparison without visible bins.</p>
+          <p><strong>How to read it:</strong> Higher peaks mean more values gather in that range.</p>
+          <p><strong>Why use it:</strong> It is great for comparing overall shape across groups.</p>
+          <p><strong>Common use cases:</strong> Revenue spread by quarter, exam scores by class, rate distribution by region.</p>
+          <p><strong>Avoid when:</strong> You need exact bin counts or have very little data.</p>
+        </div>
+      </article>
+
+      <article class="chart-guide-card">
+        <span class="section-kicker">Distribution</span>
+        <h2>Box plot</h2>
+        <p>Best when you want a compact summary of spread, median, and possible outliers.</p>
+        <div class="chart-guide-points">
+          <p><strong>Used for:</strong> Median, interquartile range, and outlier spotting.</p>
+          <p><strong>How to read it:</strong> Focus on the middle box, whiskers, and isolated points.</p>
+          <p><strong>Why use it:</strong> It summarizes a lot of distribution information in very little space.</p>
+          <p><strong>Common use cases:</strong> Income variation, rate stability, processing time spread.</p>
+          <p><strong>Avoid when:</strong> You need to show every row or explain the exact shape of the distribution.</p>
+        </div>
+      </article>
+
+      <article class="chart-guide-card">
+        <span class="section-kicker">Distribution</span>
+        <h2>Beeswarm plot</h2>
+        <p>Best when you want to see the real spread of individual rows inside categories.</p>
+        <div class="chart-guide-points">
+          <p><strong>Used for:</strong> Row-level spread by category.</p>
+          <p><strong>How to read it:</strong> Compare how high, low, dense, or scattered the dots are inside each category.</p>
+          <p><strong>Why use it:</strong> It keeps the individual records visible while reducing overlap.</p>
+          <p><strong>Common use cases:</strong> Revenue by quarter, scores by section, case duration by district.</p>
+          <p><strong>Avoid when:</strong> The dataset is extremely large and the point cloud becomes too dense.</p>
+        </div>
+      </article>
+
+      <article class="chart-guide-card">
+        <span class="section-kicker">Relationship</span>
+        <h2>Scatter plot</h2>
+        <p>Best when you want to study the relationship between two numeric measures.</p>
+        <div class="chart-guide-points">
+          <p><strong>Used for:</strong> Correlation, clusters, and outliers.</p>
+          <p><strong>How to read it:</strong> Watch whether points rise together, fall apart, or split into groups.</p>
+          <p><strong>Why use it:</strong> It is the standard chart for two-measure relationships.</p>
+          <p><strong>Common use cases:</strong> Revenue vs orders, population vs incidence, cost vs output.</p>
+          <p><strong>Avoid when:</strong> Point overlap is severe and the plot turns into a dark cloud.</p>
+        </div>
+      </article>
+
+      <article class="chart-guide-card">
+        <span class="section-kicker">Relationship</span>
+        <h2>Bubble chart</h2>
+        <p>Best when you want to compare three numeric measures at once.</p>
+        <div class="chart-guide-points">
+          <p><strong>Used for:</strong> Two numeric axes plus a third numeric size field.</p>
+          <p><strong>How to read it:</strong> Read X, Y, and bubble size together; color can add a group split.</p>
+          <p><strong>Why use it:</strong> It packs a third measure into the same relationship view.</p>
+          <p><strong>Common use cases:</strong> Orders vs revenue sized by conversion rate, GDP vs population sized by emissions.</p>
+          <p><strong>Avoid when:</strong> Bubble size differences are too subtle or misleadingly dominate the story.</p>
+        </div>
+      </article>
+
+      <article class="chart-guide-card">
+        <span class="section-kicker">Relationship</span>
+        <h2>Hexbin chart</h2>
+        <p>Best when a scatter plot would be too crowded and you still want to understand concentration patterns.</p>
+        <div class="chart-guide-points">
+          <p><strong>Used for:</strong> High-density two-measure relationships.</p>
+          <p><strong>How to read it:</strong> Darker bins mean more rows overlap in that region.</p>
+          <p><strong>Why use it:</strong> It solves the overplotting problem better than a raw scatter in dense data.</p>
+          <p><strong>Common use cases:</strong> Large transaction data, sensor readings, record-heavy numeric comparisons.</p>
+          <p><strong>Avoid when:</strong> The dataset is tiny and individual dots would tell the story better.</p>
+        </div>
+      </article>
+
+      <article class="chart-guide-card">
+        <span class="section-kicker">Matrix</span>
+        <h2>Heatmap</h2>
+        <p>Best when you want to compare many row-column combinations at once.</p>
+        <div class="chart-guide-points">
+          <p><strong>Used for:</strong> Two-dimensional comparisons using color intensity.</p>
+          <p><strong>How to read it:</strong> Scan rows and columns, then compare darker and lighter cells.</p>
+          <p><strong>Why use it:</strong> It compresses a large comparison grid into a readable pattern view.</p>
+          <p><strong>Common use cases:</strong> Region by year, category by state, metric by department.</p>
+          <p><strong>Avoid when:</strong> The audience needs exact values more than broad pattern recognition.</p>
+        </div>
+      </article>
+
+      <article class="chart-guide-card chart-guide-card-wide">
+        <span class="section-kicker">Structure</span>
+        <h2>Feature relationship graph</h2>
+        <p>Best when you want to understand how columns in the dataset relate to one another rather than how rows compare.</p>
+        <div class="chart-guide-points">
+          <p><strong>Used for:</strong> Structural understanding of the dataset itself.</p>
+          <p><strong>How to read it:</strong> Each node is a feature, larger nodes are more important, and closer nodes have stronger dependency or association.</p>
+          <p><strong>Why use it:</strong> It helps you discover which columns move together, split the data similarly, or act as central drivers.</p>
+          <p><strong>Common use cases:</strong> Deciding what to chart next, understanding dataset structure before analysis, detecting tightly connected field families.</p>
+          <p><strong>Avoid when:</strong> You want a row-level story or a direct business answer; this chart is about data structure, not a final KPI narrative.</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="guide-actions">
+      <a class="action-link" href="/visualize">Open the chart workspace</a>
+      <a class="button-link ghost" href="/guide">Open the workflow guide</a>
+    </section>
+  </main>
+</body>
+</html>

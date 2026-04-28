@@ -493,6 +493,57 @@ summary {
   padding: 26px 10px 0;
 }
 
+.chart-guide-page .guide-hero h1 {
+  max-width: 14ch;
+}
+
+.chart-guide-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 24px 10px 0;
+}
+
+.chart-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 24px 10px 0;
+}
+
+.chart-guide-card {
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow);
+}
+
+.chart-guide-card h2 {
+  margin: 0;
+}
+
+.chart-guide-card > p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.chart-guide-points {
+  display: grid;
+  gap: 10px;
+}
+
+.chart-guide-points p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.chart-guide-card-wide {
+  grid-column: 1 / -1;
+}
+
 .landing-topbar-chip-link {
   color: #537092;
   text-decoration: none;
@@ -1875,7 +1926,9 @@ tr:hover td {
   .landing-proof-strip,
   .landing-source-grid,
   .landing-quick-links,
-  .guide-grid {
+  .guide-grid,
+  .chart-guide-summary,
+  .chart-guide-grid {
     grid-template-columns: 1fr;
   }
 
