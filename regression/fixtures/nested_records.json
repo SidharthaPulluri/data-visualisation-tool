@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "source": "demo-api",
+    "generated_at": "2026-04-27T00:00:00Z"
+  },
+  "payload": {
+    "records": [
+      {
+        "country": "India",
+        "year": 2024,
+        "cases": 2600000,
+        "rate_percent": 61.5
+      },
+      {
+        "country": "Nigeria",
+        "year": 2024,
+        "cases": 495000,
+        "rate_percent": 29.4
+      },
+      {
+        "country": "Pakistan",
+        "year": 2024,
+        "cases": 575000,
+        "rate_percent": 46.8
+      }
+    ]
+  }
+}

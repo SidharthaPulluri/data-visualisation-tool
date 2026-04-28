@@ -1,6 +1,6 @@
 # Rule-Based Data Visualisation Tool
 
-A deterministic local BI-style app for structured datasets. Upload CSV, Excel, or JSON files, run them through a fixed data pipeline, preview the cleaned/transformed table, generate standard charts, and export the results.
+A deterministic local BI-style app for structured datasets. Upload one or more structured files, run them through a fixed data pipeline, inspect parser recovery and validation notes, preview the cleaned/transformed tables, generate standard charts, and export the results.
 
 ## Core Pipeline
 
@@ -8,13 +8,16 @@ A deterministic local BI-style app for structured datasets. Upload CSV, Excel, o
 
 ## Features
 
-- CSV, XLSX, and JSON ingestion
+- Structured file ingestion for `CSV`, `TSV`, `XLSX`, `XLS`, `JSON`, ZIP archives, nested JSON payloads, multi-sheet Excel workbooks, and headerless `.data` files
+- Multi-file workspaces with per-table switching in preparation and visualization
 - Rule-based schema detection for numeric, categorical, datetime, and text columns
 - Deterministic cleaning rules for missing values, duplicates, type coercion, and text normalization
+- Parser diagnostics and recovery notes for delimiter inference, headerless fallback, duplicate-header normalization, nested JSON path selection, worksheet selection, and dropped empty rows/columns
+- Validation and recovery signals for chart readiness, blocking issues, and safer fallback behavior
 - Filtering, grouping, aggregation, and derived-column transformations
-- Analysis summaries with descriptive stats and correlations
-- Standard charts with type-based validation
-- Export cleaned datasets and text reports
+- Analysis summaries with descriptive stats, dataset explanation, and deterministic insight generation
+- Standard charts with type-based validation and automatic recovery when a saved setup becomes invalid
+- Export cleaned datasets, reports, charts, and dashboard PDFs
 
 ## Tech Stack
 
@@ -34,6 +37,16 @@ python app.py
 ```
 
 Open `http://127.0.0.1:5000`.
+
+## Regression Checks
+
+Run the local smoke-test pack to verify ingestion, transforms, intent detection, JSON header-row recovery, mixed-schema JSON arrays, nested JSON extraction, ZIP archive extraction, multi-sheet workbook selection, ambiguous workbook sheet ranking, headerless recovery, chart rendering, and empty-file handling:
+
+```powershell
+python scripts/run_regression_checks.py
+```
+
+Fixtures live in [D:\Data Visualisation Tool\regression\fixtures](D:\Data%20Visualisation%20Tool\regression\fixtures).
 
 ## Deploy
 

@@ -77,7 +77,12 @@ def _build_transform_payload(
 ) -> dict[str, Any]:
     transformed_df, steps = apply_transformations(clean_df, config or {})
     schema = detect_schema(transformed_df)
-    analysis = build_analysis_report(transformed_df, schema)
+    analysis = build_analysis_report(
+        transformed_df,
+        schema,
+        load_report=load_report,
+        cleaning_report=cleaning_report,
+    )
     return {
         "dataset_id": dataset_id,
         "filename": filename,
@@ -203,14 +208,19 @@ def health() -> Any:
 def upload_dataset() -> Any:
     file = request.files.get("file")
     if not file or not file.filename:
-        return _json_response({"error": "Please choose a CSV, TSV, DATA, Excel, or JSON file."}, 400)
+            return _json_response({"error": "Please choose a CSV, TSV, DATA, Excel, JSON, or ZIP file."}, 400)
 
     try:
         raw_df, load_report = load_uploaded_dataset(file)
         raw_schema = detect_schema(raw_df)
         clean_df, cleaning_report = clean_dataframe(raw_df)
         clean_schema = detect_schema(clean_df)
-        analysis = build_analysis_report(clean_df, clean_schema)
+        analysis = build_analysis_report(
+            clean_df,
+            clean_schema,
+            load_report=load_report,
+            cleaning_report=cleaning_report,
+        )
 
         dataset_id = uuid4().hex
         DATASETS[dataset_id] = {
@@ -527,7 +537,12 @@ def export_report() -> Any:
 
     transformed_df, steps = apply_transformations(clean_df, config)
     schema = detect_schema(transformed_df)
-    analysis = build_analysis_report(transformed_df, schema)
+    analysis = build_analysis_report(
+        transformed_df,
+        schema,
+        load_report=load_report,
+        cleaning_report=cleaning_report,
+    )
 
     schema_counts = analysis.get("type_counts", {})
     numeric_examples = _schema_examples(schema, "numeric")

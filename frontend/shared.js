@@ -1,51 +1,204 @@
 (function () {
   const STORAGE_KEY = "data_visualisation_tool_session";
   const WORKSPACES_KEY = "data_visualisation_tool_workspaces";
+  const ACTIVE_TABLE_FIELDS = [
+    "datasetId",
+    "datasetState",
+    "dataset_state",
+    "filename",
+    "shape",
+    "schema",
+    "preview",
+    "analysis",
+    "transformConfig",
+    "transformHistory",
+    "transformHistoryIndex",
+    "chartConfig",
+    "charts",
+    "activeChartId",
+    "dashboardMode",
+    "dashboardColumns",
+  ];
+
+  function cloneJson(value, fallback) {
+    if (value === undefined) return fallback;
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch {
+      return fallback;
+    }
+  }
+
+  function buildTableRecord(record = {}) {
+    const datasetState = record?.datasetState || record?.dataset_state || null;
+    return {
+      id: record.id || `table_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      datasetId: record?.datasetId || null,
+      datasetState,
+      dataset_state: datasetState,
+      filename: record?.filename || "Dataset",
+      shape: cloneJson(record?.shape, null),
+      schema: cloneJson(record?.schema, {}),
+      preview: cloneJson(record?.preview, []),
+      analysis: cloneJson(record?.analysis, null),
+      transformConfig: cloneJson(record?.transformConfig, {}) || {},
+      transformHistory: cloneJson(record?.transformHistory, [{ label: "Original cleaned view", config: {} }]) || [{ label: "Original cleaned view", config: {} }],
+      transformHistoryIndex: typeof record?.transformHistoryIndex === "number" ? record.transformHistoryIndex : 0,
+      chartConfig: cloneJson(record?.chartConfig, null),
+      charts: cloneJson(record?.charts, []) || [],
+      activeChartId: record?.activeChartId || null,
+      dashboardMode: record?.dashboardMode || "single",
+      dashboardColumns: Number(record?.dashboardColumns || 2),
+      sourcePath: record?.sourcePath || null,
+      sourceContext: cloneJson(record?.sourceContext, null),
+    };
+  }
+
+  function mirrorActiveTableIntoSession(session, preferredTableId) {
+    if (!session || !Array.isArray(session.tables) || !session.tables.length) {
+      return session;
+    }
+
+    const tables = session.tables.map((table) => buildTableRecord(table));
+    const activeTableId = preferredTableId || session.activeTableId || tables[0]?.id;
+    const activeTable = tables.find((table) => table.id === activeTableId) || tables[0];
+    const nextSession = { ...session, tables, activeTableId: activeTable?.id || null };
+    if (activeTable) {
+      ACTIVE_TABLE_FIELDS.forEach((field) => {
+        if (field === "dataset_state") return;
+        nextSession[field] = cloneJson(activeTable[field], activeTable[field]);
+      });
+      nextSession.dataset_state = nextSession.datasetState;
+      nextSession.filename = activeTable.filename || nextSession.filename;
+      nextSession.shape = activeTable.shape || nextSession.shape;
+      nextSession.schema = activeTable.schema || nextSession.schema;
+      nextSession.preview = activeTable.preview || nextSession.preview;
+      nextSession.analysis = activeTable.analysis || nextSession.analysis;
+    }
+    return nextSession;
+  }
+
+  function syncActiveTableIntoSession(session) {
+    if (!session || !Array.isArray(session.tables) || !session.tables.length) {
+      return session;
+    }
+
+    const activeTableId = session.activeTableId || session.tables[0]?.id;
+    const tables = session.tables.map((table, index) => {
+      const nextTable = buildTableRecord(table);
+      if ((nextTable.id || index) !== activeTableId) {
+        return nextTable;
+      }
+      ACTIVE_TABLE_FIELDS.forEach((field) => {
+        if (field === "dataset_state") return;
+        if (field === "datasetState") {
+          const datasetState = session?.datasetState || session?.dataset_state || null;
+          nextTable.datasetState = cloneJson(datasetState, datasetState);
+          nextTable.dataset_state = nextTable.datasetState;
+          return;
+        }
+        if (field in session) {
+          nextTable[field] = cloneJson(session[field], session[field]);
+        }
+      });
+      nextTable.dataset_state = nextTable.datasetState;
+      return nextTable;
+    });
+
+    return mirrorActiveTableIntoSession({ ...session, tables, activeTableId }, activeTableId);
+  }
+
+  function createMultiTableSession(tables, options = {}) {
+    const workspaceTables = (Array.isArray(tables) ? tables : []).map((table) => buildTableRecord(table));
+    if (!workspaceTables.length) {
+      return null;
+    }
+    const session = {
+      tables: workspaceTables,
+      activeTableId: workspaceTables[0].id,
+      lastPage: options.lastPage || "/prepare",
+      sourcePath: options.sourcePath || null,
+      sourceContext: cloneJson(options.sourceContext, null),
+    };
+    return mirrorActiveTableIntoSession(session, workspaceTables[0].id);
+  }
+
+  function getWorkspaceTables(session) {
+    return Array.isArray(session?.tables) ? session.tables : [];
+  }
+
+  function getActiveTableRecord(session) {
+    const tables = getWorkspaceTables(session);
+    if (!tables.length) return null;
+    const activeTableId = session?.activeTableId || tables[0]?.id;
+    return tables.find((table) => table.id === activeTableId) || tables[0] || null;
+  }
+
+  function setActiveTable(session, tableId) {
+    if (!session || !Array.isArray(session.tables) || !session.tables.length) {
+      return session;
+    }
+    const currentActiveId = session.activeTableId || session.tables[0]?.id;
+    const syncedCurrent = syncActiveTableIntoSession({ ...session, activeTableId: currentActiveId });
+    return mirrorActiveTableIntoSession({ ...syncedCurrent, activeTableId: tableId }, tableId);
+  }
+
+  function stripChartBinary(chart) {
+    if (!chart) return chart;
+    const clone = { ...chart };
+    delete clone.chart_data_url;
+    delete clone.mime_type;
+    return clone;
+  }
 
   function createStorageSafeSession(session) {
-    const charts = Array.isArray(session?.charts)
-      ? session.charts.map((chart) => {
-          if (!chart) return chart;
-          const clone = { ...chart };
-          delete clone.chart_data_url;
-          delete clone.mime_type;
-          return clone;
-        })
+    const syncedSession = syncActiveTableIntoSession(session);
+    const charts = Array.isArray(syncedSession?.charts)
+      ? syncedSession.charts.map(stripChartBinary)
       : [];
 
-    const chartConfig = session?.chartConfig
-      ? (() => {
-          const clone = { ...session.chartConfig };
-          delete clone.chart_data_url;
-          delete clone.mime_type;
-          return clone;
-        })()
+    const chartConfig = syncedSession?.chartConfig
+      ? stripChartBinary(syncedSession.chartConfig)
       : null;
 
-    const datasetState = session?.datasetId ? null : (session?.datasetState || session?.dataset_state || null);
+    const datasetState = syncedSession?.datasetId ? null : (syncedSession?.datasetState || syncedSession?.dataset_state || null);
+    const tables = Array.isArray(syncedSession?.tables)
+      ? syncedSession.tables.map((table) => {
+          const nextTable = buildTableRecord(table);
+          nextTable.charts = Array.isArray(nextTable.charts) ? nextTable.charts.map(stripChartBinary) : [];
+          nextTable.chartConfig = nextTable.chartConfig ? stripChartBinary(nextTable.chartConfig) : null;
+          if (nextTable.datasetId) {
+            nextTable.datasetState = null;
+            nextTable.dataset_state = null;
+          }
+          return nextTable;
+        })
+      : undefined;
 
     return {
-      ...session,
+      ...syncedSession,
       charts,
       chartConfig,
       datasetState,
       dataset_state: datasetState,
+      ...(tables ? { tables } : {}),
     };
   }
 
   function createMinimalSession(session) {
+    const syncedSession = syncActiveTableIntoSession(session);
     return {
-      datasetId: session?.datasetId || null,
-      filename: session?.filename || null,
-      shape: session?.shape || null,
-      schema: session?.schema || null,
+      datasetId: syncedSession?.datasetId || null,
+      filename: syncedSession?.filename || null,
+      shape: syncedSession?.shape || null,
+      schema: syncedSession?.schema || null,
       datasetState: null,
       dataset_state: null,
-      transformConfig: session?.transformConfig || {},
-      transformHistory: session?.transformHistory || [],
-      transformHistoryIndex: session?.transformHistoryIndex ?? 0,
-      charts: Array.isArray(session?.charts)
-        ? session.charts.map((chart) => ({
+      transformConfig: syncedSession?.transformConfig || {},
+      transformHistory: syncedSession?.transformHistory || [],
+      transformHistoryIndex: syncedSession?.transformHistoryIndex ?? 0,
+      charts: Array.isArray(syncedSession?.charts)
+        ? syncedSession.charts.map((chart) => ({
             id: chart.id,
             label: chart.label,
             title: chart.title,
@@ -62,22 +215,49 @@
             filtered_preview_shape: chart.filtered_preview_shape || null,
           }))
         : [],
-      activeChartId: session?.activeChartId || null,
-      dashboardMode: session?.dashboardMode || "single",
-      dashboardColumns: session?.dashboardColumns || 2,
-      chartConfig: session?.chartConfig
+      activeChartId: syncedSession?.activeChartId || null,
+      dashboardMode: syncedSession?.dashboardMode || "single",
+      dashboardColumns: syncedSession?.dashboardColumns || 2,
+      chartConfig: syncedSession?.chartConfig
         ? {
-            id: session.chartConfig.id,
-            title: session.chartConfig.title,
-            chart_type: session.chartConfig.chart_type,
-            x_column: session.chartConfig.x_column,
-            y_column: session.chartConfig.y_column,
-            format: session.chartConfig.format,
-            chart_file: session.chartConfig.chart_file,
-            note: session.chartConfig.note || "",
-            chart_options: session.chartConfig.chart_options || {},
+            id: syncedSession.chartConfig.id,
+            title: syncedSession.chartConfig.title,
+            chart_type: syncedSession.chartConfig.chart_type,
+            x_column: syncedSession.chartConfig.x_column,
+            y_column: syncedSession.chartConfig.y_column,
+            format: syncedSession.chartConfig.format,
+            chart_file: syncedSession.chartConfig.chart_file,
+            note: syncedSession.chartConfig.note || "",
+            chart_options: syncedSession.chartConfig.chart_options || {},
           }
         : null,
+      tables: Array.isArray(syncedSession?.tables)
+        ? syncedSession.tables.map((table) => ({
+            id: table.id,
+            datasetId: table.datasetId || null,
+            filename: table.filename || null,
+            shape: table.shape || null,
+            schema: table.schema || null,
+            datasetState: null,
+            dataset_state: null,
+            preview: table.preview || [],
+            analysis: table.analysis || null,
+            transformConfig: table.transformConfig || {},
+            transformHistory: table.transformHistory || [],
+            transformHistoryIndex: table.transformHistoryIndex ?? 0,
+            charts: Array.isArray(table.charts) ? table.charts.map(stripChartBinary) : [],
+            activeChartId: table.activeChartId || null,
+            dashboardMode: table.dashboardMode || "single",
+            dashboardColumns: table.dashboardColumns || 2,
+            chartConfig: table.chartConfig ? stripChartBinary(table.chartConfig) : null,
+            sourcePath: table.sourcePath || null,
+            sourceContext: table.sourceContext || null,
+          }))
+        : undefined,
+      activeTableId: syncedSession?.activeTableId || null,
+      lastPage: syncedSession?.lastPage || "/prepare",
+      sourcePath: syncedSession?.sourcePath || null,
+      sourceContext: syncedSession?.sourceContext || null,
     };
   }
 
@@ -119,51 +299,52 @@
   }
 
   function createWorkspaceSnapshot(session, name) {
-    const datasetState = session?.datasetState || session?.dataset_state || null;
-    const charts = Array.isArray(session?.charts)
-      ? session.charts.map((chart) => {
-          if (!chart) return chart;
-          const clone = { ...chart };
-          delete clone.chart_data_url;
-          delete clone.mime_type;
-          return clone;
-        })
+    const syncedSession = syncActiveTableIntoSession(session);
+    const datasetState = syncedSession?.datasetState || syncedSession?.dataset_state || null;
+    const charts = Array.isArray(syncedSession?.charts)
+      ? syncedSession.charts.map(stripChartBinary)
       : [];
-    const chartConfig = session?.chartConfig
-      ? (() => {
-          const clone = { ...session.chartConfig };
-          delete clone.chart_data_url;
-          delete clone.mime_type;
-          return clone;
-        })()
+    const chartConfig = syncedSession?.chartConfig
+      ? stripChartBinary(syncedSession.chartConfig)
       : null;
 
     const snapshot = {
-      datasetId: session?.datasetId || null,
+      datasetId: syncedSession?.datasetId || null,
       datasetState,
       dataset_state: datasetState,
-      filename: session?.filename || null,
-      shape: session?.shape || null,
-      schema: session?.schema || null,
-      preview: session?.preview || [],
-      analysis: session?.analysis || null,
-      transformConfig: session?.transformConfig || {},
-      transformHistory: session?.transformHistory || [],
-      transformHistoryIndex: session?.transformHistoryIndex ?? 0,
+      filename: syncedSession?.filename || null,
+      shape: syncedSession?.shape || null,
+      schema: syncedSession?.schema || null,
+      preview: syncedSession?.preview || [],
+      analysis: syncedSession?.analysis || null,
+      transformConfig: syncedSession?.transformConfig || {},
+      transformHistory: syncedSession?.transformHistory || [],
+      transformHistoryIndex: syncedSession?.transformHistoryIndex ?? 0,
       charts,
-      activeChartId: session?.activeChartId || null,
-      dashboardMode: session?.dashboardMode || "single",
-      dashboardColumns: session?.dashboardColumns || 2,
+      activeChartId: syncedSession?.activeChartId || null,
+      dashboardMode: syncedSession?.dashboardMode || "single",
+      dashboardColumns: syncedSession?.dashboardColumns || 2,
       chartConfig,
-      lastPage: session?.lastPage || "/prepare",
+      lastPage: syncedSession?.lastPage || "/prepare",
+      tables: Array.isArray(syncedSession?.tables)
+        ? syncedSession.tables.map((table) => {
+            const nextTable = buildTableRecord(table);
+            nextTable.charts = Array.isArray(nextTable.charts) ? nextTable.charts.map(stripChartBinary) : [];
+            nextTable.chartConfig = nextTable.chartConfig ? stripChartBinary(nextTable.chartConfig) : null;
+            return nextTable;
+          })
+        : undefined,
+      activeTableId: syncedSession?.activeTableId || null,
+      sourcePath: syncedSession?.sourcePath || null,
+      sourceContext: syncedSession?.sourceContext || null,
     };
     return {
       id: `workspace_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      name: name || session?.filename || "Saved workspace",
-      filename: session?.filename || null,
-      shape: session?.shape || null,
+      name: name || syncedSession?.filename || "Saved workspace",
+      filename: syncedSession?.filename || null,
+      shape: syncedSession?.shape || null,
       savedAt: new Date().toISOString(),
-      lastPage: session?.lastPage || "/prepare",
+      lastPage: syncedSession?.lastPage || "/prepare",
       session: snapshot,
     };
   }
@@ -937,6 +1118,10 @@ function renderAnalysis(container, analysis, shape) {
     saveSession,
     loadSession,
     clearSession,
+    createMultiTableSession,
+    getWorkspaceTables,
+    getActiveTableRecord,
+    setActiveTable,
     escapeHtml,
     formatNumber,
     populateSelect,

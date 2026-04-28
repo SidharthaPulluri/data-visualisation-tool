@@ -1,0 +1,9 @@
+region,quarter,revenue,orders,conversion_rate
+North,Q1,1200,35,12.5
+South,Q1,980,28,10.2
+East,Q1,1100,31,11.4
+West,Q1,1040,30,10.9
+North,Q2,1280,37,12.9
+South,Q2,1005,29,10.6
+East,Q2,1160,33,11.8
+West,Q2,1095,31,11.2

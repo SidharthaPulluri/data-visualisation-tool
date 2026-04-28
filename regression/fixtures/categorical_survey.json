@@ -1,0 +1,8 @@
+[
+  {"segment": "new", "channel": "email", "satisfaction": "high", "response": "yes"},
+  {"segment": "new", "channel": "email", "satisfaction": "medium", "response": "yes"},
+  {"segment": "returning", "channel": "web", "satisfaction": "high", "response": "no"},
+  {"segment": "returning", "channel": "store", "satisfaction": "low", "response": "no"},
+  {"segment": "vip", "channel": "web", "satisfaction": "high", "response": "yes"},
+  {"segment": "vip", "channel": "store", "satisfaction": "medium", "response": "yes"}
+]

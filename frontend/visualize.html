@@ -66,6 +66,16 @@
             <span class="badge neutral" id="chartBadge">No chart yet</span>
           </div>
         </div>
+        <div id="tableWorkspacePanel" class="workspace-table-panel" hidden>
+          <div class="section-head compact-head">
+            <div>
+              <span class="section-kicker">Workspace Tables</span>
+              <h3>Files in this workspace</h3>
+              <p id="tableWorkspaceMeta" class="helper">Switch the active prepared table before charting.</p>
+            </div>
+          </div>
+          <div id="tableWorkspaceTabs" class="table-switcher"></div>
+        </div>
 
         <div class="workspace-toolbar">
           <div class="workspace-intro">
@@ -393,11 +403,50 @@
       previewMeta: document.getElementById("previewMeta"),
       previewHead: document.getElementById("previewHead"),
       previewBody: document.getElementById("previewBody"),
-      status: document.getElementById("status")
+      status: document.getElementById("status"),
+      tableWorkspacePanel: document.getElementById("tableWorkspacePanel"),
+      tableWorkspaceMeta: document.getElementById("tableWorkspaceMeta"),
+      tableWorkspaceTabs: document.getElementById("tableWorkspaceTabs")
     };
 
     function setStatus(message) {
       ids.status.textContent = message;
+    }
+
+    function renderTableWorkspace() {
+      const tables = window.dataTool.getWorkspaceTables(state);
+      if (tables.length <= 1) {
+        ids.tableWorkspacePanel.hidden = true;
+        ids.tableWorkspaceTabs.innerHTML = "";
+        return;
+      }
+
+      ids.tableWorkspacePanel.hidden = false;
+      ids.tableWorkspaceMeta.textContent = `${window.dataTool.formatNumber(tables.length, 0)} uploaded files are available in this workspace.`;
+      ids.tableWorkspaceTabs.innerHTML = tables.map((table, index) => `
+        <button
+          type="button"
+          class="table-switch-button${table.id === state.activeTableId ? " active" : ""}"
+          data-table-id="${window.dataTool.escapeHtml(table.id)}"
+        >
+          <strong>${window.dataTool.escapeHtml(table.filename || `Table ${index + 1}`)}</strong>
+          <span>${window.dataTool.formatNumber(table.shape?.rows || 0, 0)} rows • ${window.dataTool.formatNumber(table.shape?.columns || 0, 0)} columns</span>
+        </button>
+      `).join("");
+
+      ids.tableWorkspaceTabs.querySelectorAll("[data-table-id]").forEach((button) => {
+        button.addEventListener("click", () => switchWorkspaceTable(button.dataset.tableId));
+      });
+    }
+
+    function switchWorkspaceTable(tableId) {
+      const nextSession = window.dataTool.setActiveTable(state, tableId);
+      Object.keys(state).forEach((key) => {
+        delete state[key];
+      });
+      Object.assign(state, nextSession);
+      window.dataTool.saveSession(state);
+      window.location.reload();
     }
 
     function setRecommendation(message) {
@@ -1090,6 +1139,7 @@
     function renderPage() {
       ids.datasetName.textContent = state.filename || "Dataset";
       ids.datasetMeta.textContent = `${window.dataTool.formatNumber(state.shape?.rows || 0, 0)} rows and ${window.dataTool.formatNumber(state.shape?.columns || 0, 0)} columns in the prepared dataset.`;
+      renderTableWorkspace();
       applyRecommendation();
       if (getActiveChart()) {
         populateFormFromChart(getActiveChart());
@@ -1122,6 +1172,97 @@
         note: ids.chartNoteInput.value.trim() || "",
         chart_options: chartOptions
       };
+    }
+
+    function applyRequestPayloadToForm(requestPayload) {
+      if (!requestPayload) return;
+      ids.chartType.value = requestPayload.chart_type;
+      syncChartControls(true);
+      if (requestPayload.x_column && Array.from(ids.xColumn.options).some((option) => option.value === requestPayload.x_column)) {
+        ids.xColumn.value = requestPayload.x_column;
+      }
+      if (requestPayload.chart_options?.row_column !== undefined && Array.from(ids.rowColumn.options).some((option) => option.value === requestPayload.chart_options.row_column)) {
+        ids.rowColumn.value = requestPayload.chart_options.row_column || "";
+      }
+      if (requestPayload.y_column !== undefined && Array.from(ids.yColumn.options).some((option) => option.value === requestPayload.y_column)) {
+        ids.yColumn.value = requestPayload.y_column || "";
+      }
+      ids.chartTitle.value = requestPayload.title || "";
+      ids.chartFormat.value = requestPayload.format || "png";
+      ids.aggregation.value = requestPayload.chart_options?.aggregation || "auto";
+      ids.sortOrder.value = requestPayload.chart_options?.sort_order || "desc";
+      ids.topN.value = Number(requestPayload.chart_options?.top_n || 12);
+      ids.bins.value = Number(requestPayload.chart_options?.bins || 20);
+      ids.palette.value = requestPayload.chart_options?.palette || "blue";
+      ids.labelRotation.value = requestPayload.chart_options?.label_rotation || "auto";
+      ids.decimalPlaces.value = Number(requestPayload.chart_options?.decimal_places ?? 2);
+      ids.showValueLabels.checked = Boolean(requestPayload.chart_options?.show_value_labels);
+      updateChartOptionVisibility();
+      updateChartEditState();
+    }
+
+    function getSafeChartRequestPayload() {
+      const requestPayload = buildChartRequestPayload();
+      const compatibility = window.dataTool.getChartCompatibility(requestPayload.chart_type, state.schema || {});
+      const recoveryNotes = [];
+
+      if (!compatibility.xColumns.includes(requestPayload.x_column)) {
+        requestPayload.x_column = compatibility.xColumns[0] || "";
+        if (requestPayload.x_column) {
+          recoveryNotes.push(`X column was reset to ${requestPayload.x_column}.`);
+        }
+      }
+
+      if (compatibility.rowOptional === false) {
+        if (!(compatibility.rowColumns || []).includes(requestPayload.chart_options.row_column) || requestPayload.chart_options.row_column === requestPayload.x_column) {
+          requestPayload.chart_options.row_column = (compatibility.rowColumns || []).find((column) => column !== requestPayload.x_column) || "";
+          if (requestPayload.chart_options.row_column) {
+            recoveryNotes.push(`Row column was reset to ${requestPayload.chart_options.row_column}.`);
+          }
+        }
+      } else if (!(compatibility.rowColumns || []).includes(requestPayload.chart_options.row_column || "")) {
+        requestPayload.chart_options.row_column = null;
+      }
+
+      if (compatibility.yOptional) {
+        if (requestPayload.y_column && !compatibility.yColumns.includes(requestPayload.y_column)) {
+          requestPayload.y_column = null;
+          recoveryNotes.push("Y column was cleared because it no longer matches this chart type.");
+        }
+      } else if (!compatibility.yColumns.includes(requestPayload.y_column || "") || requestPayload.y_column === requestPayload.x_column) {
+        requestPayload.y_column = compatibility.yColumns.find((column) => column !== requestPayload.x_column) || null;
+        if (requestPayload.y_column) {
+          recoveryNotes.push(`Y column was reset to ${requestPayload.y_column}.`);
+        }
+      }
+
+      if (["bar", "pie"].includes(requestPayload.chart_type) && (!Number.isFinite(requestPayload.chart_options.top_n) || requestPayload.chart_options.top_n < 1)) {
+        requestPayload.chart_options.top_n = 12;
+      }
+      if (requestPayload.chart_type === "pie" && (!Number.isFinite(requestPayload.chart_options.top_n) || requestPayload.chart_options.top_n > 12)) {
+        requestPayload.chart_options.top_n = 8;
+        recoveryNotes.push("Pie chart categories were limited to the top 8 groups for readability.");
+      }
+
+      if (!requestPayload.x_column || (compatibility.yOptional === false && !requestPayload.y_column) || (compatibility.rowOptional === false && !requestPayload.chart_options.row_column)) {
+        const recommendation = window.dataTool.recommendChartConfig(state.schema || {});
+        const fallbackPayload = {
+          ...requestPayload,
+          chart_type: recommendation.chartType,
+          x_column: recommendation.xColumn || "",
+          y_column: recommendation.yColumn || null,
+          chart_options: {
+            ...requestPayload.chart_options,
+            row_column: null,
+          },
+        };
+        recoveryNotes.push("The selected chart setup was incomplete, so the app switched to the recommended chart configuration.");
+        applyRequestPayloadToForm(fallbackPayload);
+        return { requestPayload: fallbackPayload, recoveryNotes, compatibility };
+      }
+
+      applyRequestPayloadToForm(requestPayload);
+      return { requestPayload, recoveryNotes, compatibility };
     }
 
     function createSavedChart(payload, requestPayload) {
@@ -1268,7 +1409,7 @@
     async function renderChart(mode = "update") {
       try {
         setStatus("Rendering chart...");
-        const requestPayload = buildChartRequestPayload();
+        const { requestPayload, recoveryNotes } = getSafeChartRequestPayload();
         const payload = await window.dataTool.fetchJson("/api/visualize", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1290,9 +1431,9 @@
         renderSavedCharts();
         persistState();
         setStatus(
-          shouldUpdateActive
+          `${shouldUpdateActive
             ? `Updated ${savedChart.label || "the active chart"} with the latest settings.`
-            : `Chart created as ${payload.chart_file} and added to this session.`
+            : `Chart created as ${payload.chart_file} and added to this session.`}${recoveryNotes.length ? ` ${recoveryNotes.join(" ")}` : ""}`
         );
       } catch (error) {
         setStatus(error.message);

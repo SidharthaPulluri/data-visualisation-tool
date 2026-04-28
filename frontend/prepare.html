@@ -41,6 +41,16 @@
               <h2>Review, then continue</h2>
             </div>
           </div>
+          <div id="tableWorkspacePanel" class="workspace-table-panel" hidden>
+            <div class="section-head compact-head">
+              <div>
+                <span class="section-kicker">Workspace Tables</span>
+                <h3>Files in this workspace</h3>
+                <p id="tableWorkspaceMeta" class="helper">Switch between uploaded files without leaving this workspace.</p>
+              </div>
+            </div>
+            <div id="tableWorkspaceTabs" class="table-switcher"></div>
+          </div>
           <div class="workspace-intro">
             <p class="workspace-copy">If the schema and preview look right, go straight to charting. You only need the advanced options if you want to reshape the data first.</p>
             <div class="stack compact-stack">
@@ -314,11 +324,50 @@
       historyList: document.getElementById("historyList"),
       saveWorkspaceButton: document.getElementById("saveWorkspaceButton"),
       qualityCenter: document.getElementById("qualityCenter"),
-      datasetExplanation: document.getElementById("datasetExplanation")
+      datasetExplanation: document.getElementById("datasetExplanation"),
+      tableWorkspacePanel: document.getElementById("tableWorkspacePanel"),
+      tableWorkspaceMeta: document.getElementById("tableWorkspaceMeta"),
+      tableWorkspaceTabs: document.getElementById("tableWorkspaceTabs")
     };
 
     function setStatus(message) {
       document.getElementById("status").textContent = message;
+    }
+
+    function renderTableWorkspace() {
+      const tables = window.dataTool.getWorkspaceTables(state);
+      if (tables.length <= 1) {
+        ids.tableWorkspacePanel.hidden = true;
+        ids.tableWorkspaceTabs.innerHTML = "";
+        return;
+      }
+
+      ids.tableWorkspacePanel.hidden = false;
+      ids.tableWorkspaceMeta.textContent = `${window.dataTool.formatNumber(tables.length, 0)} uploaded files are available in this workspace.`;
+      ids.tableWorkspaceTabs.innerHTML = tables.map((table, index) => `
+        <button
+          type="button"
+          class="table-switch-button${table.id === state.activeTableId ? " active" : ""}"
+          data-table-id="${window.dataTool.escapeHtml(table.id)}"
+        >
+          <strong>${window.dataTool.escapeHtml(table.filename || `Table ${index + 1}`)}</strong>
+          <span>${window.dataTool.formatNumber(table.shape?.rows || 0, 0)} rows • ${window.dataTool.formatNumber(table.shape?.columns || 0, 0)} columns</span>
+        </button>
+      `).join("");
+
+      ids.tableWorkspaceTabs.querySelectorAll("[data-table-id]").forEach((button) => {
+        button.addEventListener("click", () => switchWorkspaceTable(button.dataset.tableId));
+      });
+    }
+
+    function switchWorkspaceTable(tableId) {
+      const nextSession = window.dataTool.setActiveTable(state, tableId);
+      Object.keys(state).forEach((key) => {
+        delete state[key];
+      });
+      Object.assign(state, nextSession);
+      window.dataTool.saveSession(state);
+      window.location.reload();
     }
 
     function updateColumnControls(schema) {
@@ -439,6 +488,7 @@
 
     function renderQualityCenter() {
       const schemaEntries = Object.entries(state.schema || {});
+      const validation = state.analysis?.validation || {};
       const missingHeavy = schemaEntries.filter(([, meta]) => Number(meta.missing || 0) > (state.shape?.rows || 0) * 0.3);
       const identifiers = schemaEntries.filter(([, meta]) => meta.role === "identifier");
       const constants = schemaEntries.filter(([, meta]) => meta.role === "constant");
@@ -459,6 +509,21 @@
       }
 
       const sections = [
+        {
+          title: "Parser and recovery notes",
+          items: []
+            .concat(state.lastUploadWarnings || [])
+            .concat(validation.parser_diagnostics || [])
+            .concat(validation.recovery_actions || []),
+          empty: "No parser recovery actions or upload diagnostics were needed for this dataset."
+        },
+        {
+          title: "Validation checks",
+          items: []
+            .concat(validation.blocking_issues || [])
+            .concat(validation.warnings || []),
+          empty: "No major validation issues are standing out in the current working view."
+        },
         {
           title: "Missing-heavy columns",
           items: missingHeavy.map(([name, meta]) => `${name} (${window.dataTool.formatNumber(meta.missing || 0, 0)} missing values)`),
@@ -496,6 +561,7 @@
     function renderSession() {
       ids.datasetName.textContent = state.filename || "Dataset";
       ids.datasetMeta.textContent = `${window.dataTool.formatNumber(state.shape?.rows || 0, 0)} rows and ${window.dataTool.formatNumber(state.shape?.columns || 0, 0)} columns in the current saved view.`;
+      renderTableWorkspace();
       window.dataTool.renderDatasetExplanation(ids.datasetExplanation, {
         filename: state.filename,
         schema: state.schema || {},

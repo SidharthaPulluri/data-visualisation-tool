@@ -1,0 +1,46 @@
+[
+  {
+    "country": "Kenya",
+    "region": "AFR",
+    "metrics": {
+      "cases": 120,
+      "rate_percent": 6.4
+    },
+    "tags": ["east", "focus"],
+    "year": 2024
+  },
+  {
+    "country": "India",
+    "region": "SEA",
+    "metrics": {
+      "cases": 310,
+      "rate_percent": 3.2
+    },
+    "tags": ["south", "priority"],
+    "year": 2024
+  },
+  "supplementary note",
+  {
+    "country": "Brazil",
+    "region": "AMR",
+    "metrics": {
+      "cases": 95,
+      "rate_percent": 2.1
+    },
+    "tags": ["latam"],
+    "notes": {
+      "source": "manual review"
+    },
+    "year": 2023
+  },
+  {
+    "country": "Japan",
+    "region": "WPR",
+    "metrics": {
+      "cases": 22,
+      "rate_percent": 0.4
+    },
+    "tags": ["apac"],
+    "year": 2023
+  }
+]

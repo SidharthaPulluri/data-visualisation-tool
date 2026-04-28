@@ -177,8 +177,12 @@ def _pick_dimension_column(schema: dict[str, dict[str, Any]], df: pd.DataFrame) 
             semantic_score = 0
         if _column_matches(column, {"country", "territory", "state", "district", "province", "city", "ut"}):
             semantic_score = 0
+        elif column.lower() == "setting" and any(name in schema for name in {"iso3", "iso2", "whoreg6", "country", "country_or_territory_name"}):
+            semantic_score = 0
         elif _column_matches(column, {"region", "continent", "area"}):
             semantic_score = 2
+        elif _column_matches(column, {"subgroup", "segment", "bucket", "band"}):
+            semantic_score = max(semantic_score, 4)
 
         code_penalty = 1 if _column_matches(column, {"iso", "code", "numeric"}) else 0
         richness_score = -unique_count if meta.get("role") in {"geography", "category"} else abs(unique_count - min(max(len(df) // 4, 4), 40))
@@ -244,6 +248,8 @@ def _score_metric_candidates(
     ranked: list[dict[str, Any]] = []
     for column in columns:
         tokens = set(_tokenize(column))
+        if schema.get(column, {}).get("role") == "time":
+            continue
         if exclude_terms.intersection(tokens):
             continue
         if required_terms and not required_terms.intersection(tokens):
@@ -640,9 +646,10 @@ def _build_dataset_story(
         total_df=total_df,
     )
     compare_df = detail_df.copy()
+    story_numeric_columns = [column for column in numeric_columns if schema.get(column, {}).get("role") != "time"]
     if detail_df[dimension_column].astype(str).duplicated().any():
         aggregation_map: dict[str, str] = {}
-        for column in numeric_columns:
+        for column in story_numeric_columns:
             role = schema.get(column, {}).get("role")
             aggregation_map[column] = "mean" if role == "rate" else "sum"
         if aggregation_map:
@@ -661,7 +668,7 @@ def _build_dataset_story(
     metric_choices: list[dict[str, Any]] = []
 
     def choose_metric(slot: str, **kwargs: Any) -> str | None:
-        ranked = _score_metric_candidates(numeric_columns, schema, **kwargs)
+        ranked = _score_metric_candidates(story_numeric_columns, schema, **kwargs)
         if ranked:
             metric_choices.append(
                 {
@@ -691,7 +698,7 @@ def _build_dataset_story(
         "primary_count",
         weighted_terms={"total": 4, "investigation": 4, "cases": 1},
         exclude_terms={"pending", "pendency", "rate", "percent", "percentage", "final", "charge", "chargesheeted", "disposed"},
-    ) or (numeric_columns[0] if numeric_columns else None)
+    ) or (story_numeric_columns[0] if story_numeric_columns else None)
     pending_count = choose_metric(
         "pending_count",
         weighted_terms={"pending": 5, "pendency": 5, "backlog": 4, "end": 2},
@@ -862,13 +869,18 @@ def _build_dataset_story(
         top_idx = measure_series.idxmax()
         if pd.notna(top_idx):
             top_row = compare_df.loc[top_idx]
+            dimension_role = schema.get(dimension_column, {}).get("role")
             denominator = None
             if overall_row is not None and pd.notna(overall_row.get(primary_count)):
                 denominator = pd.to_numeric(pd.Series([overall_row[primary_count]]), errors="coerce").iloc[0]
             elif pd.notna(measure_series.sum()) and measure_series.sum() > 0:
                 denominator = float(measure_series.sum())
 
-            if denominator and denominator > 0:
+            if dimension_role == "time":
+                takeaways.append(
+                    f"{_format_dimension_value(top_row[dimension_column])} has the highest {_format_label(primary_count)} value in the current view."
+                )
+            elif denominator and denominator > 0:
                 share = float(top_row[primary_count]) / float(denominator) * 100
                 takeaways.append(
                     f"{_format_dimension_value(top_row[dimension_column])} is the largest contributor in {_format_label(primary_count)}, accounting for about {share:.1f}% of the total."
@@ -1003,7 +1015,112 @@ def _build_group_comparison(
     return None
 
 
-def build_analysis_report(df: pd.DataFrame, schema: dict[str, dict[str, Any]]) -> dict[str, Any]:
+def _build_validation_recovery(
+    df: pd.DataFrame,
+    schema: dict[str, dict[str, Any]],
+    *,
+    numeric_columns: list[str],
+    categorical_columns: list[str],
+    identifier_columns: list[str],
+    load_report: dict[str, Any] | None = None,
+    cleaning_report: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    blocking_issues: list[str] = []
+    warnings: list[str] = []
+    recovery_actions: list[str] = []
+    parser_diagnostics = list((load_report or {}).get("parser_notes", []))
+    load_report = load_report or {}
+    cleaning_report = cleaning_report or {}
+
+    if len(df) < 3:
+        blocking_issues.append("Very few usable rows remain after parsing and cleaning, so comparisons may be unreliable.")
+    if df.shape[1] < 2:
+        blocking_issues.append("The working view has fewer than two columns, so charting options are extremely limited.")
+
+    missing_heavy = [
+        column
+        for column, meta in schema.items()
+        if float(meta.get("completeness", 0)) < 0.35
+    ]
+    if missing_heavy:
+        sample = ", ".join(missing_heavy[:3])
+        warnings.append(f"High missingness is concentrated in {sample}{' and other fields' if len(missing_heavy) > 3 else ''}.")
+        recovery_actions.append("Filter to stronger columns or remove sparse fields before charting if those missing-heavy columns are not essential.")
+
+    mixed_numeric_like = [
+        column
+        for column, meta in schema.items()
+        if meta.get("type") in {"categorical", "text"} and 0.3 <= _numeric_like_ratio(df[column]) < 0.85
+    ]
+    if mixed_numeric_like:
+        sample = ", ".join(mixed_numeric_like[:3])
+        warnings.append(f"{sample}{' and other fields' if len(mixed_numeric_like) > 3 else ''} mix text with numeric-looking values.")
+        recovery_actions.append("Review mixed-type columns before grouping or numeric comparisons because they may contain placeholders such as symbols or coded text.")
+
+    suspicious_rate_columns: list[str] = []
+    negative_count_columns: list[str] = []
+    for column in numeric_columns:
+        role = schema.get(column, {}).get("role")
+        series = pd.to_numeric(df[column], errors="coerce").dropna()
+        if series.empty:
+            continue
+        if role == "count" and float(series.min()) < 0:
+            negative_count_columns.append(column)
+        if role == "rate":
+            tokens = set(_tokenize(column))
+            if "per" not in tokens and "share" not in tokens and "ratio" not in tokens:
+                if float(series.max()) > 100.5 or float(series.min()) < 0:
+                    suspicious_rate_columns.append(column)
+
+    if suspicious_rate_columns:
+        sample = ", ".join(suspicious_rate_columns[:3])
+        warnings.append(f"{sample}{' and other fields' if len(suspicious_rate_columns) > 3 else ''} look like percentage-style fields but contain values outside the expected 0 to 100 range.")
+        recovery_actions.append("Check whether those fields are true percentages, scaled rates, or imported with the wrong units before comparing them.")
+
+    if negative_count_columns:
+        sample = ", ".join(negative_count_columns[:3])
+        warnings.append(f"{sample}{' and other fields' if len(negative_count_columns) > 3 else ''} behave like counts but include negative values.")
+        recovery_actions.append("Inspect negative count fields before summing because they may represent adjustments, missing-code conversions, or import issues.")
+
+    if identifier_columns:
+        warnings.append(f"Identifier-like fields were excluded from deep statistics: {', '.join(identifier_columns[:4])}{' and more' if len(identifier_columns) > 4 else ''}.")
+
+    if len(categorical_columns) and max((schema[column].get("unique", 0) for column in categorical_columns), default=0) > 50:
+        recovery_actions.append("Use top-N filters or grouped summaries before pie or bar charts when category labels are too numerous.")
+
+    if load_report.get("header_mode") == "generated":
+        recovery_actions.append("Generated headers were used for this file, so rename important fields or rely on preview checks if the default names are too generic.")
+    if cleaning_report.get("duplicates_removed"):
+        parser_diagnostics.append(
+            f"Removed {cleaning_report['duplicates_removed']} duplicate row{'s' if cleaning_report['duplicates_removed'] != 1 else ''} during cleaning."
+        )
+    if cleaning_report.get("coerced_columns"):
+        parser_diagnostics.append(
+            f"Type coercion was applied to {len(cleaning_report['coerced_columns'])} column{'s' if len(cleaning_report['coerced_columns']) != 1 else ''}."
+        )
+
+    chart_readiness = "ready"
+    if blocking_issues:
+        chart_readiness = "limited"
+    elif warnings:
+        chart_readiness = "caution"
+
+    return {
+        "chart_readiness": chart_readiness,
+        "blocking_issues": blocking_issues,
+        "warnings": warnings[:6],
+        "recovery_actions": recovery_actions[:6],
+        "parser_diagnostics": parser_diagnostics[:8],
+    }
+
+
+def build_analysis_report(
+    df: pd.DataFrame,
+    schema: dict[str, dict[str, Any]],
+    *,
+    load_report: dict[str, Any] | None = None,
+    cleaning_report: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     numeric_columns = [name for name, meta in schema.items() if meta["type"] == "numeric"]
     categorical_columns = [name for name, meta in schema.items() if meta["type"] == "categorical"]
     datetime_columns = [name for name, meta in schema.items() if meta["type"] == "datetime"]
@@ -1014,7 +1131,7 @@ def build_analysis_report(df: pd.DataFrame, schema: dict[str, dict[str, Any]]) -
     analysis_numeric_columns = [
         name
         for name in numeric_columns
-        if name not in identifier_columns and schema[name].get("role") != "constant"
+        if name not in identifier_columns and schema[name].get("role") not in {"constant", "time"}
     ]
     rate_columns = [name for name, meta in schema.items() if meta.get("role") == "rate"]
     count_columns = [name for name, meta in schema.items() if meta.get("role") == "count"]
@@ -1033,6 +1150,15 @@ def build_analysis_report(df: pd.DataFrame, schema: dict[str, dict[str, Any]]) -
         for column in categorical_columns[:5]
     }
     group_comparison = _build_group_comparison(df, categorical_columns, analysis_numeric_columns)
+    validation = _build_validation_recovery(
+        df,
+        schema,
+        numeric_columns=numeric_columns,
+        categorical_columns=categorical_columns,
+        identifier_columns=identifier_columns,
+        load_report=load_report,
+        cleaning_report=cleaning_report,
+    )
 
     summary_lines = [
         f"Numeric columns: {len(numeric_columns)}",
@@ -1072,6 +1198,7 @@ def build_analysis_report(df: pd.DataFrame, schema: dict[str, dict[str, Any]]) -
         if check.get("status") == "warning":
             warnings.append(check["message"])
     warnings.extend(dataset_story.get("anomaly_flags", []))
+    warnings.extend(validation.get("warnings", []))
     if geography_columns and len(df) > 500:
         warnings.append(
             f"Geography-like columns such as {geography_columns[0]} may need top-N filtering for readable pie or bar charts."
@@ -1102,4 +1229,5 @@ def build_analysis_report(df: pd.DataFrame, schema: dict[str, dict[str, Any]]) -
         "identifier_columns": identifier_columns,
         "summary_lines": "\n".join(summary_lines),
         "dataset_story": dataset_story,
+        "validation": validation,
     }
