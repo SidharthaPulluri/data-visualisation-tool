@@ -874,6 +874,51 @@ h4 {
   line-height: 1.65;
 }
 
+.recommendation-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 16px 0 18px;
+}
+
+.recommendation-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(237, 244, 255, 0.88));
+  box-shadow: 0 10px 30px rgba(13, 36, 72, 0.06);
+}
+
+.recommendation-card.active {
+  border-color: rgba(24, 109, 218, 0.34);
+  box-shadow: 0 14px 36px rgba(24, 109, 218, 0.12);
+}
+
+.recommendation-card p,
+.recommendation-card strong,
+.recommendation-card span {
+  margin: 0;
+}
+
+.recommendation-rank {
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+}
+
+.recommendation-why {
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: 0.93rem;
+}
+
+.recommendation-apply {
+  justify-self: start;
+}
+
 .hero-copy p {
   max-width: 64ch;
   font-size: 1rem;

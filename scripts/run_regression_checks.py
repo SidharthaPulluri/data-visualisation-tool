@@ -37,7 +37,7 @@ def run() -> int:
     client = app.test_client()
     failures: list[str] = []
 
-    for route in ["/", "/guide", "/database", "/prepare", "/visualize"]:
+    for route in ["/", "/guide", "/chart-guide", "/database", "/prepare", "/visualize"]:
         response = client.get(route)
         _expect_equal(f"route {route}", response.status_code, 200, failures)
 

@@ -1,6 +1,6 @@
 # Rule-Based Data Visualisation Tool
 
-A deterministic local BI-style app for structured datasets. Upload one or more structured files, run them through a fixed data pipeline, inspect parser recovery and validation notes, preview the cleaned/transformed tables, generate standard charts, and export the results.
+A deterministic local BI-style app for structured datasets. Upload one or more structured files, run them through a fixed data pipeline, inspect parser recovery and validation notes, preview the cleaned/transformed tables, generate charts with rule-based recommendations, and export the results.
 
 ## Core Pipeline
 
@@ -16,7 +16,10 @@ A deterministic local BI-style app for structured datasets. Upload one or more s
 - Validation and recovery signals for chart readiness, blocking issues, and safer fallback behavior
 - Filtering, grouping, aggregation, and derived-column transformations
 - Analysis summaries with descriptive stats, dataset explanation, and deterministic insight generation
+- Expanded chart library including grouped bar, stacked bar, bubble, density, beeswarm, hexbin, and a feature relationship graph
+- Rule-based chart advisor that ranks multiple good chart options from the prepared schema and explains why each suggestion fits
 - Standard charts with type-based validation and automatic recovery when a saved setup becomes invalid
+- Built-in chart guide page at `/chart-guide` covering chart use cases, reading tips, and weak-fit scenarios
 - Export cleaned datasets, reports, charts, and dashboard PDFs
 
 ## Tech Stack
@@ -40,7 +43,7 @@ Open `http://127.0.0.1:5000`.
 
 ## Regression Checks
 
-Run the core smoke-test pack to verify ingestion, transforms, intent detection, JSON header-row recovery, mixed-schema JSON arrays, nested JSON extraction, ZIP archive extraction, multi-sheet workbook selection, ambiguous workbook sheet ranking, headerless recovery, chart rendering, and empty-file handling:
+Run the core smoke-test pack to verify ingestion, transforms, intent detection, JSON header-row recovery, mixed-schema JSON arrays, nested JSON extraction, ZIP archive extraction, multi-sheet workbook selection, ambiguous workbook sheet ranking, headerless recovery, chart rendering, chart-guide routing, and empty-file handling:
 
 ```powershell
 python scripts/run_regression_checks.py

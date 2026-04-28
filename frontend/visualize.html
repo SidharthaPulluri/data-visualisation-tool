@@ -80,8 +80,12 @@
         <div class="workspace-toolbar">
           <div class="workspace-intro">
             <p id="recommendationText" class="workspace-copy">The app will recommend a chart based on the prepared dataset.</p>
+            <div class="mini-nav">
+              <a class="subtle-link" href="/chart-guide">Open chart guide</a>
+            </div>
             <div id="status" class="status">Loading prepared dataset...</div>
           </div>
+          <div id="recommendationPanel" class="recommendation-panel"></div>
 
           <div class="control-grid">
             <div>
@@ -355,6 +359,7 @@
       datasetName: document.getElementById("datasetName"),
       datasetMeta: document.getElementById("datasetMeta"),
       recommendationText: document.getElementById("recommendationText"),
+      recommendationPanel: document.getElementById("recommendationPanel"),
       chartType: document.getElementById("chartType"),
       chartFormat: document.getElementById("chartFormat"),
       xColumnWrap: document.getElementById("xColumnWrap"),
@@ -450,6 +455,46 @@
 
     function setRecommendation(message) {
       ids.recommendationText.textContent = message;
+    }
+
+    function recommendationMatchesForm(recommendation) {
+      if (!recommendation) return false;
+      return (
+        ids.chartType.value === recommendation.chartType
+        && (recommendation.xColumn || "") === (ids.xColumn.value || "")
+        && (recommendation.yColumn || "") === (ids.yColumn.value || "")
+        && ((recommendation.chartOptions?.group_column || "") === (ids.groupColumn.value || ""))
+        && ((recommendation.chartOptions?.size_column || "") === (ids.sizeColumn.value || ""))
+        && ((recommendation.chartOptions?.row_column || "") === (ids.rowColumn.value || ""))
+      );
+    }
+
+    function renderRecommendationPanel() {
+      const recommendations = state.recommendations || [];
+      if (!recommendations.length) {
+        ids.recommendationPanel.innerHTML = "";
+        return;
+      }
+
+      ids.recommendationPanel.innerHTML = recommendations.map((recommendation, index) => `
+        <article class="recommendation-card${recommendationMatchesForm(recommendation) ? " active" : ""}">
+          <div class="recommendation-rank">Option ${index + 1}</div>
+          <strong>${window.dataTool.escapeHtml(recommendation.title)}</strong>
+          <p>${window.dataTool.escapeHtml(recommendation.message)}</p>
+          <span class="recommendation-why">${window.dataTool.escapeHtml(recommendation.why)}</span>
+          <button type="button" class="ghost recommendation-apply" data-recommendation-index="${index}">
+            Use this chart
+          </button>
+        </article>
+      `).join("");
+
+      ids.recommendationPanel.querySelectorAll("[data-recommendation-index]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const recommendation = recommendations[Number(button.dataset.recommendationIndex)];
+          applyRecommendation(recommendation);
+          setStatus(`${recommendation.title} loaded into the chart form.`);
+        });
+      });
     }
 
     function toChartId() {
@@ -605,6 +650,7 @@
 
     function updateChartEditState() {
       const activeChart = getActiveChart();
+      renderRecommendationPanel();
       if (!activeChart) {
         ids.chartEditState.textContent = "Choose a chart to edit it in place.";
         ids.resetChartForm.disabled = true;
@@ -1112,18 +1158,26 @@
       setRecommendation(compatibility.hint);
     }
 
-    function applyRecommendation() {
-      const recommendation = window.dataTool.recommendChartConfig(state.schema || {});
-      ids.chartType.value = recommendation.chartType;
-      syncChartControls(true);
-      if (recommendation.xColumn && Array.from(ids.xColumn.options).some((option) => option.value === recommendation.xColumn)) {
-        ids.xColumn.value = recommendation.xColumn;
+    function applyRecommendation(recommendation = null) {
+      const chosenRecommendation = recommendation || state.recommendations?.[0] || window.dataTool.recommendChartConfig(state.schema || {}, {
+        rowCount: state.shape?.rows || 0,
+        analysis: state.analysis || null,
+      });
+      if (!chosenRecommendation) {
+        return;
       }
-      if (recommendation.yColumn !== undefined && Array.from(ids.yColumn.options).some((option) => option.value === recommendation.yColumn)) {
-        ids.yColumn.value = recommendation.yColumn;
-      }
+      applyRequestPayloadToForm({
+        chart_type: chosenRecommendation.chartType,
+        x_column: chosenRecommendation.xColumn || "",
+        y_column: chosenRecommendation.yColumn || null,
+        chart_options: { ...defaultChartOptions(), ...(chosenRecommendation.chartOptions || {}) },
+        title: "",
+        format: ids.chartFormat.value || "png",
+        note: "",
+      });
       syncSuggestedTitle(true);
-      setRecommendation(recommendation.message);
+      setRecommendation(chosenRecommendation.message);
+      renderRecommendationPanel();
       updateChartEditState();
     }
 
@@ -1214,6 +1268,11 @@
     function renderPage() {
       ids.datasetName.textContent = state.filename || "Dataset";
       ids.datasetMeta.textContent = `${window.dataTool.formatNumber(state.shape?.rows || 0, 0)} rows and ${window.dataTool.formatNumber(state.shape?.columns || 0, 0)} columns in the prepared dataset.`;
+      state.recommendations = window.dataTool.recommendChartConfigs(state.schema || {}, {
+        rowCount: state.shape?.rows || 0,
+        shape: state.shape || null,
+        analysis: state.analysis || null,
+      });
       renderTableWorkspace();
       applyRecommendation();
       if (getActiveChart()) {

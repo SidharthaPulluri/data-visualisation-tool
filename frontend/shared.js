@@ -1263,7 +1263,39 @@ function renderAnalysis(container, analysis, shape) {
     }
   }
 
-  function recommendChartConfig(schema) {
+  function chartTypeLabel(chartType) {
+    return String(chartType || "chart")
+      .replaceAll("_", " ")
+      .replace(/\b\w/g, (match) => match.toUpperCase());
+  }
+
+  function buildChartRecommendation(chartType, config, score, message, why) {
+    return {
+      chartType,
+      xColumn: config.xColumn || "",
+      yColumn: config.yColumn || "",
+      chartOptions: { ...config.chartOptions } || {},
+      score,
+      title: chartTypeLabel(chartType),
+      message,
+      why,
+    };
+  }
+
+  function pushChartRecommendation(recommendations, seenKeys, recommendation) {
+    if (!recommendation || !recommendation.chartType) return;
+    const key = JSON.stringify({
+      chartType: recommendation.chartType,
+      xColumn: recommendation.xColumn || "",
+      yColumn: recommendation.yColumn || "",
+      chartOptions: recommendation.chartOptions || {},
+    });
+    if (seenKeys.has(key)) return;
+    seenKeys.add(key);
+    recommendations.push(recommendation);
+  }
+
+  function recommendChartConfigs(schema, context = {}) {
     const entries = Object.entries(schema);
     const numeric = entries
       .filter(([, meta]) => meta.type === "numeric" && !["identifier", "constant"].includes(meta.role))
@@ -1276,63 +1308,251 @@ function renderAnalysis(container, analysis, shape) {
         .concat(entries.filter(([, meta]) => ["categorical", "text"].includes(meta.type) && meta.role !== "identifier").map(([name]) => name))
     );
     const datetime = entries.filter(([, meta]) => meta.type === "datetime" || meta.role === "time").map(([name]) => name);
+    const groupedSplitColumns = uniqueColumns(categorical.concat(datetime));
     const primaryMeasure = countColumns[0] || rateColumns[0] || measureColumns[0] || numeric[0];
+    const usableColumns = entries
+      .filter(([, meta]) => !["identifier", "constant"].includes(meta.role))
+      .map(([name]) => name);
+    const rowCount = Number(context?.rowCount || context?.shape?.rows || context?.analysis?.row_count || 0);
+    const intentKey = context?.analysis?.dataset_story?.intent?.key || "";
+    const compactCategory = groupedSplitColumns.find((name) => {
+      const unique = Number(schema?.[name]?.unique || 0);
+      return unique >= 2 && unique <= 8;
+    });
+    const splitCategory = groupedSplitColumns.find((name) => name !== categorical[0] && name !== datetime[0]);
+    const geographyColumn = categorical.find((name) => schema?.[name]?.role === "geography");
+    const recommendations = [];
+    const seenKeys = new Set();
 
     if (datetime.length && primaryMeasure) {
-      return {
-        chartType: "line",
-        xColumn: datetime[0],
-        yColumn: primaryMeasure,
-        message: `Suggested chart: line chart using ${datetime[0]} over ${primaryMeasure}.`,
-      };
+      pushChartRecommendation(
+        recommendations,
+        seenKeys,
+        buildChartRecommendation(
+          "line",
+          { xColumn: datetime[0], yColumn: primaryMeasure },
+          98,
+          `Suggested chart: line chart using ${datetime[0]} over ${primaryMeasure}.`,
+          "Best when a numeric field changes over time and you want the trend to be the main story."
+        )
+      );
+      pushChartRecommendation(
+        recommendations,
+        seenKeys,
+        buildChartRecommendation(
+          "area",
+          { xColumn: datetime[0], yColumn: primaryMeasure },
+          89,
+          `Alternative chart: area chart using ${datetime[0]} over ${primaryMeasure}.`,
+          "Useful when you want the trend plus a stronger sense of total magnitude across time."
+        )
+      );
     }
 
     if (categorical.length && primaryMeasure) {
-      const xMeta = schema[categorical[0]];
-      return {
-        chartType: "bar",
-        xColumn: categorical[0],
-        yColumn: primaryMeasure,
-        message: xMeta?.role === "geography"
-          ? `Suggested chart: bar chart comparing ${primaryMeasure} across ${categorical[0]}. Pie charts may need top-N filtering first.`
-          : `Suggested chart: bar chart using ${categorical[0]} and ${primaryMeasure}.`,
-      };
+      const primaryCategory = categorical[0];
+      const xMeta = schema[primaryCategory];
+      pushChartRecommendation(
+        recommendations,
+        seenKeys,
+        buildChartRecommendation(
+          "bar",
+          { xColumn: primaryCategory, yColumn: primaryMeasure, chartOptions: { top_n: xMeta?.role === "geography" ? 12 : 10 } },
+          xMeta?.role === "geography" ? 96 : 94,
+          xMeta?.role === "geography"
+            ? `Suggested chart: bar chart comparing ${primaryMeasure} across ${primaryCategory}.`
+            : `Suggested chart: bar chart using ${primaryCategory} and ${primaryMeasure}.`,
+          xMeta?.role === "geography"
+            ? "Geography fields usually read better as ranked bars than pies because long labels and many groups stay readable."
+            : "Best when one category needs to be compared clearly against a single measure."
+        )
+      );
+
+      if (splitCategory) {
+        pushChartRecommendation(
+          recommendations,
+          seenKeys,
+          buildChartRecommendation(
+            "grouped_bar",
+            {
+              xColumn: primaryCategory,
+              yColumn: primaryMeasure,
+              chartOptions: { group_column: splitCategory, top_n: 10, aggregation: "sum" },
+            },
+            92,
+            `Alternative chart: grouped bar chart splitting ${primaryCategory} by ${splitCategory}.`,
+            "Best when users need side-by-side comparison across a second grouping field."
+          )
+        );
+        pushChartRecommendation(
+          recommendations,
+          seenKeys,
+          buildChartRecommendation(
+            "stacked_bar",
+            {
+              xColumn: primaryCategory,
+              yColumn: primaryMeasure,
+              chartOptions: { group_column: splitCategory, top_n: 10, aggregation: "sum" },
+            },
+            87,
+            `Alternative chart: stacked bar chart showing how ${primaryCategory} totals are composed by ${splitCategory}.`,
+            "Best when the total matters, but the composition inside each total matters too."
+          )
+        );
+      }
+
+      if (compactCategory && !geographyColumn && Number(schema?.[compactCategory]?.unique || 0) <= 6) {
+        pushChartRecommendation(
+          recommendations,
+          seenKeys,
+          buildChartRecommendation(
+            "pie",
+            { xColumn: compactCategory, yColumn: primaryMeasure, chartOptions: { top_n: 6 } },
+            72,
+            `Possible chart: pie chart for ${compactCategory} using ${primaryMeasure}.`,
+            "Only useful when there are very few categories and the task is explicitly part-to-whole."
+          )
+        );
+      }
     }
 
     if (numeric.length >= 2) {
-      return {
-        chartType: "scatter",
-        xColumn: numeric[0],
-        yColumn: numeric[1],
-        message: `Suggested chart: scatter plot using ${numeric[0]} and ${numeric[1]}.`,
-      };
+      pushChartRecommendation(
+        recommendations,
+        seenKeys,
+        buildChartRecommendation(
+          "scatter",
+          { xColumn: numeric[0], yColumn: numeric[1] },
+          88,
+          `Suggested chart: scatter plot using ${numeric[0]} and ${numeric[1]}.`,
+          "Best when the main question is whether two numeric fields move together or separate into clusters."
+        )
+      );
+
+      if (rowCount >= 80) {
+        pushChartRecommendation(
+          recommendations,
+          seenKeys,
+          buildChartRecommendation(
+            "hexbin",
+            { xColumn: numeric[0], yColumn: numeric[1], chartOptions: { bins: 18 } },
+            86,
+            `Alternative chart: hexbin using ${numeric[0]} and ${numeric[1]}.`,
+            "Better than a scatter plot when many points would overlap and hide the denser regions."
+          )
+        );
+      }
+
+      if (numeric.length >= 3) {
+        pushChartRecommendation(
+          recommendations,
+          seenKeys,
+          buildChartRecommendation(
+            "bubble",
+            {
+              xColumn: numeric[0],
+              yColumn: numeric[1],
+              chartOptions: { size_column: numeric[2], group_column: splitCategory || compactCategory || null },
+            },
+            82,
+            `Alternative chart: bubble chart using ${numeric[0]}, ${numeric[1]}, and ${numeric[2]}.`,
+            "Useful when you want three numeric measures in one view and can tolerate a more interpretive chart."
+          )
+        );
+      }
     }
 
     if (numeric.length) {
-      const xColumn = rateColumns[0] || measureColumns[0] || countColumns[0] || numeric[0];
-      return {
-        chartType: "histogram",
-        xColumn,
-        yColumn: "",
-        message: `Suggested chart: histogram of ${xColumn}.`,
-      };
+      const distributionField = rateColumns[0] || measureColumns[0] || countColumns[0] || numeric[0];
+      pushChartRecommendation(
+        recommendations,
+        seenKeys,
+        buildChartRecommendation(
+          "histogram",
+          { xColumn: distributionField, chartOptions: { bins: 20 } },
+          78,
+          `Distribution option: histogram of ${distributionField}.`,
+          "Best when the question is about spread, skew, or concentration rather than group ranking."
+        )
+      );
+      pushChartRecommendation(
+        recommendations,
+        seenKeys,
+        buildChartRecommendation(
+          "density",
+          { xColumn: distributionField, chartOptions: { group_column: compactCategory || null } },
+          compactCategory ? 80 : 74,
+          `Distribution option: density plot of ${distributionField}${compactCategory ? ` split by ${compactCategory}` : ""}.`,
+          compactCategory
+            ? "Useful when you want to compare how a numeric distribution shifts across a few groups."
+            : "Useful when you want a smoother distribution view than a histogram."
+        )
+      );
     }
 
-    if (categorical.length) {
-      return {
-        chartType: "bar",
-        xColumn: categorical[0],
-        yColumn: "",
-        message: `Suggested chart: bar chart of ${categorical[0]}.`,
-      };
+    if (compactCategory && primaryMeasure) {
+      pushChartRecommendation(
+        recommendations,
+        seenKeys,
+        buildChartRecommendation(
+          "beeswarm",
+          { xColumn: compactCategory, yColumn: primaryMeasure, chartOptions: { group_column: splitCategory || null, top_n: 10 } },
+          76,
+          `Alternative chart: beeswarm plot of ${primaryMeasure} across ${compactCategory}.`,
+          "Best when you want to preserve row-level spread inside each category instead of showing only averages."
+        )
+      );
     }
 
-    return {
-      chartType: "bar",
-      xColumn: entries[0]?.[0] || "",
-      yColumn: "",
-      message: "Upload a dataset to get a chart suggestion.",
-    };
+    if (usableColumns.length >= 6 || intentKey === "categorical_response_table") {
+      const featureFocus = primaryMeasure || categorical[0] || usableColumns[0] || "";
+      pushChartRecommendation(
+        recommendations,
+        seenKeys,
+        buildChartRecommendation(
+          "feature_graph",
+          { xColumn: featureFocus },
+          70,
+          `Structure option: feature relationship graph centered on ${featureFocus}.`,
+          "Useful when the main goal is understanding how fields relate to each other, not just plotting one direct comparison."
+        )
+      );
+    }
+
+    if (!recommendations.length && categorical.length) {
+      pushChartRecommendation(
+        recommendations,
+        seenKeys,
+        buildChartRecommendation(
+          "bar",
+          { xColumn: categorical[0], yColumn: "" },
+          60,
+          `Suggested chart: bar chart of ${categorical[0]}.`,
+          "Fallback option when the dataset is mostly categorical and simple counts are the safest first read."
+        )
+      );
+    }
+
+    if (!recommendations.length) {
+      pushChartRecommendation(
+        recommendations,
+        seenKeys,
+        buildChartRecommendation(
+          "bar",
+          { xColumn: entries[0]?.[0] || "", yColumn: "" },
+          50,
+          "Upload a dataset to get a chart suggestion.",
+          "The app needs at least one usable field before it can make a stronger recommendation."
+        )
+      );
+    }
+
+    recommendations.sort((left, right) => right.score - left.score);
+    return recommendations.slice(0, 5);
+  }
+
+  function recommendChartConfig(schema, context = {}) {
+    return recommendChartConfigs(schema, context)[0];
   }
 
   async function fetchJson(url, options) {
@@ -1399,6 +1619,8 @@ function renderAnalysis(container, analysis, shape) {
     renderDatasetExplanation,
     renderAnalysis,
     getChartCompatibility,
+    chartTypeLabel,
+    recommendChartConfigs,
     recommendChartConfig,
     fetchJson,
     downloadBinary,
