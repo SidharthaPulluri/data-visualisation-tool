@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Graph | Sidhartha Utilities</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="landing-body">
+  <main class="landing-page memory-page">
+    <header class="landing-topbar">
+      <div class="landing-topbar-inner">
+        <div class="landing-brand-lockup">
+          <img class="landing-logo" src="/static/assets/vysri-reference-mark.png" alt="VySri Services mark">
+          <div class="landing-brand">
+            <span class="eyebrow">VySri Services</span>
+            <strong>Sidhartha Utilities</strong>
+            <span class="landing-brand-subtitle">Software &bull; Tools &bull; Solutions</span>
+          </div>
+        </div>
+        <div class="landing-topbar-meta">
+          <a class="landing-topbar-chip landing-topbar-chip-link" href="/">Back to tool</a>
+          <a class="landing-topbar-chip landing-topbar-chip-link" href="/guide">Guide</a>
+          <a class="landing-topbar-chip landing-topbar-chip-link" href="/database">Database path</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="memory-hero">
+      <span class="section-kicker">System map</span>
+      <h1>Visual memory graph of the tool.</h1>
+      <p class="landing-simple-lead">This page turns the project’s living memory graph into a readable system map: how data enters, how shared state moves, where regression coverage sits, and which cleanup targets are still active.</p>
+    </section>
+
+    <section class="memory-flow">
+      <div class="memory-section-head">
+        <span class="section-kicker">Current flow</span>
+        <h2>From entry path to exports</h2>
+      </div>
+
+      <div class="memory-lane">
+        <div class="memory-node memory-node-wide">
+          <span class="memory-node-label">Entry pages</span>
+          <strong>upload.html / database.html / guide.html</strong>
+        </div>
+        <div class="memory-arrow" aria-hidden="true">&rarr;</div>
+        <div class="memory-node">
+          <span class="memory-node-label">Upload API</span>
+          <strong>/api/upload</strong>
+        </div>
+        <div class="memory-arrow" aria-hidden="true">&rarr;</div>
+        <div class="memory-node">
+          <span class="memory-node-label">Parsing</span>
+          <strong>ingestion/loader.py</strong>
+          <span>delimiter inference, headerless fallback, ZIP/JSON/XLSX handling</span>
+        </div>
+        <div class="memory-arrow" aria-hidden="true">&rarr;</div>
+        <div class="memory-node">
+          <span class="memory-node-label">Cleaning</span>
+          <strong>cleaning/cleaner.py</strong>
+        </div>
+        <div class="memory-arrow" aria-hidden="true">&rarr;</div>
+        <div class="memory-node">
+          <span class="memory-node-label">Schema + analysis</span>
+          <strong>schema/detect.py + analysis/stats.py</strong>
+        </div>
+      </div>
+
+      <div class="memory-branch-grid">
+        <article class="memory-branch-card">
+          <span class="section-kicker">Shared session core</span>
+          <h3>frontend/shared.js</h3>
+          <p>Owns the browser session shape, multi-table switching, workspace persistence, binary stripping, and shared UI helpers.</p>
+        </article>
+
+        <article class="memory-branch-card">
+          <span class="section-kicker">Preparation branch</span>
+          <h3>prepare.html -> /api/transform</h3>
+          <p>Runs transformations, quality checks, parser recovery notes, history/undo, and dataset explanation before charting.</p>
+        </article>
+
+        <article class="memory-branch-card">
+          <span class="section-kicker">Visualization branch</span>
+          <h3>visualize.html -> /api/visualize /api/preview</h3>
+          <p>Handles saved charts, cross-filtering, grid mode, chart recovery, chart exports, and dashboard export flows.</p>
+        </article>
+
+        <article class="memory-branch-card">
+          <span class="section-kicker">Rendering branch</span>
+          <h3>visualization/plots.py</h3>
+          <p>Creates chart bytes, chart descriptors, and the plot metadata used by export and table cross-filtering.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="memory-grid">
+      <article class="memory-card">
+        <span class="section-kicker">Active shared state</span>
+        <h2>Browser storage model</h2>
+        <ul class="insight-list">
+          <li><strong>Session key:</strong> <code>data_visualisation_tool_session</code></li>
+          <li><strong>Workspace key:</strong> <code>data_visualisation_tool_workspaces</code></li>
+          <li><strong>Per-table state helpers:</strong> <code>buildTableRecord</code>, <code>mirrorActiveTableIntoSession</code>, <code>syncActiveTableIntoSession</code>, <code>setActiveTable</code></li>
+          <li><strong>Normalization:</strong> sessions and reopened workspaces are normalized on load to keep active-table and dashboard state consistent.</li>
+        </ul>
+      </article>
+
+      <article class="memory-card">
+        <span class="section-kicker">Canonical helpers</span>
+        <h2>Shared frontend logic</h2>
+        <ul class="insight-list">
+          <li><code>setStatusText</code></li>
+          <li><code>renderWorkspaceTablePanel</code></li>
+          <li><code>switchWorkspaceTable</code></li>
+          <li><code>ensureDatasetState</code></li>
+          <li><code>saveWorkspaceFlow</code></li>
+          <li><code>saveSession</code> / <code>loadSession</code></li>
+          <li><code>fetchJson</code> / <code>downloadBinary</code></li>
+        </ul>
+      </article>
+
+      <article class="memory-card">
+        <span class="section-kicker">Cleanup status</span>
+        <h2>What is centralized now</h2>
+        <ul class="insight-list">
+          <li>Chart rendering goes through <code>_build_chart_bytes</code> in the Flask app.</li>
+          <li>Workspace switching and workspace save flows now route through shared helpers.</li>
+          <li>Parser heuristics for JSON, ZIP, headerless files, and workbook ranking are concentrated in the ingestion layer.</li>
+          <li>Prepare and visualize no longer keep live fallback bodies for workspace switching and workspace-save logic.</li>
+        </ul>
+      </article>
+
+      <article class="memory-card">
+        <span class="section-kicker">Still worth cleaning</span>
+        <h2>Residual inline logic</h2>
+        <ul class="insight-list">
+          <li>Page-level chart rendering still lives inline in <code>prepare.html</code> and <code>visualize.html</code>.</li>
+          <li>The next structural cleanup is extracting those page scripts into separate JS modules once the UX stops shifting.</li>
+          <li>Some old branding assets remain on disk and can be pruned in the next asset cleanup pass if still unused.</li>
+        </ul>
+      </article>
+
+      <article class="memory-card memory-card-wide">
+        <span class="section-kicker">Regression baseline</span>
+        <h2>What keeps the system stable</h2>
+        <div class="memory-regression-grid">
+          <div>
+            <strong>Core runner</strong>
+            <p><code>python scripts/run_regression_checks.py</code></p>
+          </div>
+          <div>
+            <strong>Workspace runner</strong>
+            <p><code>node scripts/run_workspace_regression_checks.js</code></p>
+          </div>
+          <div>
+            <strong>Fixture families</strong>
+            <p>Delimited data, headerless <code>.data</code>, ZIP bundles, nested JSON, mixed-schema JSON arrays, multi-sheet Excel, ambiguous workbook ranking, empty-file rejection, and multi-file workspace reopen flows.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="memory-card memory-card-wide">
+        <span class="section-kicker">Update rule</span>
+        <h2>When this graph should change</h2>
+        <ul class="insight-list">
+          <li>Session storage shape changes</li>
+          <li>Table-switching logic changes</li>
+          <li>Upload formats or parser recovery rules change</li>
+          <li>Chart rendering or export pipeline changes</li>
+          <li>Brand asset selection changes</li>
+          <li>Regression coverage changes</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="guide-actions">
+      <a class="action-link" href="/">Open the normal file path</a>
+      <a class="button-link ghost" href="/database">Open the database path</a>
+      <a class="button-link ghost" href="/guide">Open the guide</a>
+    </section>
+  </main>
+</body>
+</html>

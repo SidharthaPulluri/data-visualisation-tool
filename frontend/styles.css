@@ -472,6 +472,135 @@ body {
   padding: 26px 10px 0;
 }
 
+.memory-page {
+  padding-bottom: 56px;
+}
+
+.memory-hero {
+  padding: 26px 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.memory-hero h1 {
+  margin: 10px 0 10px;
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  line-height: 0.94;
+}
+
+.memory-flow,
+.memory-grid {
+  margin-top: 24px;
+}
+
+.memory-section-head {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.memory-section-head h2,
+.memory-card h2,
+.memory-branch-card h3 {
+  margin: 0;
+}
+
+.memory-lane {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.25fr) auto minmax(160px, 0.7fr) auto minmax(220px, 1fr) auto minmax(180px, 0.8fr) auto minmax(260px, 1.1fr);
+  gap: 12px;
+  align-items: stretch;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.memory-node,
+.memory-branch-card,
+.memory-card {
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 14px 32px rgba(18, 49, 102, 0.06);
+}
+
+.memory-node {
+  display: grid;
+  gap: 8px;
+  padding: 18px 18px 16px;
+  min-width: 160px;
+}
+
+.memory-node strong {
+  color: #0c2b63;
+  font-size: 1rem;
+}
+
+.memory-node span {
+  color: var(--muted);
+  font-size: 0.93rem;
+  line-height: 1.45;
+}
+
+.memory-node-label {
+  color: #2c64df;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.memory-node-wide {
+  min-width: 220px;
+}
+
+.memory-arrow {
+  display: grid;
+  place-items: center;
+  color: #2c64df;
+  font-size: 1.5rem;
+  font-weight: 700;
+  min-width: 24px;
+}
+
+.memory-branch-grid,
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.memory-branch-grid {
+  margin-top: 18px;
+}
+
+.memory-branch-card,
+.memory-card {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+
+.memory-card-wide {
+  grid-column: 1 / -1;
+}
+
+.memory-regression-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.memory-regression-grid strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #0c2b63;
+}
+
+.memory-regression-grid p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 .landing-topbar-chip-link {
   color: #537092;
   text-decoration: none;
@@ -1854,8 +1983,20 @@ tr:hover td {
   .landing-proof-strip,
   .landing-source-grid,
   .landing-quick-links,
-  .guide-grid {
+  .guide-grid,
+  .memory-branch-grid,
+  .memory-grid,
+  .memory-regression-grid {
     grid-template-columns: 1fr;
+  }
+
+  .memory-lane {
+    grid-template-columns: 1fr;
+  }
+
+  .memory-arrow {
+    transform: rotate(90deg);
+    min-height: 24px;
   }
 
   .landing-hero-inner {
