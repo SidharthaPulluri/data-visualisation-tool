@@ -48,6 +48,10 @@ python scripts/run_regression_checks.py
 
 Fixtures live in [D:\Data Visualisation Tool\regression\fixtures](D:\Data%20Visualisation%20Tool\regression\fixtures).
 
+## Memory Graph
+
+Use [D:\Data Visualisation Tool\MEMORY_GRAPH.md](D:\Data%20Visualisation%20Tool\MEMORY_GRAPH.md) as the living system map for active flows, shared state, cleanup decisions, and known residuals.
+
 ## Deploy
 
 The project includes a `vercel.json` config for deploying the Flask app to Vercel.

@@ -4,5 +4,8 @@ __pycache__/
 .vercel/
 exports/*
 !exports/.gitkeep
+tmp_*
+package-lock.json
+regression/internet_samples/
 
 .vercel

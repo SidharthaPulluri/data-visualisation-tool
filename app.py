@@ -174,6 +174,29 @@ def _apply_preview_filter(df: pd.DataFrame, preview_filter: dict[str, Any] | Non
     return filtered
 
 
+def _build_chart_bytes(
+    *,
+    transformed_df: pd.DataFrame,
+    transformed_schema: dict[str, Any],
+    chart_type: str,
+    x_column: str,
+    y_column: str | None,
+    title: str | None,
+    output_format: str,
+    chart_options: dict[str, Any],
+) -> bytes:
+    return create_chart(
+        df=transformed_df,
+        schema=transformed_schema,
+        chart_type=chart_type,
+        x_column=x_column,
+        y_column=y_column,
+        title=title,
+        output_format=output_format,
+        chart_options=chart_options,
+    )
+
+
 @app.get("/")
 def index() -> Any:
     return send_from_directory(FRONTEND_DIR, "upload.html")
@@ -291,9 +314,9 @@ def visualize_dataset() -> Any:
         _, clean_df, _, _ = _resolve_dataset(payload)
         transformed_df, _ = apply_transformations(clean_df, config)
         transformed_schema = detect_schema(transformed_df)
-        chart_bytes = create_chart(
-            df=transformed_df,
-            schema=transformed_schema,
+        chart_bytes = _build_chart_bytes(
+            transformed_df=transformed_df,
+            transformed_schema=transformed_schema,
             chart_type=chart_type,
             x_column=x_column,
             y_column=y_column,
@@ -394,9 +417,9 @@ def export_chart() -> Any:
         _, clean_df, _, _ = _resolve_dataset(payload)
         transformed_df, _ = apply_transformations(clean_df, config)
         transformed_schema = detect_schema(transformed_df)
-        chart_bytes = create_chart(
-            df=transformed_df,
-            schema=transformed_schema,
+        chart_bytes = _build_chart_bytes(
+            transformed_df=transformed_df,
+            transformed_schema=transformed_schema,
             chart_type=chart_type,
             x_column=x_column,
             y_column=y_column,
@@ -477,9 +500,9 @@ def export_dashboard() -> Any:
 
             for chart_index, chart in enumerate(page_charts):
                 title = chart.get("title") or chart.get("label") or chart["chart_type"].title()
-                chart_bytes = create_chart(
-                    df=transformed_df,
-                    schema=transformed_schema,
+                chart_bytes = _build_chart_bytes(
+                    transformed_df=transformed_df,
+                    transformed_schema=transformed_schema,
                     chart_type=chart["chart_type"],
                     x_column=chart["x_column"],
                     y_column=chart.get("y_column"),

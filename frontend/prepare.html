@@ -330,11 +330,16 @@
       tableWorkspaceTabs: document.getElementById("tableWorkspaceTabs")
     };
 
-    function setStatus(message) {
-      document.getElementById("status").textContent = message;
-    }
+    const setStatus = (message) => window.dataTool.setStatusText(ids.status, message);
 
     function renderTableWorkspace() {
+      return window.dataTool.renderWorkspaceTablePanel({
+        session: state,
+        panel: ids.tableWorkspacePanel,
+        meta: ids.tableWorkspaceMeta,
+        tabs: ids.tableWorkspaceTabs,
+        onSwitch: switchWorkspaceTable
+      });
       const tables = window.dataTool.getWorkspaceTables(state);
       if (tables.length <= 1) {
         ids.tableWorkspacePanel.hidden = true;
@@ -361,6 +366,7 @@
     }
 
     function switchWorkspaceTable(tableId) {
+      return window.dataTool.switchWorkspaceTable(state, tableId);
       const nextSession = window.dataTool.setActiveTable(state, tableId);
       Object.keys(state).forEach((key) => {
         delete state[key];
@@ -676,6 +682,17 @@
     }
 
     async function saveWorkspace() {
+      try {
+        return await window.dataTool.saveWorkspaceFlow({
+          state,
+          lastPage: "/prepare",
+          fetchJson: window.dataTool.fetchJson,
+          setStatus
+        });
+      } catch (error) {
+        setStatus(error.message);
+        return null;
+      }
       const workspaceName = window.prompt("Name this workspace", `${state.filename || "dataset"} workspace`);
       if (!workspaceName) {
         return;

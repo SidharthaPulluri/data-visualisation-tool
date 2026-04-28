@@ -143,6 +143,106 @@
     return mirrorActiveTableIntoSession({ ...syncedCurrent, activeTableId: tableId }, tableId);
   }
 
+  function replaceSessionState(targetState, nextSession) {
+    if (!targetState || !nextSession) {
+      return nextSession;
+    }
+    Object.keys(targetState).forEach((key) => {
+      delete targetState[key];
+    });
+    Object.assign(targetState, nextSession);
+    return targetState;
+  }
+
+  function setStatusText(target, message) {
+    if (target) {
+      target.textContent = message;
+    }
+  }
+
+  function renderWorkspaceTablePanel({ session, panel, meta, tabs, onSwitch }) {
+    const tables = getWorkspaceTables(session);
+    if (!panel || !tabs) {
+      return tables;
+    }
+
+    if (tables.length <= 1) {
+      panel.hidden = true;
+      tabs.innerHTML = "";
+      return tables;
+    }
+
+    panel.hidden = false;
+    if (meta) {
+      meta.textContent = `${formatNumber(tables.length, 0)} uploaded files are available in this workspace.`;
+    }
+    tabs.innerHTML = tables.map((table, index) => `
+      <button
+        type="button"
+        class="table-switch-button${table.id === session.activeTableId ? " active" : ""}"
+        data-table-id="${escapeHtml(table.id)}"
+      >
+        <strong>${escapeHtml(table.filename || `Table ${index + 1}`)}</strong>
+        <span>${formatNumber(table.shape?.rows || 0, 0)} rows • ${formatNumber(table.shape?.columns || 0, 0)} columns</span>
+      </button>
+    `).join("");
+
+    tabs.querySelectorAll("[data-table-id]").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (typeof onSwitch === "function") {
+          onSwitch(button.dataset.tableId);
+        }
+      });
+    });
+    return tables;
+  }
+
+  function switchWorkspaceTable(state, tableId, { reload = true } = {}) {
+    const nextSession = setActiveTable(state, tableId);
+    replaceSessionState(state, nextSession);
+    saveSession(state);
+    if (reload && typeof window !== "undefined") {
+      window.location.reload();
+    }
+    return state;
+  }
+
+  async function ensureDatasetState({ state, config, fetchJson: fetcher }) {
+    if (state?.datasetState || state?.dataset_state) {
+      return state.datasetState || state.dataset_state;
+    }
+    if (typeof fetcher !== "function") {
+      throw new Error("A fetchJson helper is required to refresh dataset state.");
+    }
+
+    const payload = await fetcher("/api/transform", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        dataset_id: state?.datasetId,
+        dataset_state: state?.datasetState || state?.dataset_state || null,
+        config: config || state?.transformConfig || {}
+      })
+    });
+    state.datasetState = payload.dataset_state;
+    state.dataset_state = payload.dataset_state;
+    return payload.dataset_state;
+  }
+
+  async function saveWorkspaceFlow({ state, lastPage = "/prepare", fetchJson: fetcher, setStatus }) {
+    const workspaceName = window.prompt("Name this workspace", `${state?.filename || "dataset"} workspace`);
+    if (!workspaceName) {
+      return null;
+    }
+
+    await ensureDatasetState({ state, config: state?.transformConfig || {}, fetchJson: fetcher });
+    const workspace = storeWorkspace({ ...state, lastPage }, workspaceName.trim());
+    if (typeof setStatus === "function") {
+      setStatus(`Saved workspace as ${workspace.name}.`);
+    }
+    return workspace;
+  }
+
   function stripChartBinary(chart) {
     if (!chart) return chart;
     const clone = { ...chart };
@@ -1122,6 +1222,12 @@ function renderAnalysis(container, analysis, shape) {
     getWorkspaceTables,
     getActiveTableRecord,
     setActiveTable,
+    replaceSessionState,
+    setStatusText,
+    renderWorkspaceTablePanel,
+    switchWorkspaceTable,
+    ensureDatasetState,
+    saveWorkspaceFlow,
     escapeHtml,
     formatNumber,
     populateSelect,
