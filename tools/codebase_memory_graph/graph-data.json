@@ -7354,7 +7354,7 @@
       "name": "build_codebase_memory_graph.py",
       "folder": "scripts",
       "extension": ".py",
-      "lines": 1270,
+      "lines": 1540,
       "functions": [
         {
           "name": "discover_source_files",
@@ -8027,31 +8027,31 @@
           "kind": "function",
           "keywords": [
             "span",
+            "node",
             "ctx",
-            "map",
+            "state",
             "planet",
-            "files",
-            "detail",
-            "folder",
-            "math"
+            "math",
+            "map",
+            "detail"
           ],
           "fingerprint": [
             "ctx",
             "detail",
-            "files",
-            "folder",
             "html",
             "map",
             "math",
+            "node",
             "planet",
             "render",
-            "span"
+            "span",
+            "state"
           ],
           "stem": "render html"
         },
         {
           "name": "main",
-          "line": 1258,
+          "line": 1528,
           "kind": "function",
           "keywords": [
             "graph",
@@ -8441,12 +8441,12 @@
       "name": "index.html",
       "folder": "tools",
       "extension": ".html",
-      "lines": 603,
+      "lines": 635,
       "functions": [
         {
           "name": "escapeHtml",
           "kind": "function",
-          "line": 30,
+          "line": 31,
           "keywords": [
             "all",
             "replace",
@@ -8467,7 +8467,7 @@
         {
           "name": "groupFilesByFolder",
           "kind": "function",
-          "line": 39,
+          "line": 40,
           "keywords": [
             "groups",
             "folder",
@@ -8494,7 +8494,7 @@
         {
           "name": "buildPositions",
           "kind": "function",
-          "line": 50,
+          "line": 51,
           "keywords": [
             "math",
             "folder",
@@ -8522,7 +8522,7 @@
         {
           "name": "attachDegrees",
           "kind": "function",
-          "line": 103,
+          "line": 104,
           "keywords": [
             "map",
             "degree",
@@ -8550,7 +8550,7 @@
         {
           "name": "buildLookups",
           "kind": "function",
-          "line": 115,
+          "line": 116,
           "keywords": [
             "map",
             "planet",
@@ -8577,7 +8577,7 @@
         {
           "name": "isVisible",
           "kind": "function",
-          "line": 125,
+          "line": 126,
           "keywords": [
             "node",
             "haystack",
@@ -8604,7 +8604,7 @@
         {
           "name": "draw",
           "kind": "function",
-          "line": 131,
+          "line": 132,
           "keywords": [
             "ctx",
             "source",
@@ -8631,22 +8631,22 @@
         {
           "name": "renderHeroStats",
           "kind": "function",
-          "line": 195,
+          "line": 196,
           "keywords": [
             "span",
             "summary",
             "chip",
+            "clusters",
             "hero",
             "stats",
             "constellations",
-            "edges",
-            "files"
+            "edges"
           ],
           "fingerprint": [
             "chip",
+            "clusters",
             "constellations",
             "edges",
-            "files",
             "hero",
             "render",
             "span",
@@ -8658,7 +8658,7 @@
         {
           "name": "renderLegend",
           "kind": "function",
-          "line": 205,
+          "line": 207,
           "keywords": [
             "folder",
             "legend",
@@ -8685,7 +8685,7 @@
         {
           "name": "renderHotspots",
           "kind": "function",
-          "line": 215,
+          "line": 217,
           "keywords": [
             "span",
             "escape",
@@ -8710,9 +8710,36 @@
           "stem": "render hotspots"
         },
         {
+          "name": "renderSimilarityClusters",
+          "kind": "function",
+          "line": 227,
+          "keywords": [
+            "similarity",
+            "span",
+            "clusters",
+            "escape",
+            "files",
+            "graph",
+            "inner",
+            "join"
+          ],
+          "fingerprint": [
+            "clusters",
+            "escape",
+            "files",
+            "graph",
+            "inner",
+            "join",
+            "render",
+            "similarity",
+            "span"
+          ],
+          "stem": "render similarity clusters"
+        },
+        {
           "name": "renderDuplicates",
           "kind": "function",
-          "line": 225,
+          "line": 242,
           "keywords": [
             "span",
             "duplicate",
@@ -8739,7 +8766,7 @@
         {
           "name": "connectedEdgesForFile",
           "kind": "function",
-          "line": 238,
+          "line": 255,
           "keywords": [
             "edge",
             "edges",
@@ -8765,26 +8792,26 @@
         {
           "name": "renderDetails",
           "kind": "function",
-          "line": 242,
+          "line": 259,
           "keywords": [
             "span",
             "detail",
             "escape",
+            "cluster",
             "planet",
-            "functions",
+            "related",
             "key",
-            "length",
-            "refs"
+            "member"
           ],
           "fingerprint": [
+            "cluster",
             "detail",
             "details",
             "escape",
-            "functions",
             "key",
-            "length",
+            "member",
             "planet",
-            "refs",
+            "related",
             "render",
             "span"
           ],
@@ -8793,7 +8820,7 @@
         {
           "name": "hitTest",
           "kind": "function",
-          "line": 289,
+          "line": 314,
           "keywords": [
             "rect",
             "node",
@@ -10366,7 +10393,7 @@
           "id": "tools/codebase_memory_graph/index.html::escapeHtml",
           "file": "tools/codebase_memory_graph/index.html",
           "name": "escapeHtml",
-          "line": 30,
+          "line": 31,
           "kind": "function"
         }
       ],
@@ -11529,7 +11556,7 @@
   ],
   "summary": {
     "files": 20,
-    "functions": 329,
+    "functions": 330,
     "edges": 34,
     "folders": 11,
     "similarity_clusters": 31

@@ -647,11 +647,11 @@ def render_html(graph: dict[str, Any]) -> str:
         radial-gradient(circle at 78% 8%, rgba(45, 108, 255, 0.16), transparent 26%),
         linear-gradient(180deg, #081220 0%, #050c17 100%);
     }}
+    h1, h2, h3, p {{ margin: 0; }}
     .shell {{
       display: grid;
-      grid-template-columns: minmax(0, 1.45fr) minmax(320px, 440px);
       gap: 18px;
-      width: min(1600px, calc(100% - 32px));
+      width: min(1620px, calc(100% - 32px));
       margin: 0 auto;
       padding: 20px 0 28px;
     }}
@@ -663,7 +663,6 @@ def render_html(graph: dict[str, Any]) -> str:
       backdrop-filter: blur(10px);
     }}
     .hero {{
-      grid-column: 1 / -1;
       padding: 22px 24px 18px;
       display: grid;
       gap: 10px;
@@ -675,7 +674,6 @@ def render_html(graph: dict[str, Any]) -> str:
       letter-spacing: 0.18em;
       text-transform: uppercase;
     }}
-    h1, h2, h3, p {{ margin: 0; }}
     .hero h1 {{
       font-family: "Segoe UI Variable Display", "Bahnschrift", "Segoe UI", sans-serif;
       font-size: clamp(2rem, 3vw, 3rem);
@@ -684,7 +682,7 @@ def render_html(graph: dict[str, Any]) -> str:
       font-weight: 650;
     }}
     .hero p {{
-      max-width: 85ch;
+      max-width: 92ch;
       color: var(--muted);
       line-height: 1.65;
     }}
@@ -708,7 +706,6 @@ def render_html(graph: dict[str, Any]) -> str:
     .workspace {{
       padding: 18px;
       overflow: hidden;
-      min-height: 760px;
     }}
     .workspace-head {{
       display: flex;
@@ -716,13 +713,26 @@ def render_html(graph: dict[str, Any]) -> str:
       gap: 16px;
       align-items: end;
       margin-bottom: 10px;
+      flex-wrap: wrap;
     }}
     .workspace-copy {{
       display: grid;
       gap: 8px;
     }}
+    .workspace-copy p {{
+      color: var(--muted);
+      max-width: 76ch;
+      line-height: 1.55;
+      font-size: 0.94rem;
+    }}
+    .controls {{
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }}
     .search {{
-      width: min(320px, 100%);
+      width: min(340px, 100%);
       padding: 12px 14px;
       border-radius: 16px;
       border: 1px solid rgba(117, 176, 255, 0.24);
@@ -731,6 +741,15 @@ def render_html(graph: dict[str, Any]) -> str:
       outline: none;
     }}
     .search::placeholder {{ color: #8ca6c6; }}
+    .reset-button {{
+      border: 1px solid rgba(117, 176, 255, 0.22);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 16px;
+      padding: 11px 14px;
+      cursor: pointer;
+      font: inherit;
+    }}
     .graph-wrap {{
       position: relative;
       border-radius: 22px;
@@ -739,12 +758,52 @@ def render_html(graph: dict[str, Any]) -> str:
         radial-gradient(circle at center, rgba(87, 182, 255, 0.04), transparent 32%),
         linear-gradient(180deg, rgba(7, 17, 31, 0.98), rgba(6, 13, 23, 0.98));
       border: 1px solid rgba(117, 176, 255, 0.12);
-      min-height: 660px;
+      min-height: 760px;
     }}
     #graphCanvas {{
       width: 100%;
-      height: 660px;
+      height: 760px;
       display: block;
+      cursor: grab;
+    }}
+    #graphCanvas.dragging {{
+      cursor: grabbing;
+    }}
+    .selection-pill {{
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: min(320px, calc(100% - 32px));
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(5, 15, 28, 0.84);
+      border: 1px solid rgba(117, 176, 255, 0.16);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.24);
+      display: grid;
+      gap: 4px;
+      z-index: 2;
+    }}
+    .selection-pill h3 {{
+      font-family: "Segoe UI Variable Display", "Bahnschrift", "Segoe UI", sans-serif;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }}
+    .selection-pill p {{
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }}
+    .graph-help {{
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(6, 17, 31, 0.72);
+      border: 1px solid rgba(117, 176, 255, 0.14);
+      color: #cfe1fb;
+      font-size: 0.78rem;
+      z-index: 2;
     }}
     .legend {{
       position: absolute;
@@ -753,7 +812,8 @@ def render_html(graph: dict[str, Any]) -> str:
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      max-width: 70%;
+      max-width: calc(100% - 260px);
+      z-index: 2;
     }}
     .legend-item {{
       display: inline-flex;
@@ -772,10 +832,13 @@ def render_html(graph: dict[str, Any]) -> str:
       border-radius: 999px;
       flex: 0 0 auto;
     }}
-    .side {{
+    .bottom-grid {{
       display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 16px;
-      align-content: start;
+    }}
+    .detail-card {{
+      grid-column: 1 / -1;
     }}
     .card {{
       padding: 18px;
@@ -784,7 +847,7 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
     .card h2 {{
       font-family: "Segoe UI Variable Display", "Bahnschrift", "Segoe UI", sans-serif;
-      font-size: 1.1rem;
+      font-size: 1.08rem;
       letter-spacing: -0.02em;
     }}
     .detail-meta {{
@@ -828,16 +891,30 @@ def render_html(graph: dict[str, Any]) -> str:
       font-weight: 700;
     }}
     .footer-note {{
-      grid-column: 1 / -1;
       padding: 0 4px;
       color: var(--muted);
       font-size: 0.9rem;
       line-height: 1.5;
     }}
-    @media (max-width: 1200px) {{
-      .shell {{ grid-template-columns: 1fr; }}
-      .workspace {{ min-height: 0; }}
-      #graphCanvas {{ height: 620px; }}
+    @media (max-width: 1120px) {{
+      .bottom-grid {{
+        grid-template-columns: 1fr;
+      }}
+    }}
+    @media (max-width: 880px) {{
+      .graph-wrap {{
+        min-height: 640px;
+      }}
+      #graphCanvas {{
+        height: 640px;
+      }}
+      .legend {{
+        max-width: calc(100% - 32px);
+        right: 16px;
+      }}
+      .graph-help {{
+        display: none;
+      }}
     }}
   </style>
 </head>
@@ -855,24 +932,34 @@ def render_html(graph: dict[str, Any]) -> str:
         <div class="workspace-copy">
           <span class="eyebrow">Constellation view</span>
           <h2>Files, functions, and cross-file strands</h2>
+          <p>Folders are laid out as separate domains, stars stay readable, and functions stay collapsed until a file is selected or searched so the map stays cleaner.</p>
         </div>
-        <input id="searchInput" class="search" type="text" placeholder="Search a file or function">
+        <div class="controls">
+          <input id="searchInput" class="search" type="text" placeholder="Search a file or function">
+          <button id="resetViewButton" class="reset-button" type="button">Reset view</button>
+        </div>
       </div>
       <div class="graph-wrap">
-        <canvas id="graphCanvas" width="1100" height="660"></canvas>
+        <div class="selection-pill" id="selectionPill">
+          <span class="eyebrow">Selection</span>
+          <h3>No node selected yet</h3>
+          <p>Click a star to open its functions, or click a planet to inspect a specific function.</p>
+        </div>
+        <canvas id="graphCanvas" width="1500" height="760"></canvas>
         <div class="legend" id="legend"></div>
+        <div class="graph-help">Drag to pan · wheel to zoom · click a star to reveal its planets</div>
       </div>
     </section>
 
-    <aside class="side">
-      <section class="card panel" id="detailCard">
-        <span class="eyebrow">Selection</span>
+    <section class="bottom-grid">
+      <section class="card panel detail-card" id="detailCard">
+        <span class="eyebrow">Selection details</span>
         <h2>Click a star or planet</h2>
-        <p class="detail-meta">The detail panel will show file role, function satellites, inbound and outbound strands, and quick redundancy signals.</p>
+        <p class="detail-meta">The detail area shows file role, function satellites, logic clusters, and linked workflow strands. It stays at the bottom so the map gets the main space.</p>
         <ul class="detail-list">
           <li>Stars are files.</li>
           <li>Planets are functions or classes defined in that file.</li>
-          <li>Bright strands show imports, helper usage, routes, and workflow links.</li>
+          <li>Cross-file strands stay faint until you focus a node.</li>
         </ul>
       </section>
 
@@ -893,7 +980,7 @@ def render_html(graph: dict[str, Any]) -> str:
         <h2>Repeated function names</h2>
         <ul class="list" id="duplicateList"></ul>
       </section>
-    </aside>
+    </section>
 
     <p class="footer-note">Generated from <code>scripts/build_codebase_memory_graph.py</code>. Re-run the generator after structural changes so the map stays useful.</p>
   </div>
@@ -917,16 +1004,27 @@ def render_html(graph: dict[str, Any]) -> str:
     const canvas = document.getElementById("graphCanvas");
     const ctx = canvas.getContext("2d");
     const searchInput = document.getElementById("searchInput");
+    const resetViewButton = document.getElementById("resetViewButton");
     const heroStats = document.getElementById("heroStats");
     const hotspotList = document.getElementById("hotspotList");
     const similarityList = document.getElementById("similarityList");
     const duplicateList = document.getElementById("duplicateList");
     const detailCard = document.getElementById("detailCard");
+    const selectionPill = document.getElementById("selectionPill");
     const legend = document.getElementById("legend");
 
     const state = {{
       selectedId: null,
-      search: ""
+      search: "",
+      scale: 1,
+      offsetX: 0,
+      offsetY: 0,
+      dragging: false,
+      movedDuringDrag: false,
+      dragStartX: 0,
+      dragStartY: 0,
+      dragOriginX: 0,
+      dragOriginY: 0
     }};
 
     function escapeHtml(value) {{
@@ -936,6 +1034,15 @@ def render_html(graph: dict[str, Any]) -> str:
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#39;");
+    }}
+
+    function attachDegrees(files, edges) {{
+      const degreeMap = new Map(files.map((file) => [file.path, 0]));
+      edges.forEach((edge) => {{
+        degreeMap.set(edge.source, (degreeMap.get(edge.source) || 0) + 1);
+        degreeMap.set(edge.target, (degreeMap.get(edge.target) || 0) + 1);
+      }});
+      return files.map((file) => ({{ ...file, degree: degreeMap.get(file.path) || 0 }}));
     }}
 
     function groupFilesByFolder(files) {{
@@ -949,37 +1056,62 @@ def render_html(graph: dict[str, Any]) -> str:
       return [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0]));
     }}
 
+    function normalizeText(value) {{
+      return String(value || "").toLowerCase();
+    }}
+
     function buildPositions(files) {{
       const fileNodes = [];
       const planetNodes = [];
-      const hitMap = [];
       const groups = groupFilesByFolder(files);
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2;
-      const groupRadius = Math.min(canvas.width, canvas.height) * 0.31;
+      const marginX = 70;
+      const marginY = 70;
+      const cols = Math.max(2, Math.ceil(Math.sqrt(groups.length)));
+      const rows = Math.max(1, Math.ceil(groups.length / cols));
+      const cellWidth = (canvas.width - marginX * 2) / cols;
+      const cellHeight = (canvas.height - marginY * 2) / rows;
+      const groupZones = [];
 
       groups.forEach(([folder, groupFiles], groupIndex) => {{
-        const folderAngle = (Math.PI * 2 * groupIndex) / Math.max(groups.length, 1) - Math.PI / 2;
-        const folderCx = cx + Math.cos(folderAngle) * groupRadius;
-        const folderCy = cy + Math.sin(folderAngle) * groupRadius;
-        const orbitRadius = Math.max(54, 34 + groupFiles.length * 8);
+        const col = groupIndex % cols;
+        const row = Math.floor(groupIndex / cols);
+        const x = marginX + col * cellWidth;
+        const y = marginY + row * cellHeight;
+        const width = cellWidth - 18;
+        const height = cellHeight - 18;
+        const innerPad = 54;
+        const contentWidth = Math.max(140, width - innerPad * 2);
+        const contentHeight = Math.max(120, height - innerPad * 2);
+        const starCols = Math.max(1, Math.ceil(Math.sqrt(groupFiles.length)));
+        const starRows = Math.max(1, Math.ceil(groupFiles.length / starCols));
+        const stepX = contentWidth / Math.max(starCols, 1);
+        const stepY = contentHeight / Math.max(starRows, 1);
+
+        groupZones.push({{
+          folder,
+          x,
+          y,
+          width,
+          height,
+          labelX: x + 18,
+          labelY: y + 24
+        }});
 
         groupFiles.forEach((file, fileIndex) => {{
-          const angle = (Math.PI * 2 * fileIndex) / Math.max(groupFiles.length, 1) - Math.PI / 2;
-          const fx = groupFiles.length === 1 ? folderCx : folderCx + Math.cos(angle) * orbitRadius;
-          const fy = groupFiles.length === 1 ? folderCy : folderCy + Math.sin(angle) * orbitRadius;
-          const radius = Math.max(10, Math.min(18, 10 + Math.sqrt(file.functions.length || 1) + (file.degree || 0) * 0.35));
+          const gridCol = fileIndex % starCols;
+          const gridRow = Math.floor(fileIndex / starCols);
+          const fx = x + innerPad + stepX * (gridCol + 0.5);
+          const fy = y + innerPad + stepY * (gridRow + 0.5);
+          const radius = Math.max(10, Math.min(18, 10 + Math.sqrt(file.functions.length || 1) + (file.degree || 0) * 0.25));
+          const orbit = Math.min(Math.min(stepX, stepY) * 0.42, radius + 18 + Math.min(22, (file.functions.length || 0) * 1.15));
 
-          const star = {{ ...file, kind: "file", x: fx, y: fy, r: radius }};
-          fileNodes.push(star);
-          hitMap.push(star);
+          fileNodes.push({{ ...file, kind: "file", x: fx, y: fy, r: radius, orbit }});
 
-          const orbit = radius + 20 + Math.min(42, (file.functions.length || 0) * 2.2);
           (file.functions || []).slice(0, 18).forEach((fn, fnIndex) => {{
-            const pAngle = (Math.PI * 2 * fnIndex) / Math.max((file.functions || []).length, 1);
+            const pAngle = (Math.PI * 2 * fnIndex) / Math.max(Math.min((file.functions || []).length, 18), 1);
             const px = fx + Math.cos(pAngle) * orbit;
             const py = fy + Math.sin(pAngle) * orbit;
-            const planet = {{
+            planetNodes.push({{
               id: `${{file.path}}::${{fn.name}}`,
               parentId: file.path,
               kind: "function",
@@ -989,109 +1121,190 @@ def render_html(graph: dict[str, Any]) -> str:
               label: fn.name,
               line: fn.line || null,
               functionKind: fn.kind || "function",
+              keywords: fn.keywords || [],
               x: px,
               y: py,
               r: 5
-            }};
-            planetNodes.push(planet);
-            hitMap.push(planet);
+            }});
           }});
         }});
       }});
 
-      return {{ fileNodes, planetNodes, hitMap }};
-    }}
-
-    function attachDegrees(files, edges) {{
-      const degreeMap = new Map(files.map((file) => [file.path, 0]));
-      edges.forEach((edge) => {{
-        degreeMap.set(edge.source, (degreeMap.get(edge.source) || 0) + 1);
-        degreeMap.set(edge.target, (degreeMap.get(edge.target) || 0) + 1);
-      }});
-      return files.map((file) => ({{ ...file, degree: degreeMap.get(file.path) || 0 }}));
+      return {{ fileNodes, planetNodes, groupZones }};
     }}
 
     const filesWithDegree = attachDegrees(GRAPH.files, GRAPH.edges);
     const positions = buildPositions(filesWithDegree);
+    const fileLookup = new Map(filesWithDegree.map((file) => [file.path, file]));
+    const fileNodeLookup = new Map(positions.fileNodes.map((node) => [node.path, node]));
+    const functionLookup = new Map(positions.planetNodes.map((node) => [node.id, node]));
+    const planetsByParent = new Map();
+    positions.planetNodes.forEach((planet) => {{
+      if (!planetsByParent.has(planet.parentId)) {{
+        planetsByParent.set(planet.parentId, []);
+      }}
+      planetsByParent.get(planet.parentId).push(planet);
+    }});
 
-    function buildLookups() {{
-      return {{
-        files: new Map(filesWithDegree.map((file) => [file.path, file])),
-        fileNodes: new Map(positions.fileNodes.map((node) => [node.path, node])),
-        functions: new Map(positions.planetNodes.map((planet) => [planet.id, planet]))
-      }};
-    }}
-
-    const lookups = buildLookups();
-
-    function isVisible(node) {{
-      if (!state.search) return true;
-      const haystack = `${{node.path || ""}} ${{node.name || ""}} ${{node.label || ""}}`.toLowerCase();
+    function isFunctionMatch(planet) {{
+      if (!state.search) return false;
+      const haystack = `${{planet.filePath}} ${{planet.name}} ${{planet.keywords.join(" ")}}`.toLowerCase();
       return haystack.includes(state.search);
     }}
 
-    function draw() {{
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#07111e";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    function isVisibleFile(node) {{
+      if (!state.search) return true;
+      const haystack = `${{node.path}} ${{node.name}} ${{node.folder}}`.toLowerCase();
+      if (haystack.includes(state.search)) return true;
+      return (planetsByParent.get(node.path) || []).some(isFunctionMatch);
+    }}
 
+    function activeParentId() {{
+      if (!state.selectedId) return null;
+      if (fileNodeLookup.has(state.selectedId)) return state.selectedId;
+      const fn = functionLookup.get(state.selectedId);
+      return fn ? fn.parentId : null;
+    }}
+
+    function shouldShowPlanets(node) {{
+      if (!isVisibleFile(node)) return false;
+      if (state.search) return true;
+      const parentId = activeParentId();
+      return parentId === node.path;
+    }}
+
+    function toWorld(clientX, clientY) {{
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const screenX = (clientX - rect.left) * scaleX;
+      const screenY = (clientY - rect.top) * scaleY;
+      return {{
+        x: (screenX - state.offsetX) / state.scale,
+        y: (screenY - state.offsetY) / state.scale
+      }};
+    }}
+
+    function resetView() {{
+      state.scale = 1;
+      state.offsetX = 0;
+      state.offsetY = 0;
+    }}
+
+    function drawGroupZones() {{
+      positions.groupZones.forEach((zone) => {{
+        const color = FOLDER_COLORS[zone.folder] || "#8aa4c8";
+        ctx.fillStyle = color + "10";
+        ctx.strokeStyle = color + "45";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.roundRect(zone.x, zone.y, zone.width, zone.height, 24);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#dce9ff";
+        ctx.font = "700 12px Segoe UI";
+        ctx.textAlign = "left";
+        ctx.fillText(zone.folder, zone.labelX, zone.labelY);
+      }});
+    }}
+
+    function connectedEdgesForFile(path) {{
+      return GRAPH.edges.filter((edge) => edge.source === path || edge.target === path);
+    }}
+
+    function drawEdges() {{
       GRAPH.edges.forEach((edge) => {{
-        const source = lookups.fileNodes.get(edge.source);
-        const target = lookups.fileNodes.get(edge.target);
-        if (!source || !target || !isVisible(source) || !isVisible(target)) return;
-        ctx.strokeStyle = state.selectedId && (state.selectedId === source.path || state.selectedId === target.path)
-          ? "rgba(110, 197, 255, 0.78)"
-          : "rgba(102, 151, 215, 0.2)";
-        ctx.lineWidth = state.selectedId && (state.selectedId === source.path || state.selectedId === target.path) ? 2.2 : 1;
+        const source = fileNodeLookup.get(edge.source);
+        const target = fileNodeLookup.get(edge.target);
+        if (!source || !target || !isVisibleFile(source) || !isVisibleFile(target)) return;
+        const focused = state.selectedId && (state.selectedId === source.path || state.selectedId === target.path || activeParentId() === source.path || activeParentId() === target.path);
+        ctx.strokeStyle = focused ? "rgba(110, 197, 255, 0.72)" : "rgba(102, 151, 215, 0.12)";
+        ctx.lineWidth = focused ? 1.8 : 0.8;
         ctx.beginPath();
         ctx.moveTo(source.x, source.y);
         const controlX = (source.x + target.x) / 2;
-        const controlY = (source.y + target.y) / 2 - Math.min(90, Math.abs(source.x - target.x) * 0.12);
+        const controlY = (source.y + target.y) / 2 - Math.min(80, Math.abs(source.x - target.x) * 0.08);
         ctx.quadraticCurveTo(controlX, controlY, target.x, target.y);
         ctx.stroke();
       }});
+    }}
 
-      positions.fileNodes.forEach((file) => {{
-        if (!isVisible(file)) return;
-        const color = FOLDER_COLORS[file.folder] || "#8aa4c8";
-        ctx.strokeStyle = "rgba(255,255,255,0.08)";
+    function drawPlanets() {{
+      positions.fileNodes.forEach((fileNode) => {{
+        if (!shouldShowPlanets(fileNode)) return;
+        const planets = planetsByParent.get(fileNode.path) || [];
+        if (!planets.length) return;
+        ctx.strokeStyle = "rgba(255,255,255,0.09)";
         ctx.lineWidth = 1;
-        if (file.functions.length) {{
-          ctx.beginPath();
-          ctx.arc(file.x, file.y, file.r + 20 + Math.min(42, (file.functions.length || 0) * 2.2), 0, Math.PI * 2);
-          ctx.stroke();
-        }}
-      }});
-
-      positions.planetNodes.forEach((planet) => {{
-        const parent = lookups.fileNodes.get(planet.parentId);
-        if (!parent || !isVisible(parent)) return;
-        ctx.strokeStyle = state.selectedId === planet.id ? "rgba(255,255,255,0.66)" : "rgba(255,255,255,0.12)";
         ctx.beginPath();
-        ctx.moveTo(parent.x, parent.y);
-        ctx.lineTo(planet.x, planet.y);
+        ctx.arc(fileNode.x, fileNode.y, fileNode.orbit, 0, Math.PI * 2);
         ctx.stroke();
-        ctx.fillStyle = state.selectedId === planet.id ? "#ffffff" : "#d8ebff";
-        ctx.beginPath();
-        ctx.arc(planet.x, planet.y, planet.r, 0, Math.PI * 2);
-        ctx.fill();
-      }});
 
-      positions.fileNodes.forEach((file) => {{
-        if (!isVisible(file)) return;
-        const color = FOLDER_COLORS[file.folder] || "#8aa4c8";
+        planets.forEach((planet) => {{
+          const selected = state.selectedId === planet.id;
+          ctx.strokeStyle = selected ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.10)";
+          ctx.beginPath();
+          ctx.moveTo(fileNode.x, fileNode.y);
+          ctx.lineTo(planet.x, planet.y);
+          ctx.stroke();
+          ctx.fillStyle = selected ? "#ffffff" : "#d8ebff";
+          ctx.beginPath();
+          ctx.arc(planet.x, planet.y, planet.r, 0, Math.PI * 2);
+          ctx.fill();
+        }});
+      }});
+    }}
+
+    function drawStars() {{
+      positions.fileNodes.forEach((fileNode) => {{
+        if (!isVisibleFile(fileNode)) return;
+        const color = FOLDER_COLORS[fileNode.folder] || "#8aa4c8";
+        const selected = state.selectedId === fileNode.path || activeParentId() === fileNode.path;
         ctx.shadowColor = color;
-        ctx.shadowBlur = state.selectedId === file.path ? 28 : 16;
+        ctx.shadowBlur = selected ? 30 : 14;
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(file.x, file.y, file.r, 0, Math.PI * 2);
+        ctx.arc(fileNode.x, fileNode.y, fileNode.r, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
         ctx.fillStyle = "#eef5ff";
-        ctx.font = "12px Segoe UI";
+        ctx.font = selected ? "700 13px Segoe UI" : "12px Segoe UI";
         ctx.textAlign = "center";
-        ctx.fillText(file.name, file.x, file.y + file.r + 16);
+        ctx.fillText(fileNode.name, fileNode.x, fileNode.y + fileNode.r + 16);
       }});
+    }}
+
+    function draw() {{
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#07111e";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(state.offsetX, state.offsetY);
+      ctx.scale(state.scale, state.scale);
+      drawGroupZones();
+      drawEdges();
+      drawPlanets();
+      drawStars();
+      ctx.restore();
+    }}
+
+    function hitTest(event) {{
+      const point = toWorld(event.clientX, event.clientY);
+      const visiblePlanets = positions.planetNodes.filter((planet) => {{
+        const parent = fileNodeLookup.get(planet.parentId);
+        return parent && shouldShowPlanets(parent);
+      }});
+      const visibleStars = positions.fileNodes.filter(isVisibleFile);
+      const nodes = [...visiblePlanets, ...visibleStars];
+      for (let index = nodes.length - 1; index >= 0; index -= 1) {{
+        const node = nodes[index];
+        const distance = Math.hypot(node.x - point.x, node.y - point.y);
+        if (distance <= node.r + 4) {{
+          return node;
+        }}
+      }}
+      return null;
     }}
 
     function renderHeroStats() {{
@@ -1130,7 +1343,7 @@ def render_html(graph: dict[str, Any]) -> str:
         similarityList.innerHTML = '<li>No cross-file logic clusters detected yet.</li>';
         return;
       }}
-      similarityList.innerHTML = GRAPH.similarity_clusters.slice(0, 10).map((item) => `
+      similarityList.innerHTML = GRAPH.similarity_clusters.slice(0, 9).map((item) => `
         <li>
           <span class="detail-key">${{item.average_score.toFixed(2)}} similarity</span>
           <strong>${{escapeHtml(item.label)}}</strong><br>
@@ -1145,7 +1358,7 @@ def render_html(graph: dict[str, Any]) -> str:
         duplicateList.innerHTML = '<li>No repeated function names detected across files.</li>';
         return;
       }}
-      duplicateList.innerHTML = GRAPH.duplicates.slice(0, 12).map((item) => `
+      duplicateList.innerHTML = GRAPH.duplicates.slice(0, 10).map((item) => `
         <li>
           <span class="duplicate-badge">${{escapeHtml(item.name)}}</span><br>
           <span class="muted">${{item.files.map((file) => escapeHtml(file)).join(" · ")}}</span>
@@ -1153,26 +1366,50 @@ def render_html(graph: dict[str, Any]) -> str:
       `).join("");
     }}
 
-    function connectedEdgesForFile(path) {{
-      return GRAPH.edges.filter((edge) => edge.source === path || edge.target === path);
+    function renderSelectionPill(nodeId) {{
+      if (!nodeId) {{
+        selectionPill.innerHTML = `
+          <span class="eyebrow">Selection</span>
+          <h3>No node selected yet</h3>
+          <p>Click a star to open its functions, or click a planet to inspect a specific function.</p>
+        `;
+        return;
+      }}
+      const file = fileLookup.get(nodeId);
+      if (file) {{
+        selectionPill.innerHTML = `
+          <span class="eyebrow">File star</span>
+          <h3>${{escapeHtml(file.name)}}</h3>
+          <p>${{escapeHtml(file.folder)}} · ${{file.functions.length}} functions · ${{file.degree || 0}} strands</p>
+        `;
+        return;
+      }}
+      const planet = functionLookup.get(nodeId);
+      if (planet) {{
+        selectionPill.innerHTML = `
+          <span class="eyebrow">Function planet</span>
+          <h3>${{escapeHtml(planet.name)}}</h3>
+          <p>${{escapeHtml(planet.filePath)}}${{planet.line ? ` · line ${{planet.line}}` : ""}}</p>
+        `;
+      }}
     }}
 
     function renderDetails(nodeId) {{
       if (!nodeId) {{
         detailCard.innerHTML = `
-          <span class="eyebrow">Selection</span>
+          <span class="eyebrow">Selection details</span>
           <h2>Click a star or planet</h2>
-          <p class="detail-meta">The detail panel will show file role, function satellites, inbound and outbound strands, and quick redundancy signals.</p>
+          <p class="detail-meta">The detail area shows file role, function satellites, logic clusters, and linked workflow strands. It stays at the bottom so the map gets the main space.</p>
           <ul class="detail-list">
             <li>Stars are files.</li>
             <li>Planets are functions or classes defined in that file.</li>
-            <li>Bright strands show imports, helper usage, routes, and workflow links.</li>
+            <li>Cross-file strands stay faint until you focus a node.</li>
           </ul>
         `;
         return;
       }}
 
-      const file = lookups.files.get(nodeId);
+      const file = fileLookup.get(nodeId);
       if (file) {{
         const related = connectedEdgesForFile(file.path);
         const relatedClusters = GRAPH.similarity_clusters.filter((cluster) =>
@@ -1181,7 +1418,7 @@ def render_html(graph: dict[str, Any]) -> str:
         detailCard.innerHTML = `
           <span class="eyebrow">File star</span>
           <h2>${{escapeHtml(file.path)}}</h2>
-          <p class="detail-meta">${{file.lines}} lines · ${{file.functions.length}} functions · ${{file.classes.length}} classes · ${{file.degree}} connected strands</p>
+          <p class="detail-meta">${{file.lines}} lines · ${{file.functions.length}} functions · ${{file.classes.length}} classes · ${{file.degree || 0}} connected strands</p>
           <ul class="detail-list">
             <li><span class="detail-key">Functions</span>${{file.functions.length ? file.functions.map((fn) => escapeHtml(fn.name)).join(", ") : "No functions extracted"}}</li>
             <li><span class="detail-key">Imports / outbound links</span>${{file.imports.length ? file.imports.map((item) => escapeHtml(item)).join(", ") : "None"}}</li>
@@ -1194,7 +1431,7 @@ def render_html(graph: dict[str, Any]) -> str:
         return;
       }}
 
-      const planet = lookups.functions.get(nodeId);
+      const planet = functionLookup.get(nodeId);
       if (planet) {{
         const relatedCluster = GRAPH.similarity_clusters.find((cluster) =>
           cluster.members.some((member) => member.id === planet.id)
@@ -1206,39 +1443,71 @@ def render_html(graph: dict[str, Any]) -> str:
           <ul class="detail-list">
             <li><span class="detail-key">Kind</span>${{escapeHtml(planet.functionKind)}}</li>
             <li><span class="detail-key">Parent star</span>${{escapeHtml(planet.filePath)}}</li>
+            <li><span class="detail-key">Keywords</span>${{planet.keywords.length ? planet.keywords.map((keyword) => escapeHtml(keyword)).join(", ") : "None extracted"}}</li>
             <li><span class="detail-key">Logic cluster</span>${{relatedCluster ? `${{escapeHtml(relatedCluster.label)}} [${{relatedCluster.average_score.toFixed(2)}}]<br><span class="muted">${{relatedCluster.members.filter((member) => member.id !== planet.id).map((member) => `${{escapeHtml(member.file)}}::${{escapeHtml(member.name)}}`).join("<br>") || "No peers beyond this node"}}</span>` : "No strong cross-file similarity cluster"}}</li>
           </ul>
         `;
       }}
     }}
 
-    function hitTest(event) {{
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      const x = (event.clientX - rect.left) * scaleX;
-      const y = (event.clientY - rect.top) * scaleY;
-
-      const nodes = [...positions.planetNodes, ...positions.fileNodes].filter(isVisible);
-      for (let index = nodes.length - 1; index >= 0; index -= 1) {{
-        const node = nodes[index];
-        const distance = Math.hypot(node.x - x, node.y - y);
-        if (distance <= node.r + 4) {{
-          return node;
-        }}
-      }}
-      return null;
+    function updateSelection(nodeId) {{
+      state.selectedId = nodeId;
+      renderSelectionPill(nodeId);
+      renderDetails(nodeId);
+      draw();
     }}
 
-    canvas.addEventListener("click", (event) => {{
-      const node = hitTest(event);
-      state.selectedId = node ? (node.path || node.id) : null;
-      renderDetails(state.selectedId);
+    canvas.addEventListener("mousedown", (event) => {{
+      state.dragging = true;
+      state.movedDuringDrag = false;
+      state.dragStartX = event.clientX;
+      state.dragStartY = event.clientY;
+      state.dragOriginX = state.offsetX;
+      state.dragOriginY = state.offsetY;
+      canvas.classList.add("dragging");
+    }});
+
+    window.addEventListener("mousemove", (event) => {{
+      if (!state.dragging) return;
+      const dx = event.clientX - state.dragStartX;
+      const dy = event.clientY - state.dragStartY;
+      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {{
+        state.movedDuringDrag = true;
+      }}
+      state.offsetX = state.dragOriginX + dx;
+      state.offsetY = state.dragOriginY + dy;
       draw();
     }});
 
+    window.addEventListener("mouseup", () => {{
+      state.dragging = false;
+      canvas.classList.remove("dragging");
+    }});
+
+    canvas.addEventListener("click", (event) => {{
+      if (state.movedDuringDrag) return;
+      const node = hitTest(event);
+      updateSelection(node ? (node.path || node.id) : null);
+    }});
+
+    canvas.addEventListener("wheel", (event) => {{
+      event.preventDefault();
+      const point = toWorld(event.clientX, event.clientY);
+      const nextScale = Math.min(2.2, Math.max(0.72, state.scale * (event.deltaY < 0 ? 1.08 : 0.92)));
+      const scaleRatio = nextScale / state.scale;
+      state.offsetX = event.clientX - canvas.getBoundingClientRect().left - point.x * nextScale;
+      state.offsetY = event.clientY - canvas.getBoundingClientRect().top - point.y * nextScale;
+      state.scale = nextScale;
+      draw();
+    }}, {{ passive: false }});
+
     searchInput.addEventListener("input", () => {{
       state.search = searchInput.value.trim().toLowerCase();
+      draw();
+    }});
+
+    resetViewButton.addEventListener("click", () => {{
+      resetView();
       draw();
     }});
 
@@ -1247,6 +1516,7 @@ def render_html(graph: dict[str, Any]) -> str:
     renderHotspots();
     renderSimilarityClusters();
     renderDuplicates();
+    renderSelectionPill(null);
     renderDetails(null);
     draw();
   </script>
