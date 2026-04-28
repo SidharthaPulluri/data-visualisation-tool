@@ -1153,6 +1153,21 @@ def render_html(graph: dict[str, Any]) -> str:
       return fn ? fn.parentId : null;
     }}
 
+    function selectedNetworkPaths() {{
+      if (state.selectedEdgeKey) {{
+        const edge = edgeLookup.get(state.selectedEdgeKey);
+        return edge ? new Set([edge.source, edge.target]) : new Set();
+      }}
+      const parentId = activeParentId();
+      if (!parentId) return new Set();
+      const linked = new Set([parentId]);
+      connectedEdgesForFile(parentId).forEach((edge) => {{
+        linked.add(edge.source);
+        linked.add(edge.target);
+      }});
+      return linked;
+    }}
+
     function shouldShowPlanets(node) {{
       if (!isVisibleFile(node)) return false;
       if (state.search) return true;
@@ -1258,18 +1273,22 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     function drawEdges() {{
+      const selectedNetwork = selectedNetworkPaths();
       GRAPH.edges.forEach((edge) => {{
         const geometry = getVisibleEdgeGeometry(edge);
         if (!geometry) return;
         const key = edgeKey(edge);
-        const focused = state.selectedId && (state.selectedId === geometry.source.path || state.selectedId === geometry.target.path || activeParentId() === geometry.source.path || activeParentId() === geometry.target.path);
+        const inSelectedNetwork = selectedNetwork.size && selectedNetwork.has(geometry.source.path) && selectedNetwork.has(geometry.target.path);
+        const focused = state.selectedId && (state.selectedId === geometry.source.path || state.selectedId === geometry.target.path || activeParentId() === geometry.source.path || activeParentId() === geometry.target.path || inSelectedNetwork);
         const selected = state.selectedEdgeKey === key;
         ctx.strokeStyle = selected
           ? "rgba(255, 211, 102, 0.92)"
           : focused
-            ? "rgba(110, 197, 255, 0.72)"
-            : "rgba(102, 151, 215, 0.12)";
-        ctx.lineWidth = selected ? 2.6 : focused ? 1.8 : 0.8;
+            ? "rgba(110, 197, 255, 0.88)"
+            : selectedNetwork.size
+              ? "rgba(102, 151, 215, 0.04)"
+              : "rgba(102, 151, 215, 0.16)";
+        ctx.lineWidth = selected ? 3.2 : focused ? 2.4 : selectedNetwork.size ? 0.45 : 1.1;
         ctx.beginPath();
         ctx.moveTo(geometry.source.x, geometry.source.y);
         ctx.quadraticCurveTo(geometry.controlX, geometry.controlY, geometry.target.x, geometry.target.y);
@@ -1304,18 +1323,28 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     function drawStars() {{
+      const selectedNetwork = selectedNetworkPaths();
       positions.fileNodes.forEach((fileNode) => {{
         if (!isVisibleFile(fileNode)) return;
         const color = FOLDER_COLORS[fileNode.folder] || "#8aa4c8";
         const selected = state.selectedId === fileNode.path || activeParentId() === fileNode.path;
+        const connected = selectedNetwork.has(fileNode.path);
+        const dimmed = selectedNetwork.size > 0 && !connected;
         ctx.shadowColor = color;
-        ctx.shadowBlur = selected ? 30 : 14;
-        ctx.fillStyle = color;
+        ctx.shadowBlur = selected ? 30 : connected ? 22 : 12;
+        ctx.fillStyle = dimmed ? color + "66" : color;
         ctx.beginPath();
         ctx.arc(fileNode.x, fileNode.y, fileNode.r, 0, Math.PI * 2);
         ctx.fill();
+        if (connected) {{
+          ctx.strokeStyle = selected ? "rgba(255,255,255,0.92)" : "rgba(110, 197, 255, 0.68)";
+          ctx.lineWidth = selected ? 2.2 : 1.6;
+          ctx.beginPath();
+          ctx.arc(fileNode.x, fileNode.y, fileNode.r + 6, 0, Math.PI * 2);
+          ctx.stroke();
+        }}
         ctx.shadowBlur = 0;
-        ctx.fillStyle = "#eef5ff";
+        ctx.fillStyle = dimmed ? "rgba(238,245,255,0.55)" : "#eef5ff";
         ctx.font = selected ? "700 13px Segoe UI" : "12px Segoe UI";
         ctx.textAlign = "center";
         ctx.fillText(fileNode.name, fileNode.x, fileNode.y + fileNode.r + 16);
@@ -1441,10 +1470,11 @@ def render_html(graph: dict[str, Any]) -> str:
       }}
       const file = fileLookup.get(nodeId);
       if (file) {{
+        const related = connectedEdgesForFile(file.path);
         selectionPill.innerHTML = `
           <span class="eyebrow">File star</span>
           <h3>${{escapeHtml(file.name)}}</h3>
-          <p>${{escapeHtml(file.folder)}} · ${{file.functions.length}} functions · ${{file.degree || 0}} strands</p>
+          <p>${{escapeHtml(file.folder)}} · ${{file.functions.length}} functions · ${{related.length}} visible connections</p>
         `;
         return;
       }}

@@ -7354,7 +7354,7 @@
       "name": "build_codebase_memory_graph.py",
       "folder": "scripts",
       "extension": ".py",
-      "lines": 1597,
+      "lines": 1627,
       "functions": [
         {
           "name": "discover_source_files",
@@ -8031,8 +8031,8 @@
             "edge",
             "ctx",
             "planet",
+            "selected",
             "detail",
-            "map",
             "math"
           ],
           "fingerprint": [
@@ -8040,18 +8040,18 @@
             "detail",
             "edge",
             "html",
-            "map",
             "math",
             "node",
             "planet",
             "render",
+            "selected",
             "span"
           ],
           "stem": "render html"
         },
         {
           "name": "main",
-          "line": 1585,
+          "line": 1615,
           "kind": "function",
           "keywords": [
             "graph",
@@ -8441,7 +8441,7 @@
       "name": "index.html",
       "folder": "tools",
       "extension": ".html",
-      "lines": 969,
+      "lines": 962,
       "functions": [
         {
           "name": "escapeHtml",
@@ -8543,31 +8543,31 @@
           "keywords": [
             "math",
             "group",
-            "height",
-            "max",
-            "width",
-            "cols",
+            "center",
+            "radius",
+            "ring",
             "index",
-            "files"
+            "angle",
+            "length"
           ],
           "fingerprint": [
+            "angle",
             "build",
-            "cols",
-            "files",
+            "center",
             "group",
-            "height",
             "index",
+            "length",
             "math",
-            "max",
             "positions",
-            "width"
+            "radius",
+            "ring"
           ],
           "stem": "build positions"
         },
         {
           "name": "isFunctionMatch",
           "kind": "function",
-          "line": 158,
+          "line": 151,
           "keywords": [
             "planet",
             "haystack",
@@ -8595,7 +8595,7 @@
         {
           "name": "isVisibleFile",
           "kind": "function",
-          "line": 164,
+          "line": 157,
           "keywords": [
             "node",
             "haystack",
@@ -8623,7 +8623,7 @@
         {
           "name": "activeParentId",
           "kind": "function",
-          "line": 171,
+          "line": 164,
           "keywords": [
             "selected",
             "state",
@@ -8649,7 +8649,7 @@
         {
           "name": "shouldShowPlanets",
           "kind": "function",
-          "line": 178,
+          "line": 171,
           "keywords": [
             "node",
             "parent",
@@ -8675,7 +8675,7 @@
         {
           "name": "toWorld",
           "kind": "function",
-          "line": 185,
+          "line": 178,
           "keywords": [
             "scale",
             "canvas",
@@ -8702,7 +8702,7 @@
         {
           "name": "resetView",
           "kind": "function",
-          "line": 199,
+          "line": 192,
           "keywords": [
             "reset",
             "scale",
@@ -8720,7 +8720,7 @@
         {
           "name": "drawGroupZones",
           "kind": "function",
-          "line": 203,
+          "line": 196,
           "keywords": [
             "zone",
             "ctx",
@@ -8749,7 +8749,7 @@
         {
           "name": "connectedEdgesForFile",
           "kind": "function",
-          "line": 226,
+          "line": 219,
           "keywords": [
             "edge",
             "edges",
@@ -8775,7 +8775,7 @@
         {
           "name": "edgeKey",
           "kind": "function",
-          "line": 230,
+          "line": 223,
           "keywords": [
             "edge",
             "key",
@@ -8793,7 +8793,7 @@
         {
           "name": "describeEdgeLabel",
           "kind": "function",
-          "line": 234,
+          "line": 227,
           "keywords": [
             "label",
             "the",
@@ -8821,7 +8821,7 @@
         {
           "name": "edgeExplanation",
           "kind": "function",
-          "line": 253,
+          "line": 246,
           "keywords": [
             "edge",
             "label",
@@ -8847,7 +8847,7 @@
         {
           "name": "getVisibleEdgeGeometry",
           "kind": "function",
-          "line": 257,
+          "line": 250,
           "keywords": [
             "source",
             "target",
@@ -8873,7 +8873,7 @@
         {
           "name": "pointToQuadraticDistance",
           "kind": "function",
-          "line": 270,
+          "line": 263,
           "keywords": [
             "geometry",
             "inv",
@@ -8900,7 +8900,7 @@
         {
           "name": "drawEdges",
           "kind": "function",
-          "line": 282,
+          "line": 275,
           "keywords": [
             "geometry",
             "selected",
@@ -8928,7 +8928,7 @@
         {
           "name": "drawPlanets",
           "kind": "function",
-          "line": 302,
+          "line": 295,
           "keywords": [
             "ctx",
             "node",
@@ -8955,7 +8955,7 @@
         {
           "name": "drawStars",
           "kind": "function",
-          "line": 328,
+          "line": 321,
           "keywords": [
             "node",
             "ctx",
@@ -8983,7 +8983,7 @@
         {
           "name": "draw",
           "kind": "function",
-          "line": 347,
+          "line": 340,
           "keywords": [
             "canvas",
             "ctx",
@@ -9009,7 +9009,7 @@
         {
           "name": "hitTest",
           "kind": "function",
-          "line": 362,
+          "line": 355,
           "keywords": [
             "index",
             "node",
@@ -9037,7 +9037,7 @@
         {
           "name": "renderHeroStats",
           "kind": "function",
-          "line": 387,
+          "line": 380,
           "keywords": [
             "span",
             "summary",
@@ -9064,7 +9064,7 @@
         {
           "name": "renderLegend",
           "kind": "function",
-          "line": 398,
+          "line": 391,
           "keywords": [
             "folder",
             "legend",
@@ -9091,7 +9091,7 @@
         {
           "name": "renderHotspots",
           "kind": "function",
-          "line": 408,
+          "line": 401,
           "keywords": [
             "span",
             "escape",
@@ -9118,7 +9118,7 @@
         {
           "name": "renderSimilarityClusters",
           "kind": "function",
-          "line": 418,
+          "line": 411,
           "keywords": [
             "similarity",
             "span",
@@ -9145,7 +9145,7 @@
         {
           "name": "renderDuplicates",
           "kind": "function",
-          "line": 433,
+          "line": 426,
           "keywords": [
             "span",
             "duplicate",
@@ -9172,7 +9172,7 @@
         {
           "name": "renderSelectionPill",
           "kind": "function",
-          "line": 446,
+          "line": 439,
           "keywords": [
             "planet",
             "span",
@@ -9199,7 +9199,7 @@
         {
           "name": "renderDetails",
           "kind": "function",
-          "line": 483,
+          "line": 476,
           "keywords": [
             "span",
             "detail",
@@ -9227,7 +9227,7 @@
         {
           "name": "updateSelection",
           "kind": "function",
-          "line": 553,
+          "line": 546,
           "keywords": [
             "node",
             "selected",
