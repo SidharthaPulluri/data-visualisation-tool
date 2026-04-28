@@ -1108,6 +1108,7 @@ def render_html(graph: dict[str, Any]) -> str:
       selectedId: null,
       selectedEdgeKey: null,
       focusedId: null,
+      isolatedFocus: false,
       search: "",
       drag: null,
       layoutOverrides: loadLayoutOverrides(),
@@ -1115,7 +1116,7 @@ def render_html(graph: dict[str, Any]) -> str:
     }};
 
     if (graphHelp) {{
-      graphHelp.textContent = "Overview mode lets you drag stars or whole constellations and save the layout · clicking a star enters focus mode · use Back to overview / drag mode to rearrange again";
+      graphHelp.textContent = "Overview mode lets you drag stars or whole constellations and save the layout · single-click inspects calmly · double-click isolates a star with its planets · use Back to overview / drag mode to rearrange again";
     }}
 
     function escapeHtml(value) {{
@@ -1365,6 +1366,10 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     function isVisibleFile(node) {{
+      const focusPath = selectedFocusPath();
+      if (state.isolatedFocus && focusPath) {{
+        return node.path === focusPath;
+      }}
       if (!state.search) return true;
       const haystack = `${{node.path}} ${{node.name}} ${{node.folder}}`.toLowerCase();
       if (haystack.includes(state.search)) return true;
@@ -1379,27 +1384,12 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     function selectedNetworkPaths() {{
-      const focusPath = selectedFocusPath();
       if (state.selectedEdgeKey) {{
         const edge = edgeLookup.get(state.selectedEdgeKey);
         if (!edge) return new Set();
-        const linked = new Set([edge.source, edge.target]);
-        if (focusPath) {{
-          linked.add(focusPath);
-          connectedEdgesForFile(focusPath).forEach((focusEdge) => {{
-            linked.add(focusEdge.source);
-            linked.add(focusEdge.target);
-          }});
-        }}
-        return linked;
+        return new Set([edge.source, edge.target]);
       }}
-      if (!focusPath) return new Set();
-      const linked = new Set([focusPath]);
-      connectedEdgesForFile(focusPath).forEach((edge) => {{
-        linked.add(edge.source);
-        linked.add(edge.target);
-      }});
-      return linked;
+      return new Set();
     }}
 
     function selectedFocusPath() {{
@@ -1431,6 +1421,7 @@ def render_html(graph: dict[str, Any]) -> str:
       state.selectedId = null;
       state.selectedEdgeKey = null;
       state.focusedId = null;
+      state.isolatedFocus = false;
       state.drag = null;
       state.suppressClick = false;
       state.search = "";
@@ -1622,20 +1613,19 @@ def render_html(graph: dict[str, Any]) -> str:
         const geometry = getVisibleEdgeGeometry(edge, displayNodeMap);
         if (!geometry) return;
         const key = edgeKey(edge);
-        const inSelectedNetwork = selectedNetwork.size && selectedNetwork.has(geometry.source.path) && selectedNetwork.has(geometry.target.path);
-        const touchesFocus = focusPath && (geometry.source.path === focusPath || geometry.target.path === focusPath);
-        const focused = state.selectedId && (state.selectedId === geometry.source.path || state.selectedId === geometry.target.path || activeParentId() === geometry.source.path || activeParentId() === geometry.target.path || inSelectedNetwork);
         const selected = state.selectedEdgeKey === key;
+        const touchesFocus = focusPath && (geometry.source.path === focusPath || geometry.target.path === focusPath);
+        const inSelectedNetwork = selectedNetwork.size && selectedNetwork.has(geometry.source.path) && selectedNetwork.has(geometry.target.path);
         ctx.strokeStyle = selected
           ? "rgba(255, 211, 102, 0.92)"
-          : touchesFocus
-            ? "rgba(133, 223, 255, 0.96)"
-          : focused
-            ? "rgba(110, 197, 255, 0.88)"
-            : selectedNetwork.size
-              ? "rgba(102, 151, 215, 0.04)"
-              : "rgba(102, 151, 215, 0.16)";
-        ctx.lineWidth = selected ? 3.2 : touchesFocus ? 2.8 : focused ? 2.2 : selectedNetwork.size ? 0.4 : 1.1;
+          : inSelectedNetwork
+            ? "rgba(133, 223, 255, 0.28)"
+            : state.isolatedFocus
+              ? "rgba(102, 151, 215, 0)"
+              : focusPath
+                ? (touchesFocus ? "rgba(102, 151, 215, 0.08)" : "rgba(102, 151, 215, 0.04)")
+                : "rgba(102, 151, 215, 0.1)";
+        ctx.lineWidth = selected ? 2.15 : inSelectedNetwork ? 1.05 : focusPath ? 0.46 : 0.72;
         ctx.beginPath();
         ctx.moveTo(geometry.source.x, geometry.source.y);
         ctx.quadraticCurveTo(geometry.controlX, geometry.controlY, geometry.target.x, geometry.target.y);
@@ -1715,7 +1705,9 @@ def render_html(graph: dict[str, Any]) -> str:
         const color = FOLDER_COLORS[fileNode.folder] || "#8aa4c8";
         const selected = state.selectedId === fileNode.path || activeParentId() === fileNode.path;
         const connected = selectedNetwork.has(fileNode.path);
-        const dimmed = selectedNetwork.size > 0 && !connected;
+        const dimmed = state.isolatedFocus
+          ? fileNode.path !== focusPath
+          : selectedNetwork.size > 0 && !connected;
         ctx.shadowColor = color;
         ctx.shadowBlur = selected ? 30 : connected ? 22 : 12;
         ctx.fillStyle = dimmed ? color + "66" : color;
@@ -1810,6 +1802,10 @@ def render_html(graph: dict[str, Any]) -> str:
         }}
       }}
       return null;
+    }}
+
+    function updateFocusIsolation(nodeId, isolated) {{
+      state.isolatedFocus = Boolean(isolated && nodeId);
     }}
 
     let drawQueued = false;
@@ -2027,19 +2023,24 @@ def render_html(graph: dict[str, Any]) -> str:
       }}
     }}
 
-    function updateSelection(nodeId) {{
+    function updateSelection(nodeId, options = {{}}) {{
+      const isolate = Boolean(options.isolate);
       state.selectedId = nodeId;
       state.selectedEdgeKey = nodeId && edgeLookup.has(nodeId) ? nodeId : null;
       if (state.selectedEdgeKey) {{
         state.selectedId = null;
+        state.isolatedFocus = false;
       }} else if (!nodeId) {{
         state.focusedId = null;
+        state.isolatedFocus = false;
       }} else if (fileNodeLookup.has(nodeId)) {{
         state.focusedId = nodeId;
+        updateFocusIsolation(nodeId, isolate);
       }} else {{
         const fn = functionLookup.get(nodeId);
         if (fn) {{
           state.focusedId = fn.parentId;
+          updateFocusIsolation(fn.parentId, isolate);
         }}
       }}
       renderSelectionPill(nodeId);
@@ -2058,10 +2059,21 @@ def render_html(graph: dict[str, Any]) -> str:
         return;
       }}
       if (node.kind === "edge") {{
-        updateSelection(edgeKey(node.edge));
+        updateSelection(edgeKey(node.edge), {{ isolate: false }});
         return;
       }}
-      updateSelection(node.path || node.id);
+      updateSelection(node.path || node.id, {{ isolate: false }});
+    }});
+
+    canvas.addEventListener("dblclick", (event) => {{
+      if (state.suppressClick) {{
+        return;
+      }}
+      const node = hitTest(event);
+      if (!node || node.kind === "edge") {{
+        return;
+      }}
+      updateSelection(node.path || node.id, {{ isolate: true }});
     }});
 
     canvas.addEventListener("mousedown", (event) => {{
