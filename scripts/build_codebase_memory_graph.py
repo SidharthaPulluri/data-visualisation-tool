@@ -34,6 +34,42 @@ JS_IMPORT_RE = re.compile(
     re.MULTILINE,
 )
 CSS_IMPORT_RE = re.compile(r"""@import\s+["']([^"']+)["']""")
+TOKEN_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]{2,}")
+COMMON_TOKENS = {
+    "true",
+    "false",
+    "none",
+    "null",
+    "return",
+    "const",
+    "async",
+    "await",
+    "function",
+    "class",
+    "self",
+    "this",
+    "data",
+    "item",
+    "items",
+    "value",
+    "values",
+    "result",
+    "results",
+    "list",
+    "dict",
+    "string",
+    "number",
+    "object",
+    "array",
+    "path",
+    "file",
+    "text",
+    "line",
+    "json",
+    "html",
+}
+SIMILARITY_THRESHOLD = 0.52
+SIMILARITY_SECONDARY_THRESHOLD = 0.42
 
 
 def discover_source_files() -> list[Path]:
@@ -101,6 +137,112 @@ def resolve_relative_asset(source_path: Path, target: str) -> str | None:
     return None
 
 
+def split_identifier_words(value: str) -> list[str]:
+    expanded = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", value.replace("_", " "))
+    return [part.lower() for part in expanded.split() if len(part) >= 3]
+
+
+def normalize_logic_tokens(text: str) -> list[str]:
+    tokens: list[str] = []
+    for raw in TOKEN_RE.findall(text):
+        for token in split_identifier_words(raw):
+            if token not in COMMON_TOKENS and not token.isdigit():
+                tokens.append(token)
+    return tokens
+
+
+def build_keyword_summary(tokens: list[str], limit: int = 8) -> list[str]:
+    counts: dict[str, int] = defaultdict(int)
+    for token in tokens:
+        counts[token] += 1
+    return [
+        token
+        for token, _ in sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:limit]
+    ]
+
+
+def normalize_name_stem(name: str) -> str:
+    parts = split_identifier_words(name)
+    return " ".join(parts[:3]) if parts else name.lower()
+
+
+def jaccard_similarity(left: set[str], right: set[str]) -> float:
+    if not left or not right:
+        return 0.0
+    union = left | right
+    if not union:
+        return 0.0
+    return len(left & right) / len(union)
+
+
+def extract_python_calls(function_node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
+    calls: list[str] = []
+    for node in ast.walk(function_node):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Name):
+            calls.extend(split_identifier_words(func.id))
+        elif isinstance(func, ast.Attribute):
+            calls.extend(split_identifier_words(func.attr))
+    return calls
+
+
+def build_function_logic_meta(name: str, source: str, extra_tokens: list[str] | None = None) -> dict[str, Any]:
+    tokens = normalize_logic_tokens(source)
+    if extra_tokens:
+        tokens.extend(extra_tokens)
+    keywords = build_keyword_summary(tokens)
+    fingerprint = sorted(set(keywords + split_identifier_words(name)[:3]))
+    return {
+        "keywords": keywords,
+        "fingerprint": fingerprint,
+        "stem": normalize_name_stem(name),
+    }
+
+
+def extract_braced_block(text: str, start_index: int) -> str:
+    brace_start = text.find("{", start_index)
+    if brace_start == -1:
+        return text[start_index:text.find("\n", start_index) if text.find("\n", start_index) != -1 else len(text)]
+    depth = 0
+    for index in range(brace_start, len(text)):
+        char = text[index]
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start_index:index + 1]
+    return text[start_index:]
+
+
+def extract_js_functions(text: str) -> list[dict[str, Any]]:
+    functions: list[dict[str, Any]] = []
+    seen: set[tuple[str, int]] = set()
+    for matcher, kind in ((FUNCTION_RE, "function"), (ARROW_RE, "arrow")):
+        for match in matcher.finditer(text):
+            name = match.group(1)
+            line = text.count("\n", 0, match.start()) + 1
+            key = (name, line)
+            if key in seen:
+                continue
+            seen.add(key)
+            snippet = extract_braced_block(text, match.start())
+            logic = build_function_logic_meta(name, snippet)
+            functions.append(
+                {
+                    "name": name,
+                    "kind": kind,
+                    "line": line,
+                    "keywords": logic["keywords"],
+                    "fingerprint": logic["fingerprint"],
+                    "stem": logic["stem"],
+                }
+            )
+    return sorted(functions, key=lambda item: (item["line"], item["name"]))
+
+
 def extract_route_meta(function_node: ast.FunctionDef | ast.AsyncFunctionDef) -> dict[str, Any]:
     paths: list[str] = []
     methods: list[str] = []
@@ -138,10 +280,15 @@ def parse_python(path: Path, text: str) -> dict[str, Any]:
 
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            source = ast.get_source_segment(text, node) or ""
+            logic = build_function_logic_meta(node.name, source, extract_python_calls(node))
             meta = {
                 "name": node.name,
                 "line": node.lineno,
                 "kind": "async_function" if isinstance(node, ast.AsyncFunctionDef) else "function",
+                "keywords": logic["keywords"],
+                "fingerprint": logic["fingerprint"],
+                "stem": logic["stem"],
             }
             route_meta = extract_route_meta(node)
             if route_meta["paths"]:
@@ -168,11 +315,7 @@ def parse_python(path: Path, text: str) -> dict[str, Any]:
 
 def parse_js_like(text: str) -> dict[str, Any]:
     return {
-        "functions": [
-            {"name": match.group(1), "kind": "function"} for match in FUNCTION_RE.finditer(text)
-        ] + [
-            {"name": match.group(1), "kind": "arrow"} for match in ARROW_RE.finditer(text)
-        ],
+        "functions": extract_js_functions(text),
         "helper_refs": sorted(set(DATA_TOOL_RE.findall(text))),
         "api_refs": sorted(set(API_RE.findall(text))),
         "page_refs": sorted(set(PAGE_RE.findall(text))),
@@ -297,6 +440,99 @@ def add_edge(edges: dict[tuple[str, str], dict[str, Any]], source: str, target: 
     edges[key]["weight"] += 1
 
 
+def build_similarity_clusters(files: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    functions: list[dict[str, Any]] = []
+    for file_info in files:
+        for function in file_info["functions"]:
+            fingerprint = set(function.get("fingerprint", []))
+            if len(fingerprint) < 3:
+                continue
+            functions.append(
+                {
+                    "id": f"{file_info['path']}::{function['name']}",
+                    "file": file_info["path"],
+                    "folder": file_info["folder"],
+                    "name": function["name"],
+                    "line": function.get("line"),
+                    "kind": function.get("kind", "function"),
+                    "stem": function.get("stem", normalize_name_stem(function["name"])),
+                    "fingerprint": fingerprint,
+                    "keywords": function.get("keywords", []),
+                }
+            )
+
+    parent = list(range(len(functions)))
+
+    def find(index: int) -> int:
+        while parent[index] != index:
+            parent[index] = parent[parent[index]]
+            index = parent[index]
+        return index
+
+    def union(left: int, right: int) -> None:
+        left_root = find(left)
+        right_root = find(right)
+        if left_root != right_root:
+            parent[right_root] = left_root
+
+    for left in range(len(functions)):
+        for right in range(left + 1, len(functions)):
+            if functions[left]["file"] == functions[right]["file"]:
+                continue
+            score = jaccard_similarity(functions[left]["fingerprint"], functions[right]["fingerprint"])
+            same_stem = functions[left]["stem"] == functions[right]["stem"]
+            if score >= SIMILARITY_THRESHOLD or (same_stem and score >= SIMILARITY_SECONDARY_THRESHOLD):
+                union(left, right)
+
+    clusters: dict[int, list[dict[str, Any]]] = defaultdict(list)
+    for index, function in enumerate(functions):
+        clusters[find(index)].append(function)
+
+    similarity_clusters: list[dict[str, Any]] = []
+    for cluster_functions in clusters.values():
+        file_count = len({item["file"] for item in cluster_functions})
+        if len(cluster_functions) < 2 or file_count < 2:
+            continue
+        scores: list[float] = []
+        for left in range(len(cluster_functions)):
+            for right in range(left + 1, len(cluster_functions)):
+                scores.append(
+                    jaccard_similarity(
+                        cluster_functions[left]["fingerprint"],
+                        cluster_functions[right]["fingerprint"],
+                    )
+                )
+        keywords = build_keyword_summary(
+            [token for item in cluster_functions for token in item["keywords"]],
+            limit=6,
+        )
+        stems = sorted({item["stem"] for item in cluster_functions if item["stem"]})
+        similarity_clusters.append(
+            {
+                "label": " / ".join(stems[:2]) if stems else cluster_functions[0]["name"],
+                "keywords": keywords,
+                "files": sorted({item["file"] for item in cluster_functions}),
+                "members": [
+                    {
+                        "id": item["id"],
+                        "file": item["file"],
+                        "name": item["name"],
+                        "line": item["line"],
+                        "kind": item["kind"],
+                    }
+                    for item in sorted(cluster_functions, key=lambda member: (member["file"], member["name"]))
+                ],
+                "average_score": round(sum(scores) / len(scores), 3) if scores else 1.0,
+                "size": len(cluster_functions),
+            }
+        )
+
+    similarity_clusters.sort(
+        key=lambda item: (-item["average_score"], -item["size"], item["label"])
+    )
+    return similarity_clusters
+
+
 def build_graph(files: list[dict[str, Any]]) -> dict[str, Any]:
     by_path = {item["path"]: item for item in files}
     api_lookup, page_lookup = build_route_lookup(by_path)
@@ -353,6 +589,7 @@ def build_graph(files: list[dict[str, Any]]) -> dict[str, Any]:
         ],
         key=lambda item: (-item["degree"], -item["functions"], item["path"]),
     )[:10]
+    similarity_clusters = build_similarity_clusters(files)
 
     return {
         "files": files,
@@ -366,12 +603,14 @@ def build_graph(files: list[dict[str, Any]]) -> dict[str, Any]:
             for edge in edges.values()
         ],
         "duplicates": duplicates,
+        "similarity_clusters": similarity_clusters,
         "hotspots": hotspots,
         "summary": {
             "files": len(files),
             "functions": sum(len(item["functions"]) for item in files),
             "edges": len(edges),
             "folders": len({item["folder"] for item in files}),
+            "similarity_clusters": len(similarity_clusters),
         },
         "generated_from": str(ROOT),
     }
@@ -607,7 +846,7 @@ def render_html(graph: dict[str, Any]) -> str:
     <section class="hero panel">
       <span class="eyebrow">Standalone repo tool</span>
       <h1>Codebase memory graph for this repository.</h1>
-      <p>This is a separate development tool that maps files as stars and functions as planets. It tracks imports, shared-helper usage, page-to-page links, and endpoint relationships so we can spot workflow strands, hotspots, and duplication without reparsing the project mentally every time.</p>
+      <p>This is a separate development tool that maps files as stars and functions as planets. It tracks imports, shared-helper usage, page-to-page links, endpoint relationships, and function-shape similarity so we can spot workflow strands, hotspots, and hidden duplication without reparsing the project mentally every time.</p>
       <div class="hero-stats" id="heroStats"></div>
     </section>
 
@@ -644,6 +883,12 @@ def render_html(graph: dict[str, Any]) -> str:
       </section>
 
       <section class="card panel">
+        <span class="eyebrow">Logic similarity</span>
+        <h2>Similar function clusters</h2>
+        <ul class="list" id="similarityList"></ul>
+      </section>
+
+      <section class="card panel">
         <span class="eyebrow">Possible duplication</span>
         <h2>Repeated function names</h2>
         <ul class="list" id="duplicateList"></ul>
@@ -674,6 +919,7 @@ def render_html(graph: dict[str, Any]) -> str:
     const searchInput = document.getElementById("searchInput");
     const heroStats = document.getElementById("heroStats");
     const hotspotList = document.getElementById("hotspotList");
+    const similarityList = document.getElementById("similarityList");
     const duplicateList = document.getElementById("duplicateList");
     const detailCard = document.getElementById("detailCard");
     const legend = document.getElementById("legend");
@@ -855,6 +1101,7 @@ def render_html(graph: dict[str, Any]) -> str:
         <span class="chip">${{summary.functions}} planets</span>
         <span class="chip">${{summary.edges}} strands</span>
         <span class="chip">${{summary.folders}} constellations</span>
+        <span class="chip">${{summary.similarity_clusters}} logic clusters</span>
       `;
     }}
 
@@ -874,6 +1121,21 @@ def render_html(graph: dict[str, Any]) -> str:
           <span class="detail-key">${{escapeHtml(item.folder)}}</span>
           <strong>${{escapeHtml(item.path)}}</strong><br>
           <span class="muted">${{item.degree}} strands · ${{item.functions}} functions</span>
+        </li>
+      `).join("");
+    }}
+
+    function renderSimilarityClusters() {{
+      if (!GRAPH.similarity_clusters.length) {{
+        similarityList.innerHTML = '<li>No cross-file logic clusters detected yet.</li>';
+        return;
+      }}
+      similarityList.innerHTML = GRAPH.similarity_clusters.slice(0, 10).map((item) => `
+        <li>
+          <span class="detail-key">${{item.average_score.toFixed(2)}} similarity</span>
+          <strong>${{escapeHtml(item.label)}}</strong><br>
+          <span class="muted">${{item.size}} functions · ${{item.files.length}} files</span><br>
+          <span class="muted">${{item.keywords.map((word) => escapeHtml(word)).join(" · ")}}</span>
         </li>
       `).join("");
     }}
@@ -913,6 +1175,9 @@ def render_html(graph: dict[str, Any]) -> str:
       const file = lookups.files.get(nodeId);
       if (file) {{
         const related = connectedEdgesForFile(file.path);
+        const relatedClusters = GRAPH.similarity_clusters.filter((cluster) =>
+          cluster.members.some((member) => member.file === file.path)
+        );
         detailCard.innerHTML = `
           <span class="eyebrow">File star</span>
           <h2>${{escapeHtml(file.path)}}</h2>
@@ -922,6 +1187,7 @@ def render_html(graph: dict[str, Any]) -> str:
             <li><span class="detail-key">Imports / outbound links</span>${{file.imports.length ? file.imports.map((item) => escapeHtml(item)).join(", ") : "None"}}</li>
             <li><span class="detail-key">Shared helper refs</span>${{file.helper_refs.length ? file.helper_refs.map((item) => `<code>${{escapeHtml(item)}}</code>`).join(", ") : "None"}}</li>
             <li><span class="detail-key">Endpoints and pages</span>${{[...file.api_refs, ...file.page_refs].length ? [...file.api_refs, ...file.page_refs].map((item) => escapeHtml(item)).join(", ") : "None"}}</li>
+            <li><span class="detail-key">Logic clusters</span>${{relatedClusters.length ? relatedClusters.map((cluster) => `${{escapeHtml(cluster.label)}} [${{cluster.average_score.toFixed(2)}}]`).join("<br>") : "No strong cross-file similarity clusters"}}</li>
             <li><span class="detail-key">Connected strands</span>${{related.length ? related.map((edge) => `${{escapeHtml(edge.source === file.path ? edge.target : edge.source)}} (${{escapeHtml(edge.labels.join(", "))}})`).join("<br>") : "No cross-file strands"}}</li>
           </ul>
         `;
@@ -930,6 +1196,9 @@ def render_html(graph: dict[str, Any]) -> str:
 
       const planet = lookups.functions.get(nodeId);
       if (planet) {{
+        const relatedCluster = GRAPH.similarity_clusters.find((cluster) =>
+          cluster.members.some((member) => member.id === planet.id)
+        );
         detailCard.innerHTML = `
           <span class="eyebrow">Function planet</span>
           <h2>${{escapeHtml(planet.name)}}</h2>
@@ -937,6 +1206,7 @@ def render_html(graph: dict[str, Any]) -> str:
           <ul class="detail-list">
             <li><span class="detail-key">Kind</span>${{escapeHtml(planet.functionKind)}}</li>
             <li><span class="detail-key">Parent star</span>${{escapeHtml(planet.filePath)}}</li>
+            <li><span class="detail-key">Logic cluster</span>${{relatedCluster ? `${{escapeHtml(relatedCluster.label)}} [${{relatedCluster.average_score.toFixed(2)}}]<br><span class="muted">${{relatedCluster.members.filter((member) => member.id !== planet.id).map((member) => `${{escapeHtml(member.file)}}::${{escapeHtml(member.name)}}`).join("<br>") || "No peers beyond this node"}}</span>` : "No strong cross-file similarity cluster"}}</li>
           </ul>
         `;
       }}
@@ -975,6 +1245,7 @@ def render_html(graph: dict[str, Any]) -> str:
     renderHeroStats();
     renderLegend();
     renderHotspots();
+    renderSimilarityClusters();
     renderDuplicates();
     renderDetails(null);
     draw();

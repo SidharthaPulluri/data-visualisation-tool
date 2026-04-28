@@ -10,6 +10,12 @@ The visual graph is a separate developer tool, not a shipped product feature:
 
 Update this file whenever a major workflow, module boundary, storage shape, or graph rule changes.
 
+The graph now highlights:
+
+- file-level workflow strands
+- repeated function names
+- deterministic similarity clusters for “same logic, different file” cases
+
 ## Current Flow
 
 ```mermaid

@@ -7,12 +7,14 @@ This is a separate developer tool for understanding the repository.
 - `stars` = source files
 - `planets` = functions inside those files
 - `strands` = imports, shared-helper usage, page-to-page links, script loading, and API workflow connections
+- `logic clusters` = deterministic similarity buckets for functions that look like the same shape of logic across different files
 
 The goal is to help us:
 
 - see file relationships without reopening every file
 - spot hotspots and strongly connected workflow files
 - notice repeated function names and partial duplication
+- notice same-logic patterns even when the function names differ
 - keep a cached mental model of the repo after structural changes
 
 ## Build it
