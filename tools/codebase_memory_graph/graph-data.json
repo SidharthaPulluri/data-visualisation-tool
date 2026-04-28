@@ -1666,11 +1666,6 @@
       "imports": [
         "analysis/stats.py",
         "cleaning/cleaner.py",
-        "frontend/database.html",
-        "frontend/guide.html",
-        "frontend/prepare.html",
-        "frontend/upload.html",
-        "frontend/visualize.html",
         "ingestion/loader.py",
         "schema/detect.py",
         "transformation/transform.py",
@@ -7354,7 +7349,7 @@
       "name": "build_codebase_memory_graph.py",
       "folder": "scripts",
       "extension": ".py",
-      "lines": 2009,
+      "lines": 2100,
       "functions": [
         {
           "name": "discover_source_files",
@@ -7803,7 +7798,7 @@
         },
         {
           "name": "parse_js_like",
-          "line": 316,
+          "line": 315,
           "kind": "function",
           "keywords": [
             "findall",
@@ -7831,7 +7826,7 @@
         },
         {
           "name": "parse_html",
-          "line": 327,
+          "line": 326,
           "kind": "function",
           "keywords": [
             "script",
@@ -7859,7 +7854,7 @@
         },
         {
           "name": "parse_css",
-          "line": 363,
+          "line": 362,
           "kind": "function",
           "keywords": [
             "set",
@@ -7886,7 +7881,7 @@
         },
         {
           "name": "parse_file",
-          "line": 381,
+          "line": 380,
           "kind": "function",
           "keywords": [
             "set",
@@ -7913,7 +7908,7 @@
         },
         {
           "name": "build_route_lookup",
-          "line": 423,
+          "line": 422,
           "kind": "function",
           "keywords": [
             "str",
@@ -7940,17 +7935,17 @@
         },
         {
           "name": "add_edge",
-          "line": 439,
+          "line": 438,
           "kind": "function",
           "keywords": [
-            "str",
-            "edges",
             "key",
-            "source",
-            "target",
-            "add",
+            "edges",
             "label",
-            "labels"
+            "str",
+            "reason",
+            "add",
+            "source",
+            "target"
           ],
           "fingerprint": [
             "add",
@@ -7958,7 +7953,7 @@
             "edges",
             "key",
             "label",
-            "labels",
+            "reason",
             "source",
             "str",
             "target"
@@ -7967,7 +7962,7 @@
         },
         {
           "name": "build_similarity_clusters",
-          "line": 449,
+          "line": 473,
           "kind": "function",
           "keywords": [
             "functions",
@@ -7995,35 +7990,35 @@
         },
         {
           "name": "build_graph",
-          "line": 542,
+          "line": 566,
           "kind": "function",
           "keywords": [
             "info",
             "edge",
-            "files",
+            "route",
             "for",
+            "files",
             "len",
-            "edges",
-            "name",
-            "target"
+            "get",
+            "page"
           ],
           "fingerprint": [
             "build",
             "edge",
-            "edges",
             "files",
             "for",
+            "get",
             "graph",
             "info",
             "len",
-            "name",
-            "target"
+            "page",
+            "route"
           ],
           "stem": "build graph"
         },
         {
           "name": "render_html",
-          "line": 631,
+          "line": 711,
           "kind": "function",
           "keywords": [
             "node",
@@ -8051,7 +8046,7 @@
         },
         {
           "name": "main",
-          "line": 1997,
+          "line": 2088,
           "kind": "function",
           "keywords": [
             "graph",
@@ -8078,7 +8073,7 @@
         },
         {
           "name": "find",
-          "line": 472,
+          "line": 496,
           "kind": "function",
           "keywords": [
             "index",
@@ -8100,7 +8095,7 @@
         },
         {
           "name": "union",
-          "line": 478,
+          "line": 502,
           "kind": "function",
           "keywords": [
             "root",
@@ -8441,7 +8436,7 @@
       "name": "tools/index.html",
       "folder": "tools",
       "extension": ".html",
-      "lines": 1291,
+      "lines": 1362,
       "functions": [
         {
           "name": "escapeHtml",
@@ -8607,34 +8602,34 @@
           "kind": "function",
           "line": 96,
           "keywords": [
-            "score",
             "color",
-            "cluster",
-            "kind",
-            "math",
+            "orbit",
+            "band",
+            "score",
             "rgba",
-            "degree",
-            "else"
+            "weight",
+            "kind",
+            "cluster"
           ],
           "fingerprint": [
+            "band",
             "cluster",
             "color",
-            "degree",
-            "else",
             "function",
             "kind",
-            "math",
             "meta",
+            "orbit",
             "rgba",
             "score",
-            "visual"
+            "visual",
+            "weight"
           ],
           "stem": "function visual meta"
         },
         {
           "name": "groupFilesByFolder",
           "kind": "function",
-          "line": 121,
+          "line": 147,
           "keywords": [
             "groups",
             "folder",
@@ -8661,7 +8656,7 @@
         {
           "name": "normalizeText",
           "kind": "function",
-          "line": 132,
+          "line": 158,
           "keywords": [
             "case",
             "lower",
@@ -8678,7 +8673,7 @@
         {
           "name": "buildGroupZonesFromNodes",
           "kind": "function",
-          "line": 136,
+          "line": 162,
           "keywords": [
             "node",
             "nodes",
@@ -8707,7 +8702,7 @@
         {
           "name": "buildPositions",
           "kind": "function",
-          "line": 162,
+          "line": 188,
           "keywords": [
             "math",
             "group",
@@ -8715,8 +8710,8 @@
             "center",
             "index",
             "radius",
-            "angle",
-            "length"
+            "visual",
+            "angle"
           ],
           "fingerprint": [
             "angle",
@@ -8724,18 +8719,18 @@
             "center",
             "group",
             "index",
-            "length",
             "math",
             "positions",
             "radius",
-            "ring"
+            "ring",
+            "visual"
           ],
           "stem": "build positions"
         },
         {
           "name": "isFunctionMatch",
           "kind": "function",
-          "line": 247,
+          "line": 278,
           "keywords": [
             "planet",
             "haystack",
@@ -8763,7 +8758,7 @@
         {
           "name": "isVisibleFile",
           "kind": "function",
-          "line": 253,
+          "line": 284,
           "keywords": [
             "node",
             "haystack",
@@ -8791,7 +8786,7 @@
         {
           "name": "activeParentId",
           "kind": "function",
-          "line": 260,
+          "line": 291,
           "keywords": [
             "selected",
             "state",
@@ -8817,7 +8812,7 @@
         {
           "name": "selectedNetworkPaths",
           "kind": "function",
-          "line": 267,
+          "line": 298,
           "keywords": [
             "edge",
             "focus",
@@ -8845,7 +8840,7 @@
         {
           "name": "selectedFocusPath",
           "kind": "function",
-          "line": 291,
+          "line": 322,
           "keywords": [
             "active",
             "focus",
@@ -8868,7 +8863,7 @@
         {
           "name": "canRearrangeLayout",
           "kind": "function",
-          "line": 295,
+          "line": 326,
           "keywords": [
             "selected",
             "state",
@@ -8894,7 +8889,7 @@
         {
           "name": "shouldShowPlanets",
           "kind": "function",
-          "line": 299,
+          "line": 330,
           "keywords": [
             "focus",
             "node",
@@ -8920,7 +8915,7 @@
         {
           "name": "toWorld",
           "kind": "function",
-          "line": 306,
+          "line": 337,
           "keywords": [
             "rect",
             "client",
@@ -8947,7 +8942,7 @@
         {
           "name": "resetView",
           "kind": "function",
-          "line": 316,
+          "line": 347,
           "keywords": [
             "state",
             "render",
@@ -8975,7 +8970,7 @@
         {
           "name": "drawGroupZones",
           "kind": "function",
-          "line": 328,
+          "line": 359,
           "keywords": [
             "zone",
             "ctx",
@@ -9004,7 +8999,7 @@
         {
           "name": "connectedEdgesForFile",
           "kind": "function",
-          "line": 351,
+          "line": 382,
           "keywords": [
             "edges",
             "connected",
@@ -9022,7 +9017,7 @@
         {
           "name": "edgeKey",
           "kind": "function",
-          "line": 355,
+          "line": 386,
           "keywords": [
             "edge",
             "key",
@@ -9040,7 +9035,7 @@
         {
           "name": "describeEdgeLabel",
           "kind": "function",
-          "line": 359,
+          "line": 390,
           "keywords": [
             "label",
             "the",
@@ -9068,7 +9063,7 @@
         {
           "name": "edgeExplanation",
           "kind": "function",
-          "line": 378,
+          "line": 409,
           "keywords": [
             "edge",
             "label",
@@ -9094,7 +9089,7 @@
         {
           "name": "buildDisplayNodeMap",
           "kind": "function",
-          "line": 382,
+          "line": 413,
           "keywords": [
             "strength",
             "math",
@@ -9121,35 +9116,36 @@
         {
           "name": "buildDisplayPlanets",
           "kind": "function",
-          "line": 438,
+          "line": 469,
           "keywords": [
-            "parent",
-            "planet",
+            "orbit",
             "math",
+            "planet",
+            "band",
+            "parent",
             "index",
-            "sibling",
             "angle",
-            "display",
-            "map"
+            "siblings"
           ],
           "fingerprint": [
             "angle",
+            "band",
             "build",
             "display",
             "index",
-            "map",
             "math",
+            "orbit",
             "parent",
             "planet",
             "planets",
-            "sibling"
+            "siblings"
           ],
           "stem": "build display planets"
         },
         {
           "name": "getVisibleEdgeGeometry",
           "kind": "function",
-          "line": 456,
+          "line": 497,
           "keywords": [
             "source",
             "target",
@@ -9175,7 +9171,7 @@
         {
           "name": "pointToQuadraticDistance",
           "kind": "function",
-          "line": 469,
+          "line": 510,
           "keywords": [
             "geometry",
             "inv",
@@ -9202,7 +9198,7 @@
         {
           "name": "drawEdges",
           "kind": "function",
-          "line": 481,
+          "line": 522,
           "keywords": [
             "geometry",
             "selected",
@@ -9230,25 +9226,26 @@
         {
           "name": "drawPlanets",
           "kind": "function",
-          "line": 508,
+          "line": 549,
           "keywords": [
             "planet",
             "ctx",
             "node",
-            "map",
+            "orbit",
+            "rgba",
             "selected",
             "stroke",
-            "planets",
-            "display"
+            "map"
           ],
           "fingerprint": [
             "ctx",
-            "display",
             "draw",
             "map",
             "node",
+            "orbit",
             "planet",
             "planets",
+            "rgba",
             "selected",
             "stroke"
           ],
@@ -9257,7 +9254,7 @@
         {
           "name": "drawStars",
           "kind": "function",
-          "line": 541,
+          "line": 612,
           "keywords": [
             "node",
             "ctx",
@@ -9285,7 +9282,7 @@
         {
           "name": "createScene",
           "kind": "function",
-          "line": 579,
+          "line": 650,
           "keywords": [
             "display",
             "map",
@@ -9313,7 +9310,7 @@
         {
           "name": "draw",
           "kind": "function",
-          "line": 599,
+          "line": 670,
           "keywords": [
             "scene",
             "draw",
@@ -9339,7 +9336,7 @@
         {
           "name": "hitTest",
           "kind": "function",
-          "line": 614,
+          "line": 685,
           "keywords": [
             "index",
             "node",
@@ -9367,7 +9364,7 @@
         {
           "name": "requestDraw",
           "kind": "function",
-          "line": 638,
+          "line": 709,
           "keywords": [
             "draw",
             "queued",
@@ -9389,7 +9386,7 @@
         {
           "name": "clamp",
           "kind": "function",
-          "line": 646,
+          "line": 717,
           "keywords": [
             "max",
             "min",
@@ -9407,7 +9404,7 @@
         {
           "name": "updateManualStarPosition",
           "kind": "function",
-          "line": 650,
+          "line": 721,
           "keywords": [
             "next",
             "node",
@@ -9436,7 +9433,7 @@
         {
           "name": "renderHeroStats",
           "kind": "function",
-          "line": 660,
+          "line": 731,
           "keywords": [
             "span",
             "summary",
@@ -9463,7 +9460,7 @@
         {
           "name": "renderLegend",
           "kind": "function",
-          "line": 671,
+          "line": 742,
           "keywords": [
             "folder",
             "legend",
@@ -9490,7 +9487,7 @@
         {
           "name": "renderHotspots",
           "kind": "function",
-          "line": 681,
+          "line": 752,
           "keywords": [
             "span",
             "escape",
@@ -9517,7 +9514,7 @@
         {
           "name": "renderSimilarityClusters",
           "kind": "function",
-          "line": 691,
+          "line": 762,
           "keywords": [
             "similarity",
             "span",
@@ -9544,7 +9541,7 @@
         {
           "name": "renderDuplicates",
           "kind": "function",
-          "line": 706,
+          "line": 777,
           "keywords": [
             "span",
             "duplicate",
@@ -9571,7 +9568,7 @@
         {
           "name": "renderSelectionPill",
           "kind": "function",
-          "line": 719,
+          "line": 790,
           "keywords": [
             "span",
             "planet",
@@ -9598,7 +9595,7 @@
         {
           "name": "renderDetails",
           "kind": "function",
-          "line": 760,
+          "line": 831,
           "keywords": [
             "span",
             "detail",
@@ -9626,7 +9623,7 @@
         {
           "name": "updateSelection",
           "kind": "function",
-          "line": 832,
+          "line": 903,
           "keywords": [
             "node",
             "state",
@@ -10654,7 +10651,14 @@
       "labels": [
         "imports"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "import",
+          "label": "imports",
+          "detail": "Resolved import dependency on analysis/stats.py."
+        }
+      ]
     },
     {
       "source": "app.py",
@@ -10662,47 +10666,14 @@
       "labels": [
         "imports"
       ],
-      "weight": 1
-    },
-    {
-      "source": "app.py",
-      "target": "frontend/database.html",
-      "labels": [
-        "imports"
-      ],
-      "weight": 1
-    },
-    {
-      "source": "app.py",
-      "target": "frontend/guide.html",
-      "labels": [
-        "imports"
-      ],
-      "weight": 1
-    },
-    {
-      "source": "app.py",
-      "target": "frontend/prepare.html",
-      "labels": [
-        "imports"
-      ],
-      "weight": 1
-    },
-    {
-      "source": "app.py",
-      "target": "frontend/upload.html",
-      "labels": [
-        "imports"
-      ],
-      "weight": 1
-    },
-    {
-      "source": "app.py",
-      "target": "frontend/visualize.html",
-      "labels": [
-        "imports"
-      ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "import",
+          "label": "imports",
+          "detail": "Resolved import dependency on cleaning/cleaner.py."
+        }
+      ]
     },
     {
       "source": "app.py",
@@ -10710,7 +10681,14 @@
       "labels": [
         "imports"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "import",
+          "label": "imports",
+          "detail": "Resolved import dependency on ingestion/loader.py."
+        }
+      ]
     },
     {
       "source": "app.py",
@@ -10718,7 +10696,14 @@
       "labels": [
         "imports"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "import",
+          "label": "imports",
+          "detail": "Resolved import dependency on schema/detect.py."
+        }
+      ]
     },
     {
       "source": "app.py",
@@ -10726,7 +10711,14 @@
       "labels": [
         "imports"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "import",
+          "label": "imports",
+          "detail": "Resolved import dependency on transformation/transform.py."
+        }
+      ]
     },
     {
       "source": "app.py",
@@ -10734,7 +10726,14 @@
       "labels": [
         "imports"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "import",
+          "label": "imports",
+          "detail": "Resolved import dependency on utils/helpers.py."
+        }
+      ]
     },
     {
       "source": "app.py",
@@ -10742,7 +10741,89 @@
       "labels": [
         "imports"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "import",
+          "label": "imports",
+          "detail": "Resolved import dependency on visualization/plots.py."
+        }
+      ]
+    },
+    {
+      "source": "app.py",
+      "target": "frontend/upload.html",
+      "labels": [
+        "serves page"
+      ],
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "page-serve",
+          "label": "serves page",
+          "detail": "Route / (GET) serves frontend file frontend/upload.html."
+        }
+      ]
+    },
+    {
+      "source": "app.py",
+      "target": "frontend/prepare.html",
+      "labels": [
+        "serves page"
+      ],
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "page-serve",
+          "label": "serves page",
+          "detail": "Route /prepare (GET) serves frontend file frontend/prepare.html."
+        }
+      ]
+    },
+    {
+      "source": "app.py",
+      "target": "frontend/database.html",
+      "labels": [
+        "serves page"
+      ],
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "page-serve",
+          "label": "serves page",
+          "detail": "Route /database (GET) serves frontend file frontend/database.html."
+        }
+      ]
+    },
+    {
+      "source": "app.py",
+      "target": "frontend/guide.html",
+      "labels": [
+        "serves page"
+      ],
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "page-serve",
+          "label": "serves page",
+          "detail": "Route /guide (GET) serves frontend file frontend/guide.html."
+        }
+      ]
+    },
+    {
+      "source": "app.py",
+      "target": "frontend/visualize.html",
+      "labels": [
+        "serves page"
+      ],
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "page-serve",
+          "label": "serves page",
+          "detail": "Route /visualize (GET) serves frontend file frontend/visualize.html."
+        }
+      ]
     },
     {
       "source": "cleaning/cleaner.py",
@@ -10750,7 +10831,14 @@
       "labels": [
         "imports"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "import",
+          "label": "imports",
+          "detail": "Resolved import dependency on schema/detect.py."
+        }
+      ]
     },
     {
       "source": "frontend/database.html",
@@ -10760,7 +10848,24 @@
         "loads script",
         "uses shared helper"
       ],
-      "weight": 3
+      "weight": 3,
+      "reasons": [
+        {
+          "kind": "import",
+          "label": "imports",
+          "detail": "Resolved import dependency on frontend/shared.js."
+        },
+        {
+          "kind": "script-load",
+          "label": "loads script",
+          "detail": "Loads script asset frontend/shared.js into the page runtime."
+        },
+        {
+          "kind": "shared-helper",
+          "label": "uses shared helper",
+          "detail": "Calls shared helpers via window.dataTool.fetchJson, saveSession."
+        }
+      ]
     },
     {
       "source": "frontend/database.html",
@@ -10768,7 +10873,14 @@
       "labels": [
         "/api/upload"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "api-call",
+          "label": "/api/upload",
+          "detail": "Calls API route /api/upload, which is handled in app.py."
+        }
+      ]
     },
     {
       "source": "frontend/database.html",
@@ -10776,7 +10888,14 @@
       "labels": [
         "/prepare"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "page-link",
+          "label": "/prepare",
+          "detail": "Links or navigates to page route /prepare, which resolves to frontend/prepare.html."
+        }
+      ]
     },
     {
       "source": "frontend/guide.html",
@@ -10784,7 +10903,14 @@
       "labels": [
         "/database"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "page-link",
+          "label": "/database",
+          "detail": "Links or navigates to page route /database, which resolves to frontend/database.html."
+        }
+      ]
     },
     {
       "source": "frontend/index.html",
@@ -10797,7 +10923,39 @@
         "/api/upload",
         "/api/visualize"
       ],
-      "weight": 6
+      "weight": 6,
+      "reasons": [
+        {
+          "kind": "api-call",
+          "label": "/api/export/chart",
+          "detail": "Calls API route /api/export/chart, which is handled in app.py."
+        },
+        {
+          "kind": "api-call",
+          "label": "/api/export/dataset",
+          "detail": "Calls API route /api/export/dataset, which is handled in app.py."
+        },
+        {
+          "kind": "api-call",
+          "label": "/api/export/report",
+          "detail": "Calls API route /api/export/report, which is handled in app.py."
+        },
+        {
+          "kind": "api-call",
+          "label": "/api/transform",
+          "detail": "Calls API route /api/transform, which is handled in app.py."
+        },
+        {
+          "kind": "api-call",
+          "label": "/api/upload",
+          "detail": "Calls API route /api/upload, which is handled in app.py."
+        },
+        {
+          "kind": "api-call",
+          "label": "/api/visualize",
+          "detail": "Calls API route /api/visualize, which is handled in app.py."
+        }
+      ]
     },
     {
       "source": "frontend/prepare.html",
@@ -10807,7 +10965,24 @@
         "loads script",
         "uses shared helper"
       ],
-      "weight": 3
+      "weight": 3,
+      "reasons": [
+        {
+          "kind": "import",
+          "label": "imports",
+          "detail": "Resolved import dependency on frontend/shared.js."
+        },
+        {
+          "kind": "script-load",
+          "label": "loads script",
+          "detail": "Loads script asset frontend/shared.js into the page runtime."
+        },
+        {
+          "kind": "shared-helper",
+          "label": "uses shared helper",
+          "detail": "Calls shared helpers via window.dataTool.escapeHtml, fetchJson, filterPreviewRows, formatNumber, getPreviewColumns, populateMultiSelect, populateSelect, renderAnalysis, renderDatasetExplanation, renderPreview, renderSchema, renderWorkspaceTablePanel, requireSession, saveSession, saveWorkspaceFlow, setStatusText, summarizePreviewColumns, switchWorkspaceTable."
+        }
+      ]
     },
     {
       "source": "frontend/prepare.html",
@@ -10815,7 +10990,14 @@
       "labels": [
         "/api/transform"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "api-call",
+          "label": "/api/transform",
+          "detail": "Calls API route /api/transform, which is handled in app.py."
+        }
+      ]
     },
     {
       "source": "frontend/prepare.html",
@@ -10823,7 +11005,14 @@
       "labels": [
         "/visualize"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "page-link",
+          "label": "/visualize",
+          "detail": "Links or navigates to page route /visualize, which resolves to frontend/visualize.html."
+        }
+      ]
     },
     {
       "source": "frontend/shared.js",
@@ -10831,7 +11020,14 @@
       "labels": [
         "/api/transform"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "api-call",
+          "label": "/api/transform",
+          "detail": "Calls API route /api/transform, which is handled in app.py."
+        }
+      ]
     },
     {
       "source": "frontend/upload.html",
@@ -10841,7 +11037,24 @@
         "loads script",
         "uses shared helper"
       ],
-      "weight": 3
+      "weight": 3,
+      "reasons": [
+        {
+          "kind": "import",
+          "label": "imports",
+          "detail": "Resolved import dependency on frontend/shared.js."
+        },
+        {
+          "kind": "script-load",
+          "label": "loads script",
+          "detail": "Loads script asset frontend/shared.js into the page runtime."
+        },
+        {
+          "kind": "shared-helper",
+          "label": "uses shared helper",
+          "detail": "Calls shared helpers via window.dataTool.clearSession, createMultiTableSession, deleteWorkspace, escapeHtml, fetchJson, formatNumber, getWorkspace, loadSession, loadWorkspaces, saveSession."
+        }
+      ]
     },
     {
       "source": "frontend/upload.html",
@@ -10849,7 +11062,14 @@
       "labels": [
         "/api/upload"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "api-call",
+          "label": "/api/upload",
+          "detail": "Calls API route /api/upload, which is handled in app.py."
+        }
+      ]
     },
     {
       "source": "frontend/upload.html",
@@ -10857,7 +11077,14 @@
       "labels": [
         "/database"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "page-link",
+          "label": "/database",
+          "detail": "Links or navigates to page route /database, which resolves to frontend/database.html."
+        }
+      ]
     },
     {
       "source": "frontend/upload.html",
@@ -10865,7 +11092,14 @@
       "labels": [
         "/guide"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "page-link",
+          "label": "/guide",
+          "detail": "Links or navigates to page route /guide, which resolves to frontend/guide.html."
+        }
+      ]
     },
     {
       "source": "frontend/upload.html",
@@ -10873,7 +11107,14 @@
       "labels": [
         "/prepare"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "page-link",
+          "label": "/prepare",
+          "detail": "Links or navigates to page route /prepare, which resolves to frontend/prepare.html."
+        }
+      ]
     },
     {
       "source": "frontend/visualize.html",
@@ -10883,7 +11124,24 @@
         "loads script",
         "uses shared helper"
       ],
-      "weight": 3
+      "weight": 3,
+      "reasons": [
+        {
+          "kind": "import",
+          "label": "imports",
+          "detail": "Resolved import dependency on frontend/shared.js."
+        },
+        {
+          "kind": "script-load",
+          "label": "loads script",
+          "detail": "Loads script asset frontend/shared.js into the page runtime."
+        },
+        {
+          "kind": "shared-helper",
+          "label": "uses shared helper",
+          "detail": "Calls shared helpers via window.dataTool.downloadBinary, escapeHtml, fetchJson, filterPreviewRows, formatNumber, getChartCompatibility, getPreviewColumns, populateSelect, recommendChartConfig, renderPreview, renderWorkspaceTablePanel, requireSession, saveSession, saveWorkspaceFlow, setStatusText, summarizePreviewColumns, switchWorkspaceTable."
+        }
+      ]
     },
     {
       "source": "frontend/visualize.html",
@@ -10896,7 +11154,39 @@
         "/api/preview",
         "/api/visualize"
       ],
-      "weight": 6
+      "weight": 6,
+      "reasons": [
+        {
+          "kind": "api-call",
+          "label": "/api/export/chart",
+          "detail": "Calls API route /api/export/chart, which is handled in app.py."
+        },
+        {
+          "kind": "api-call",
+          "label": "/api/export/dashboard",
+          "detail": "Calls API route /api/export/dashboard, which is handled in app.py."
+        },
+        {
+          "kind": "api-call",
+          "label": "/api/export/dataset",
+          "detail": "Calls API route /api/export/dataset, which is handled in app.py."
+        },
+        {
+          "kind": "api-call",
+          "label": "/api/export/report",
+          "detail": "Calls API route /api/export/report, which is handled in app.py."
+        },
+        {
+          "kind": "api-call",
+          "label": "/api/preview",
+          "detail": "Calls API route /api/preview, which is handled in app.py."
+        },
+        {
+          "kind": "api-call",
+          "label": "/api/visualize",
+          "detail": "Calls API route /api/visualize, which is handled in app.py."
+        }
+      ]
     },
     {
       "source": "frontend/visualize.html",
@@ -10904,7 +11194,14 @@
       "labels": [
         "/prepare"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "page-link",
+          "label": "/prepare",
+          "detail": "Links or navigates to page route /prepare, which resolves to frontend/prepare.html."
+        }
+      ]
     },
     {
       "source": "ingestion/loader.py",
@@ -10912,7 +11209,14 @@
       "labels": [
         "imports"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "import",
+          "label": "imports",
+          "detail": "Resolved import dependency on utils/helpers.py."
+        }
+      ]
     },
     {
       "source": "schema/detect.py",
@@ -10920,7 +11224,14 @@
       "labels": [
         "imports"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "import",
+          "label": "imports",
+          "detail": "Resolved import dependency on utils/helpers.py."
+        }
+      ]
     },
     {
       "source": "scripts/run_regression_checks.py",
@@ -10928,7 +11239,14 @@
       "labels": [
         "imports"
       ],
-      "weight": 1
+      "weight": 1,
+      "reasons": [
+        {
+          "kind": "import",
+          "label": "imports",
+          "detail": "Resolved import dependency on app.py."
+        }
+      ]
     }
   ],
   "duplicates": [

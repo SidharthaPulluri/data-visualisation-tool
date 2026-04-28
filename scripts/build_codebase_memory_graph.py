@@ -296,7 +296,6 @@ def parse_python(path: Path, text: str) -> dict[str, Any]:
                 meta["methods"] = route_meta["methods"]
                 if route_meta["served_file"]:
                     meta["serves"] = route_meta["served_file"]
-                    info["imports"].add(route_meta["served_file"])
                 info["routes"].append(meta)
             info["functions"].append(meta)
         elif isinstance(node, ast.ClassDef):
@@ -436,14 +435,39 @@ def build_route_lookup(files: dict[str, dict[str, Any]]) -> tuple[dict[str, str]
     return api_lookup, page_lookup
 
 
-def add_edge(edges: dict[tuple[str, str], dict[str, Any]], source: str, target: str, label: str) -> None:
+def add_edge(
+    edges: dict[tuple[str, str], dict[str, Any]],
+    source: str,
+    target: str,
+    label: str,
+    *,
+    detail: str | None = None,
+    kind: str | None = None,
+) -> None:
     if source == target:
         return
     key = (source, target)
     if key not in edges:
-        edges[key] = {"source": source, "target": target, "labels": set(), "weight": 0}
+        edges[key] = {
+            "source": source,
+            "target": target,
+            "labels": set(),
+            "weight": 0,
+            "reasons": [],
+            "_reason_keys": set(),
+        }
     edges[key]["labels"].add(label)
     edges[key]["weight"] += 1
+    reason_key = (kind or label, detail or label)
+    if reason_key not in edges[key]["_reason_keys"]:
+        edges[key]["_reason_keys"].add(reason_key)
+        edges[key]["reasons"].append(
+            {
+                "kind": kind or label,
+                "label": label,
+                "detail": detail or label,
+            }
+        )
 
 
 def build_similarity_clusters(files: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -553,24 +577,76 @@ def build_graph(files: list[dict[str, Any]]) -> dict[str, Any]:
     for file_info in files:
         for imported in file_info["imports"]:
             if imported in by_path:
-                add_edge(edges, file_info["path"], imported, "imports")
+                add_edge(
+                    edges,
+                    file_info["path"],
+                    imported,
+                    "imports",
+                    kind="import",
+                    detail=f"Resolved import dependency on {imported}.",
+                )
 
         if file_info["helper_refs"] and "frontend/shared.js" in by_path and file_info["path"] != "frontend/shared.js":
-            add_edge(edges, file_info["path"], "frontend/shared.js", "uses shared helper")
+            helper_list = ", ".join(sorted(file_info["helper_refs"]))
+            add_edge(
+                edges,
+                file_info["path"],
+                "frontend/shared.js",
+                "uses shared helper",
+                kind="shared-helper",
+                detail=f"Calls shared helpers via window.dataTool.{helper_list}.",
+            )
 
         for api in file_info["api_refs"]:
             target = api_lookup.get(api)
             if target and target in by_path:
-                add_edge(edges, file_info["path"], target, api)
+                add_edge(
+                    edges,
+                    file_info["path"],
+                    target,
+                    api,
+                    kind="api-call",
+                    detail=f"Calls API route {api}, which is handled in {target}.",
+                )
 
         for page in file_info["page_refs"]:
             target = page_lookup.get(page)
             if target and target in by_path:
-                add_edge(edges, file_info["path"], target, page)
+                add_edge(
+                    edges,
+                    file_info["path"],
+                    target,
+                    page,
+                    kind="page-link",
+                    detail=f"Links or navigates to page route {page}, which resolves to {target}.",
+                )
 
         for script_ref in file_info["script_refs"]:
             if script_ref in by_path:
-                add_edge(edges, file_info["path"], script_ref, "loads script")
+                add_edge(
+                    edges,
+                    file_info["path"],
+                    script_ref,
+                    "loads script",
+                    kind="script-load",
+                    detail=f"Loads script asset {script_ref} into the page runtime.",
+                )
+
+        for route in file_info.get("routes", []):
+            served = route.get("serves")
+            if served and served in by_path:
+                route_paths = route.get("routes", []) or route.get("paths", [])
+                route_methods = route.get("methods", [])
+                route_paths_text = ", ".join(route_paths) if route_paths else "page route"
+                route_methods_text = "/".join(route_methods) if route_methods else "GET"
+                add_edge(
+                    edges,
+                    file_info["path"],
+                    served,
+                    "serves page",
+                    kind="page-serve",
+                    detail=f"Route {route_paths_text} ({route_methods_text}) serves frontend file {served}.",
+                )
 
     degrees = defaultdict(int)
     for edge in edges.values():
@@ -611,6 +687,10 @@ def build_graph(files: list[dict[str, Any]]) -> dict[str, Any]:
                 "target": edge["target"],
                 "labels": sorted(edge["labels"]),
                 "weight": edge["weight"],
+                "reasons": sorted(
+                    edge["reasons"],
+                    key=lambda item: (item["kind"], item["detail"]),
+                ),
             }
             for edge in edges.values()
         ],
@@ -1385,27 +1465,37 @@ def render_html(graph: dict[str, Any]) -> str:
       return `${{edge.source}}->${{edge.target}}`;
     }}
 
-    function describeEdgeLabel(label) {{
-      if (label === "imports") {{
-        return "This file directly imports the target file, so the target provides code used by the source.";
+    function describeEdgeReason(reason) {{
+      const kind = reason.kind || reason.label || "connection";
+      if (kind === "import") {{
+        return "The source file depends on code from the target file through a direct import resolution.";
       }}
-      if (label === "uses shared helper") {{
-        return "This file calls shared helpers from the target, so the target supplies reusable frontend logic.";
+      if (kind === "shared-helper") {{
+        return "The source file reaches into the shared frontend helper layer, so the target supplies reusable runtime behavior.";
       }}
-      if (label === "loads script") {{
-        return "This page explicitly loads the target script as a runtime dependency.";
+      if (kind === "api-call") {{
+        return "The source file triggers an application API endpoint, and that endpoint is implemented in the target file.";
       }}
-      if (label.startsWith("/api/")) {{
-        return `This file calls the API route ${{label}}, which is handled in the target file.`;
+      if (kind === "page-link") {{
+        return "The source file links or redirects into a routed page that resolves to the target file.";
       }}
-      if (label.startsWith("/")) {{
-        return `This file links or navigates to ${{label}}, which resolves to the target page file.`;
+      if (kind === "script-load") {{
+        return "The source file explicitly loads the target script asset into the browser runtime.";
       }}
-      return `This connection exists because of: ${{label}}.`;
+      if (kind === "page-serve") {{
+        return "The target page is served by a route implemented in the source file.";
+      }}
+      return `This strand exists because of ${{kind}}.`;
     }}
 
     function edgeExplanation(edge) {{
-      return edge.labels.map((label) => `<li><span class="detail-key">${{escapeHtml(label)}}</span>${{escapeHtml(describeEdgeLabel(label))}}</li>`).join("");
+      return (edge.reasons || []).map((reason) => `
+        <li>
+          <span class="detail-key">${{escapeHtml(reason.kind || reason.label || "connection")}}</span>
+          <strong>${{escapeHtml(reason.detail || reason.label || "Linked by repository analysis.")}}</strong><br>
+          <span class="muted">${{escapeHtml(describeEdgeReason(reason))}}</span>
+        </li>
+      `).join("");
     }}
 
     function buildDisplayNodeMap() {{
@@ -1796,10 +1886,11 @@ def render_html(graph: dict[str, Any]) -> str:
         return;
       }}
       if (edge) {{
+        const reasonPreview = (edge.reasons || []).slice(0, 2).map((reason) => reason.detail).join(" ");
         selectionPill.innerHTML = `
           <span class="eyebrow">Connection strand</span>
           <h3>${{escapeHtml(edge.source)}} → ${{escapeHtml(edge.target)}}</h3>
-          <p>${{edge.labels.length}} reason${{edge.labels.length === 1 ? "" : "s"}} recorded for this connection.</p>
+          <p>${{(edge.reasons || []).length}} reason${{(edge.reasons || []).length === 1 ? "" : "s"}} recorded for this connection.${{reasonPreview ? `<br><span class="muted">${{escapeHtml(reasonPreview)}}</span>` : ""}}</p>
         `;
         return;
       }}
@@ -1845,7 +1936,7 @@ def render_html(graph: dict[str, Any]) -> str:
         detailCard.innerHTML = `
           <span class="eyebrow">Connection strand</span>
           <h2>${{escapeHtml(edge.source)}} → ${{escapeHtml(edge.target)}}</h2>
-          <p class="detail-meta">This strand exists because the source file depends on or routes to the target file in one or more explicit ways.</p>
+          <p class="detail-meta">This strand exists because the source file depends on, loads, routes to, or serves the target file in explicit repository-observed ways. The reasons below are concrete evidence, not guesses.</p>
           <ul class="detail-list">
             <li><span class="detail-key">Source</span>${{escapeHtml(edge.source)}}</li>
             <li><span class="detail-key">Target</span>${{escapeHtml(edge.target)}}</li>
@@ -1872,7 +1963,7 @@ def render_html(graph: dict[str, Any]) -> str:
             <li><span class="detail-key">Shared helper refs</span>${{file.helper_refs.length ? file.helper_refs.map((item) => `<code>${{escapeHtml(item)}}</code>`).join(", ") : "None"}}</li>
             <li><span class="detail-key">Endpoints and pages</span>${{[...file.api_refs, ...file.page_refs].length ? [...file.api_refs, ...file.page_refs].map((item) => escapeHtml(item)).join(", ") : "None"}}</li>
             <li><span class="detail-key">Logic clusters</span>${{relatedClusters.length ? relatedClusters.map((cluster) => `${{escapeHtml(cluster.label)}} [${{cluster.average_score.toFixed(2)}}]`).join("<br>") : "No strong cross-file similarity clusters"}}</li>
-            <li><span class="detail-key">Connected strands</span>${{related.length ? related.map((edge) => `${{escapeHtml(edge.source === file.path ? edge.target : edge.source)}} (${{escapeHtml(edge.labels.join(", "))}})`).join("<br>") : "No cross-file strands"}}</li>
+            <li><span class="detail-key">Connected strands</span>${{related.length ? related.map((edge) => `${{escapeHtml(edge.source === file.path ? edge.target : edge.source)}}<br><span class="muted">${{escapeHtml(((edge.reasons || [])[0] || {{ detail: edge.labels.join(", ") }}).detail)}}</span>`).join("<br><br>") : "No cross-file strands"}}</li>
           </ul>
         `;
         return;
