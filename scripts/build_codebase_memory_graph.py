@@ -956,7 +956,7 @@ def render_html(graph: dict[str, Any]) -> str:
         </div>
         <canvas id="graphCanvas" width="1500" height="760"></canvas>
         <div class="legend" id="legend"></div>
-        <div class="graph-help">Click a star to focus its orbit · click a planet to inspect a function · click a strand to inspect the connection</div>
+        <div class="graph-help">Drag stars in overview to save your own layout · click a star to focus its orbit · click a strand to inspect the connection</div>
       </div>
     </section>
 
@@ -1021,12 +1021,16 @@ def render_html(graph: dict[str, Any]) -> str:
     const detailCard = document.getElementById("detailCard");
     const selectionPill = document.getElementById("selectionPill");
     const legend = document.getElementById("legend");
+    const LAYOUT_STORAGE_KEY = "data_visualisation_tool_codebase_memory_graph_layout_v1";
 
     const state = {{
       selectedId: null,
       selectedEdgeKey: null,
       focusedId: null,
-      search: ""
+      search: "",
+      drag: null,
+      layoutOverrides: loadLayoutOverrides(),
+      suppressClick: false
     }};
 
     function escapeHtml(value) {{
@@ -1036,6 +1040,25 @@ def render_html(graph: dict[str, Any]) -> str:
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#39;");
+    }}
+
+    function loadLayoutOverrides() {{
+      try {{
+        const raw = window.localStorage.getItem(LAYOUT_STORAGE_KEY);
+        if (!raw) return {{}};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === "object" ? parsed : {{}};
+      }} catch (_error) {{
+        return {{}};
+      }}
+    }}
+
+    function persistLayoutOverrides() {{
+      try {{
+        window.localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(state.layoutOverrides));
+      }} catch (_error) {{
+        // Ignore localStorage write failures silently; the graph still works without persistence.
+      }}
     }}
 
     function attachDegrees(files, edges) {{
@@ -1108,6 +1131,32 @@ def render_html(graph: dict[str, Any]) -> str:
       return String(value || "").toLowerCase();
     }}
 
+    function buildGroupZonesFromNodes(fileNodes) {{
+      const grouped = new Map();
+      fileNodes.forEach((node) => {{
+        if (!grouped.has(node.folder)) {{
+          grouped.set(node.folder, []);
+        }}
+        grouped.get(node.folder).push(node);
+      }});
+      return [...grouped.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([folder, nodes]) => {{
+        const centerX = nodes.reduce((sum, node) => sum + node.x, 0) / Math.max(nodes.length, 1);
+        const centerY = nodes.reduce((sum, node) => sum + node.y, 0) / Math.max(nodes.length, 1);
+        const haloRadius = nodes.reduce((maxRadius, node) => {{
+          const distance = Math.hypot(node.x - centerX, node.y - centerY) + node.r + node.orbit + 14;
+          return Math.max(maxRadius, distance);
+        }}, 78);
+        return {{
+          folder,
+          centerX,
+          centerY,
+          haloRadius,
+          labelX: centerX - haloRadius * 0.45,
+          labelY: centerY - haloRadius * 0.82
+        }};
+      }});
+    }}
+
     function buildPositions(files) {{
       const fileNodes = [];
       const planetNodes = [];
@@ -1115,23 +1164,12 @@ def render_html(graph: dict[str, Any]) -> str:
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       const outerRadius = Math.min(canvas.width, canvas.height) * 0.34;
-      const groupZones = [];
 
       groups.forEach(([folder, groupFiles], groupIndex) => {{
         const angle = (Math.PI * 2 * groupIndex) / Math.max(groups.length, 1) - Math.PI / 2;
         const groupCenterX = groups.length === 1 ? centerX : centerX + Math.cos(angle) * outerRadius;
         const groupCenterY = groups.length === 1 ? centerY : centerY + Math.sin(angle) * outerRadius;
         const starRingRadius = Math.max(54, 26 + Math.min(116, groupFiles.length * 12));
-        const haloRadius = starRingRadius + 62;
-
-        groupZones.push({{
-          folder,
-          centerX: groupCenterX,
-          centerY: groupCenterY,
-          haloRadius,
-          labelX: groupCenterX - haloRadius * 0.45,
-          labelY: groupCenterY - haloRadius * 0.82
-        }});
 
         groupFiles.forEach((file, fileIndex) => {{
           let fx = groupCenterX;
@@ -1148,6 +1186,11 @@ def render_html(graph: dict[str, Any]) -> str:
           }}
           const radius = Math.max(10, Math.min(18, 10 + Math.sqrt(file.functions.length || 1) + (file.degree || 0) * 0.25));
           const orbit = Math.min(42, radius + 18 + Math.min(22, (file.functions.length || 0) * 1.15));
+          const override = state.layoutOverrides[file.path];
+          if (override && Number.isFinite(override.x) && Number.isFinite(override.y)) {{
+            fx = override.x;
+            fy = override.y;
+          }}
 
           fileNodes.push({{ ...file, kind: "file", x: fx, y: fy, r: radius, orbit }});
 
@@ -1179,6 +1222,7 @@ def render_html(graph: dict[str, Any]) -> str:
         }});
       }});
 
+      const groupZones = buildGroupZonesFromNodes(fileNodes);
       return {{ fileNodes, planetNodes, groupZones }};
     }}
 
@@ -1246,6 +1290,10 @@ def render_html(graph: dict[str, Any]) -> str:
       return state.focusedId || activeParentId();
     }}
 
+    function canRearrangeLayout() {{
+      return !selectedFocusPath() && !state.search && !state.selectedEdgeKey;
+    }}
+
     function shouldShowPlanets(node) {{
       if (!isVisibleFile(node)) return false;
       if (state.search) return true;
@@ -1267,6 +1315,8 @@ def render_html(graph: dict[str, Any]) -> str:
       state.selectedId = null;
       state.selectedEdgeKey = null;
       state.focusedId = null;
+      state.drag = null;
+      state.suppressClick = false;
       state.search = "";
       searchInput.value = "";
       renderSelectionPill(null);
@@ -1540,7 +1590,7 @@ def render_html(graph: dict[str, Any]) -> str:
         visibleStars: [...displayNodeMap.values()].filter(isVisibleFile),
         selectedNetwork: selectedNetworkPaths(),
         focusPath: selectedFocusPath(),
-        groupZones: positions.groupZones
+        groupZones: buildGroupZonesFromNodes([...displayNodeMap.values()])
       }};
     }}
 
@@ -1589,6 +1639,20 @@ def render_html(graph: dict[str, Any]) -> str:
         drawQueued = false;
         draw();
       }});
+    }}
+
+    function clamp(value, min, max) {{
+      return Math.min(max, Math.max(min, value));
+    }}
+
+    function updateManualStarPosition(path, x, y) {{
+      const baseNode = fileNodeLookup.get(path);
+      if (!baseNode) return;
+      const nextX = clamp(x, 42, canvas.width - 42);
+      const nextY = clamp(y, 42, canvas.height - 42);
+      baseNode.x = nextX;
+      baseNode.y = nextY;
+      state.layoutOverrides[path] = {{ x: nextX, y: nextY }};
     }}
 
     function renderHeroStats() {{
@@ -1780,6 +1844,10 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     canvas.addEventListener("click", (event) => {{
+      if (state.suppressClick) {{
+        state.suppressClick = false;
+        return;
+      }}
       const node = hitTest(event);
       if (!node) {{
         updateSelection(null);
@@ -1790,6 +1858,41 @@ def render_html(graph: dict[str, Any]) -> str:
         return;
       }}
       updateSelection(node.path || node.id);
+    }});
+
+    canvas.addEventListener("mousedown", (event) => {{
+      if (!canRearrangeLayout()) return;
+      const node = hitTest(event);
+      if (!node || node.kind !== "file") return;
+      const point = toWorld(event.clientX, event.clientY);
+      state.drag = {{
+        path: node.path,
+        offsetX: point.x - node.x,
+        offsetY: point.y - node.y,
+        moved: false
+      }};
+      canvas.style.cursor = "grabbing";
+    }});
+
+    canvas.addEventListener("mousemove", (event) => {{
+      if (!state.drag) return;
+      const point = toWorld(event.clientX, event.clientY);
+      const nextX = point.x - state.drag.offsetX;
+      const nextY = point.y - state.drag.offsetY;
+      updateManualStarPosition(state.drag.path, nextX, nextY);
+      state.drag.moved = true;
+      state.suppressClick = true;
+      requestDraw();
+    }});
+
+    window.addEventListener("mouseup", () => {{
+      if (!state.drag) return;
+      if (state.drag.moved) {{
+        persistLayoutOverrides();
+      }}
+      state.drag = null;
+      canvas.style.cursor = "default";
+      requestDraw();
     }});
 
     searchInput.addEventListener("input", () => {{
