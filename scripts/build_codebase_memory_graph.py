@@ -1054,49 +1054,42 @@ def render_html(graph: dict[str, Any]) -> str:
       const fileNodes = [];
       const planetNodes = [];
       const groups = groupFilesByFolder(files);
-      const marginX = 70;
-      const marginY = 70;
-      const cols = Math.max(2, Math.ceil(Math.sqrt(groups.length)));
-      const rows = Math.max(1, Math.ceil(groups.length / cols));
-      const cellWidth = (canvas.width - marginX * 2) / cols;
-      const cellHeight = (canvas.height - marginY * 2) / rows;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const outerRadius = Math.min(canvas.width, canvas.height) * 0.34;
       const groupZones = [];
 
       groups.forEach(([folder, groupFiles], groupIndex) => {{
-        const col = groupIndex % cols;
-        const row = Math.floor(groupIndex / cols);
-        const x = marginX + col * cellWidth;
-        const y = marginY + row * cellHeight;
-        const width = cellWidth - 18;
-        const height = cellHeight - 18;
-        const innerPad = 54;
-        const contentWidth = Math.max(140, width - innerPad * 2);
-        const contentHeight = Math.max(120, height - innerPad * 2);
-        const starCols = Math.max(1, Math.ceil(Math.sqrt(groupFiles.length)));
-        const starRows = Math.max(1, Math.ceil(groupFiles.length / starCols));
-        const stepX = contentWidth / Math.max(starCols, 1);
-        const stepY = contentHeight / Math.max(starRows, 1);
+        const angle = (Math.PI * 2 * groupIndex) / Math.max(groups.length, 1) - Math.PI / 2;
+        const groupCenterX = groups.length === 1 ? centerX : centerX + Math.cos(angle) * outerRadius;
+        const groupCenterY = groups.length === 1 ? centerY : centerY + Math.sin(angle) * outerRadius;
+        const starRingRadius = Math.max(54, 26 + Math.min(116, groupFiles.length * 12));
+        const haloRadius = starRingRadius + 62;
 
         groupZones.push({{
           folder,
-          x,
-          y,
-          width,
-          height,
-          centerX: x + width / 2,
-          centerY: y + height / 2,
-          haloRadius: Math.max(width, height) * 0.38,
-          labelX: x + 18,
-          labelY: y + 24
+          centerX: groupCenterX,
+          centerY: groupCenterY,
+          haloRadius,
+          labelX: groupCenterX - haloRadius * 0.45,
+          labelY: groupCenterY - haloRadius * 0.82
         }});
 
         groupFiles.forEach((file, fileIndex) => {{
-          const gridCol = fileIndex % starCols;
-          const gridRow = Math.floor(fileIndex / starCols);
-          const fx = x + innerPad + stepX * (gridCol + 0.5);
-          const fy = y + innerPad + stepY * (gridRow + 0.5);
+          let fx = groupCenterX;
+          let fy = groupCenterY;
+          if (groupFiles.length > 1) {{
+            const ringIndex = Math.floor(Math.sqrt(fileIndex));
+            const ringStart = ringIndex * ringIndex;
+            const ringOffset = fileIndex - ringStart;
+            const itemsInRing = Math.max(1, Math.min(groupFiles.length - ringStart, ringIndex * 2 + 1));
+            const localAngle = (Math.PI * 2 * ringOffset) / itemsInRing - Math.PI / 2 + angle * 0.12;
+            const localRadius = Math.min(starRingRadius, 30 + ringIndex * 34);
+            fx = groupCenterX + Math.cos(localAngle) * localRadius;
+            fy = groupCenterY + Math.sin(localAngle) * localRadius;
+          }}
           const radius = Math.max(10, Math.min(18, 10 + Math.sqrt(file.functions.length || 1) + (file.degree || 0) * 0.25));
-          const orbit = Math.min(Math.min(stepX, stepY) * 0.42, radius + 18 + Math.min(22, (file.functions.length || 0) * 1.15));
+          const orbit = Math.min(42, radius + 18 + Math.min(22, (file.functions.length || 0) * 1.15));
 
           fileNodes.push({{ ...file, kind: "file", x: fx, y: fy, r: radius, orbit }});
 
