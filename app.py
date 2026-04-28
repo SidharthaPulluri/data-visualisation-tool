@@ -217,11 +217,6 @@ def guide_page() -> Any:
     return send_from_directory(FRONTEND_DIR, "guide.html")
 
 
-@app.get("/memory-graph")
-def memory_graph_page() -> Any:
-    return send_from_directory(FRONTEND_DIR, "memory-graph.html")
-
-
 @app.get("/visualize")
 def visualize_page() -> Any:
     return send_from_directory(FRONTEND_DIR, "visualize.html")

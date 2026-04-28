@@ -1,0 +1,2615 @@
+{
+  "files": [
+    {
+      "id": "analysis/stats.py",
+      "path": "analysis/stats.py",
+      "name": "stats.py",
+      "folder": "analysis",
+      "extension": ".py",
+      "lines": 1234,
+      "functions": [
+        {
+          "name": "_tokenize",
+          "line": 9,
+          "kind": "function"
+        },
+        {
+          "name": "_round_nested",
+          "line": 13,
+          "kind": "function"
+        },
+        {
+          "name": "_is_identifier_column",
+          "line": 23,
+          "kind": "function"
+        },
+        {
+          "name": "_column_matches",
+          "line": 30,
+          "kind": "function"
+        },
+        {
+          "name": "_format_label",
+          "line": 35,
+          "kind": "function"
+        },
+        {
+          "name": "_format_dimension_value",
+          "line": 49,
+          "kind": "function"
+        },
+        {
+          "name": "_is_generic_generated_name",
+          "line": 58,
+          "kind": "function"
+        },
+        {
+          "name": "_metric_slot_label",
+          "line": 62,
+          "kind": "function"
+        },
+        {
+          "name": "_headline_metric_label",
+          "line": 73,
+          "kind": "function"
+        },
+        {
+          "name": "_metric_choice_map",
+          "line": 115,
+          "kind": "function"
+        },
+        {
+          "name": "_format_value",
+          "line": 123,
+          "kind": "function"
+        },
+        {
+          "name": "_to_serializable_number",
+          "line": 132,
+          "kind": "function"
+        },
+        {
+          "name": "_numeric_like_ratio",
+          "line": 141,
+          "kind": "function"
+        },
+        {
+          "name": "_pick_dimension_column",
+          "line": 149,
+          "kind": "function"
+        },
+        {
+          "name": "_split_detail_and_total_rows",
+          "line": 207,
+          "kind": "function"
+        },
+        {
+          "name": "_pick_overall_total_row",
+          "line": 213,
+          "kind": "function"
+        },
+        {
+          "name": "_score_metric_candidates",
+          "line": 234,
+          "kind": "function"
+        },
+        {
+          "name": "_pick_metric_column",
+          "line": 300,
+          "kind": "function"
+        },
+        {
+          "name": "_detect_dataset_intent",
+          "line": 320,
+          "kind": "function"
+        },
+        {
+          "name": "_top_rankings",
+          "line": 397,
+          "kind": "function"
+        },
+        {
+          "name": "_find_supporting_metric",
+          "line": 428,
+          "kind": "function"
+        },
+        {
+          "name": "_build_consistency_checks",
+          "line": 446,
+          "kind": "function"
+        },
+        {
+          "name": "_build_anomaly_flags",
+          "line": 541,
+          "kind": "function"
+        },
+        {
+          "name": "_build_dataset_story",
+          "line": 620,
+          "kind": "function"
+        },
+        {
+          "name": "_top_correlation_pairs",
+          "line": 959,
+          "kind": "function"
+        },
+        {
+          "name": "_build_group_comparison",
+          "line": 981,
+          "kind": "function"
+        },
+        {
+          "name": "_build_validation_recovery",
+          "line": 1018,
+          "kind": "function"
+        },
+        {
+          "name": "build_analysis_report",
+          "line": 1117,
+          "kind": "function"
+        },
+        {
+          "name": "add_dominance_flag",
+          "line": 555,
+          "kind": "function"
+        },
+        {
+          "name": "choose_metric",
+          "line": 670,
+          "kind": "function"
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "helper_refs": [],
+      "api_refs": [],
+      "page_refs": [],
+      "script_refs": [],
+      "routes": []
+    },
+    {
+      "id": "app.py",
+      "path": "app.py",
+      "name": "app.py",
+      "folder": "root",
+      "extension": ".py",
+      "lines": 755,
+      "functions": [
+        {
+          "name": "_json_response",
+          "line": 31,
+          "kind": "function"
+        },
+        {
+          "name": "_serialize_dataset_state",
+          "line": 35,
+          "kind": "function"
+        },
+        {
+          "name": "_resolve_dataset",
+          "line": 50,
+          "kind": "function"
+        },
+        {
+          "name": "_build_transform_payload",
+          "line": 69,
+          "kind": "function"
+        },
+        {
+          "name": "_format_report_value",
+          "line": 103,
+          "kind": "function"
+        },
+        {
+          "name": "_schema_examples",
+          "line": 113,
+          "kind": "function"
+        },
+        {
+          "name": "_normalise_chart_items",
+          "line": 117,
+          "kind": "function"
+        },
+        {
+          "name": "_safe_dashboard_columns",
+          "line": 124,
+          "kind": "function"
+        },
+        {
+          "name": "_chunked",
+          "line": 132,
+          "kind": "function"
+        },
+        {
+          "name": "_coerce_preview_filter_value",
+          "line": 136,
+          "kind": "function"
+        },
+        {
+          "name": "_apply_preview_filter",
+          "line": 144,
+          "kind": "function"
+        },
+        {
+          "name": "_build_chart_bytes",
+          "line": 177,
+          "kind": "function"
+        },
+        {
+          "name": "index",
+          "line": 201,
+          "kind": "function",
+          "routes": [
+            "/"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "serves": "frontend/upload.html"
+        },
+        {
+          "name": "prepare_page",
+          "line": 206,
+          "kind": "function",
+          "routes": [
+            "/prepare"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "serves": "frontend/prepare.html"
+        },
+        {
+          "name": "database_page",
+          "line": 211,
+          "kind": "function",
+          "routes": [
+            "/database"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "serves": "frontend/database.html"
+        },
+        {
+          "name": "guide_page",
+          "line": 216,
+          "kind": "function",
+          "routes": [
+            "/guide"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "serves": "frontend/guide.html"
+        },
+        {
+          "name": "visualize_page",
+          "line": 221,
+          "kind": "function",
+          "routes": [
+            "/visualize"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "serves": "frontend/visualize.html"
+        },
+        {
+          "name": "health",
+          "line": 226,
+          "kind": "function",
+          "routes": [
+            "/health"
+          ],
+          "methods": [
+            "GET"
+          ]
+        },
+        {
+          "name": "upload_dataset",
+          "line": 231,
+          "kind": "function",
+          "routes": [
+            "/api/upload"
+          ],
+          "methods": [
+            "POST"
+          ]
+        },
+        {
+          "name": "transform_dataset",
+          "line": 281,
+          "kind": "function",
+          "routes": [
+            "/api/transform"
+          ],
+          "methods": [
+            "POST"
+          ]
+        },
+        {
+          "name": "visualize_dataset",
+          "line": 300,
+          "kind": "function",
+          "routes": [
+            "/api/visualize"
+          ],
+          "methods": [
+            "POST"
+          ]
+        },
+        {
+          "name": "filtered_preview",
+          "line": 354,
+          "kind": "function",
+          "routes": [
+            "/api/preview"
+          ],
+          "methods": [
+            "POST"
+          ]
+        },
+        {
+          "name": "export_dataset",
+          "line": 375,
+          "kind": "function",
+          "routes": [
+            "/api/export/dataset"
+          ],
+          "methods": [
+            "POST"
+          ]
+        },
+        {
+          "name": "export_chart",
+          "line": 403,
+          "kind": "function",
+          "routes": [
+            "/api/export/chart"
+          ],
+          "methods": [
+            "POST"
+          ]
+        },
+        {
+          "name": "export_dashboard",
+          "line": 444,
+          "kind": "function",
+          "routes": [
+            "/api/export/dashboard"
+          ],
+          "methods": [
+            "POST"
+          ]
+        },
+        {
+          "name": "export_report",
+          "line": 551,
+          "kind": "function",
+          "routes": [
+            "/api/export/report"
+          ],
+          "methods": [
+            "POST"
+          ]
+        }
+      ],
+      "classes": [],
+      "imports": [
+        "analysis/stats.py",
+        "cleaning/cleaner.py",
+        "frontend/database.html",
+        "frontend/guide.html",
+        "frontend/prepare.html",
+        "frontend/upload.html",
+        "frontend/visualize.html",
+        "ingestion/loader.py",
+        "schema/detect.py",
+        "transformation/transform.py",
+        "utils/helpers.py",
+        "visualization/plots.py"
+      ],
+      "helper_refs": [],
+      "api_refs": [],
+      "page_refs": [],
+      "script_refs": [],
+      "routes": [
+        {
+          "name": "index",
+          "line": 201,
+          "kind": "function",
+          "routes": [
+            "/"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "serves": "frontend/upload.html"
+        },
+        {
+          "name": "prepare_page",
+          "line": 206,
+          "kind": "function",
+          "routes": [
+            "/prepare"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "serves": "frontend/prepare.html"
+        },
+        {
+          "name": "database_page",
+          "line": 211,
+          "kind": "function",
+          "routes": [
+            "/database"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "serves": "frontend/database.html"
+        },
+        {
+          "name": "guide_page",
+          "line": 216,
+          "kind": "function",
+          "routes": [
+            "/guide"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "serves": "frontend/guide.html"
+        },
+        {
+          "name": "visualize_page",
+          "line": 221,
+          "kind": "function",
+          "routes": [
+            "/visualize"
+          ],
+          "methods": [
+            "GET"
+          ],
+          "serves": "frontend/visualize.html"
+        },
+        {
+          "name": "health",
+          "line": 226,
+          "kind": "function",
+          "routes": [
+            "/health"
+          ],
+          "methods": [
+            "GET"
+          ]
+        },
+        {
+          "name": "upload_dataset",
+          "line": 231,
+          "kind": "function",
+          "routes": [
+            "/api/upload"
+          ],
+          "methods": [
+            "POST"
+          ]
+        },
+        {
+          "name": "transform_dataset",
+          "line": 281,
+          "kind": "function",
+          "routes": [
+            "/api/transform"
+          ],
+          "methods": [
+            "POST"
+          ]
+        },
+        {
+          "name": "visualize_dataset",
+          "line": 300,
+          "kind": "function",
+          "routes": [
+            "/api/visualize"
+          ],
+          "methods": [
+            "POST"
+          ]
+        },
+        {
+          "name": "filtered_preview",
+          "line": 354,
+          "kind": "function",
+          "routes": [
+            "/api/preview"
+          ],
+          "methods": [
+            "POST"
+          ]
+        },
+        {
+          "name": "export_dataset",
+          "line": 375,
+          "kind": "function",
+          "routes": [
+            "/api/export/dataset"
+          ],
+          "methods": [
+            "POST"
+          ]
+        },
+        {
+          "name": "export_chart",
+          "line": 403,
+          "kind": "function",
+          "routes": [
+            "/api/export/chart"
+          ],
+          "methods": [
+            "POST"
+          ]
+        },
+        {
+          "name": "export_dashboard",
+          "line": 444,
+          "kind": "function",
+          "routes": [
+            "/api/export/dashboard"
+          ],
+          "methods": [
+            "POST"
+          ]
+        },
+        {
+          "name": "export_report",
+          "line": 551,
+          "kind": "function",
+          "routes": [
+            "/api/export/report"
+          ],
+          "methods": [
+            "POST"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cleaning/cleaner.py",
+      "path": "cleaning/cleaner.py",
+      "name": "cleaner.py",
+      "folder": "cleaning",
+      "extension": ".py",
+      "lines": 73,
+      "functions": [
+        {
+          "name": "clean_dataframe",
+          "line": 10,
+          "kind": "function"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        "schema/detect.py"
+      ],
+      "helper_refs": [],
+      "api_refs": [],
+      "page_refs": [],
+      "script_refs": [],
+      "routes": []
+    },
+    {
+      "id": "frontend/database.html",
+      "path": "frontend/database.html",
+      "name": "database.html",
+      "folder": "frontend",
+      "extension": ".html",
+      "lines": 212,
+      "functions": [
+        {
+          "name": "setStatus",
+          "kind": "function"
+        },
+        {
+          "name": "renderSelectedFile",
+          "kind": "function"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        "frontend/shared.js"
+      ],
+      "helper_refs": [
+        "fetchJson",
+        "saveSession"
+      ],
+      "api_refs": [
+        "/api/upload"
+      ],
+      "page_refs": [
+        "/prepare",
+        "/static/styles.css"
+      ],
+      "script_refs": [
+        "frontend/shared.js"
+      ],
+      "routes": []
+    },
+    {
+      "id": "frontend/guide.html",
+      "path": "frontend/guide.html",
+      "name": "guide.html",
+      "folder": "frontend",
+      "extension": ".html",
+      "lines": 124,
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "helper_refs": [],
+      "api_refs": [],
+      "page_refs": [
+        "/database",
+        "/static/styles.css"
+      ],
+      "script_refs": [],
+      "routes": []
+    },
+    {
+      "id": "frontend/index.html",
+      "path": "frontend/index.html",
+      "name": "index.html",
+      "folder": "frontend",
+      "extension": ".html",
+      "lines": 1607,
+      "functions": [
+        {
+          "name": "setStatus",
+          "kind": "function"
+        },
+        {
+          "name": "setRecommendation",
+          "kind": "function"
+        },
+        {
+          "name": "escapeHtml",
+          "kind": "function"
+        },
+        {
+          "name": "formatNumber",
+          "kind": "function"
+        },
+        {
+          "name": "truncateValue",
+          "kind": "function"
+        },
+        {
+          "name": "setChartDownloadState",
+          "kind": "function"
+        },
+        {
+          "name": "buildSuggestedTitle",
+          "kind": "function"
+        },
+        {
+          "name": "syncSuggestedTitle",
+          "kind": "function"
+        },
+        {
+          "name": "populateSelect",
+          "kind": "function"
+        },
+        {
+          "name": "populateMultiSelect",
+          "kind": "function"
+        },
+        {
+          "name": "renderSchema",
+          "kind": "function"
+        },
+        {
+          "name": "getColumnsForTypes",
+          "kind": "function"
+        },
+        {
+          "name": "getColumnsForRoles",
+          "kind": "function"
+        },
+        {
+          "name": "uniqueColumns",
+          "kind": "function"
+        },
+        {
+          "name": "getChartCompatibility",
+          "kind": "function"
+        },
+        {
+          "name": "syncChartControls",
+          "kind": "function"
+        },
+        {
+          "name": "ensureChartSelectionValid",
+          "kind": "function"
+        },
+        {
+          "name": "recommendChartConfig",
+          "kind": "function"
+        },
+        {
+          "name": "applyRecommendedChart",
+          "kind": "function"
+        },
+        {
+          "name": "renderPreview",
+          "kind": "function"
+        },
+        {
+          "name": "renderAnalysis",
+          "kind": "function"
+        },
+        {
+          "name": "updateColumnControls",
+          "kind": "function"
+        },
+        {
+          "name": "collectTransformConfig",
+          "kind": "function"
+        },
+        {
+          "name": "buildChartRequestPayload",
+          "kind": "function"
+        },
+        {
+          "name": "fetchJson",
+          "kind": "function"
+        },
+        {
+          "name": "applyTransformPreview",
+          "kind": "function"
+        },
+        {
+          "name": "downloadBinary",
+          "kind": "function"
+        },
+        {
+          "name": "downloadExport",
+          "kind": "function"
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "helper_refs": [],
+      "api_refs": [
+        "/api/export/chart",
+        "/api/export/dataset",
+        "/api/export/report",
+        "/api/transform",
+        "/api/upload",
+        "/api/visualize"
+      ],
+      "page_refs": [],
+      "script_refs": [],
+      "routes": []
+    },
+    {
+      "id": "frontend/prepare.html",
+      "path": "frontend/prepare.html",
+      "name": "prepare.html",
+      "folder": "frontend",
+      "extension": ".html",
+      "lines": 697,
+      "functions": [
+        {
+          "name": "renderTableWorkspace",
+          "kind": "function"
+        },
+        {
+          "name": "switchWorkspaceTable",
+          "kind": "function"
+        },
+        {
+          "name": "updateColumnControls",
+          "kind": "function"
+        },
+        {
+          "name": "cloneConfig",
+          "kind": "function"
+        },
+        {
+          "name": "configsEqual",
+          "kind": "function"
+        },
+        {
+          "name": "configHasChanges",
+          "kind": "function"
+        },
+        {
+          "name": "buildHistoryLabel",
+          "kind": "function"
+        },
+        {
+          "name": "normaliseHistoryState",
+          "kind": "function"
+        },
+        {
+          "name": "populateControlsFromConfig",
+          "kind": "function"
+        },
+        {
+          "name": "renderHistory",
+          "kind": "function"
+        },
+        {
+          "name": "renderQualityCenter",
+          "kind": "function"
+        },
+        {
+          "name": "summarizeRoleExamples",
+          "kind": "function"
+        },
+        {
+          "name": "renderSession",
+          "kind": "function"
+        },
+        {
+          "name": "renderFilteredPreview",
+          "kind": "function"
+        },
+        {
+          "name": "collectTransformConfig",
+          "kind": "function"
+        },
+        {
+          "name": "applyTransformConfig",
+          "kind": "function"
+        },
+        {
+          "name": "restoreHistory",
+          "kind": "function"
+        },
+        {
+          "name": "saveWorkspace",
+          "kind": "function"
+        },
+        {
+          "name": "setStatus",
+          "kind": "arrow"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        "frontend/shared.js"
+      ],
+      "helper_refs": [
+        "escapeHtml",
+        "fetchJson",
+        "filterPreviewRows",
+        "formatNumber",
+        "getPreviewColumns",
+        "populateMultiSelect",
+        "populateSelect",
+        "renderAnalysis",
+        "renderDatasetExplanation",
+        "renderPreview",
+        "renderSchema",
+        "renderWorkspaceTablePanel",
+        "requireSession",
+        "saveSession",
+        "saveWorkspaceFlow",
+        "setStatusText",
+        "summarizePreviewColumns",
+        "switchWorkspaceTable"
+      ],
+      "api_refs": [
+        "/api/transform"
+      ],
+      "page_refs": [
+        "/static/styles.css",
+        "/visualize"
+      ],
+      "script_refs": [
+        "frontend/shared.js"
+      ],
+      "routes": []
+    },
+    {
+      "id": "frontend/shared.js",
+      "path": "frontend/shared.js",
+      "name": "shared.js",
+      "folder": "frontend",
+      "extension": ".js",
+      "lines": 1279,
+      "functions": [
+        {
+          "name": "cloneJson",
+          "kind": "function"
+        },
+        {
+          "name": "buildTableRecord",
+          "kind": "function"
+        },
+        {
+          "name": "mirrorActiveTableIntoSession",
+          "kind": "function"
+        },
+        {
+          "name": "syncActiveTableIntoSession",
+          "kind": "function"
+        },
+        {
+          "name": "createMultiTableSession",
+          "kind": "function"
+        },
+        {
+          "name": "getWorkspaceTables",
+          "kind": "function"
+        },
+        {
+          "name": "getActiveTableRecord",
+          "kind": "function"
+        },
+        {
+          "name": "setActiveTable",
+          "kind": "function"
+        },
+        {
+          "name": "replaceSessionState",
+          "kind": "function"
+        },
+        {
+          "name": "setStatusText",
+          "kind": "function"
+        },
+        {
+          "name": "renderWorkspaceTablePanel",
+          "kind": "function"
+        },
+        {
+          "name": "switchWorkspaceTable",
+          "kind": "function"
+        },
+        {
+          "name": "ensureDatasetState",
+          "kind": "function"
+        },
+        {
+          "name": "saveWorkspaceFlow",
+          "kind": "function"
+        },
+        {
+          "name": "stripChartBinary",
+          "kind": "function"
+        },
+        {
+          "name": "createStorageSafeSession",
+          "kind": "function"
+        },
+        {
+          "name": "createMinimalSession",
+          "kind": "function"
+        },
+        {
+          "name": "normalizeSessionShape",
+          "kind": "function"
+        },
+        {
+          "name": "saveSession",
+          "kind": "function"
+        },
+        {
+          "name": "loadSession",
+          "kind": "function"
+        },
+        {
+          "name": "clearSession",
+          "kind": "function"
+        },
+        {
+          "name": "loadWorkspaces",
+          "kind": "function"
+        },
+        {
+          "name": "saveWorkspaces",
+          "kind": "function"
+        },
+        {
+          "name": "createWorkspaceSnapshot",
+          "kind": "function"
+        },
+        {
+          "name": "storeWorkspace",
+          "kind": "function"
+        },
+        {
+          "name": "deleteWorkspace",
+          "kind": "function"
+        },
+        {
+          "name": "getWorkspace",
+          "kind": "function"
+        },
+        {
+          "name": "escapeHtml",
+          "kind": "function"
+        },
+        {
+          "name": "formatNumber",
+          "kind": "function"
+        },
+        {
+          "name": "truncateValue",
+          "kind": "function"
+        },
+        {
+          "name": "humanizeFieldName",
+          "kind": "function"
+        },
+        {
+          "name": "getPreviewColumns",
+          "kind": "function"
+        },
+        {
+          "name": "filterPreviewRows",
+          "kind": "function"
+        },
+        {
+          "name": "summarizePreviewColumns",
+          "kind": "function"
+        },
+        {
+          "name": "populateSelect",
+          "kind": "function"
+        },
+        {
+          "name": "populateMultiSelect",
+          "kind": "function"
+        },
+        {
+          "name": "renderSchema",
+          "kind": "function"
+        },
+        {
+          "name": "renderPreview",
+          "kind": "function"
+        },
+        {
+          "name": "renderDatasetExplanation",
+          "kind": "function"
+        },
+        {
+          "name": "renderAnalysis",
+          "kind": "function"
+        },
+        {
+          "name": "summarizeWarnings",
+          "kind": "function"
+        },
+        {
+          "name": "getColumnsForTypes",
+          "kind": "function"
+        },
+        {
+          "name": "getColumnsForRoles",
+          "kind": "function"
+        },
+        {
+          "name": "uniqueColumns",
+          "kind": "function"
+        },
+        {
+          "name": "getChartCompatibility",
+          "kind": "function"
+        },
+        {
+          "name": "recommendChartConfig",
+          "kind": "function"
+        },
+        {
+          "name": "fetchJson",
+          "kind": "function"
+        },
+        {
+          "name": "downloadBinary",
+          "kind": "function"
+        },
+        {
+          "name": "requireSession",
+          "kind": "function"
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "helper_refs": [],
+      "api_refs": [
+        "/api/transform"
+      ],
+      "page_refs": [],
+      "script_refs": [],
+      "routes": []
+    },
+    {
+      "id": "frontend/styles.css",
+      "path": "frontend/styles.css",
+      "name": "styles.css",
+      "folder": "frontend",
+      "extension": ".css",
+      "lines": 2180,
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "helper_refs": [],
+      "api_refs": [],
+      "page_refs": [],
+      "script_refs": [],
+      "routes": []
+    },
+    {
+      "id": "frontend/upload.html",
+      "path": "frontend/upload.html",
+      "name": "upload.html",
+      "folder": "frontend",
+      "extension": ".html",
+      "lines": 269,
+      "functions": [
+        {
+          "name": "setStatus",
+          "kind": "function"
+        },
+        {
+          "name": "renderSelectedFile",
+          "kind": "function"
+        },
+        {
+          "name": "renderSessionSummary",
+          "kind": "function"
+        },
+        {
+          "name": "renderWorkspaceList",
+          "kind": "function"
+        },
+        {
+          "name": "uploadSingleFile",
+          "kind": "function"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        "frontend/shared.js"
+      ],
+      "helper_refs": [
+        "clearSession",
+        "createMultiTableSession",
+        "deleteWorkspace",
+        "escapeHtml",
+        "fetchJson",
+        "formatNumber",
+        "getWorkspace",
+        "loadSession",
+        "loadWorkspaces",
+        "saveSession"
+      ],
+      "api_refs": [
+        "/api/upload"
+      ],
+      "page_refs": [
+        "/database",
+        "/guide",
+        "/prepare",
+        "/static/styles.css"
+      ],
+      "script_refs": [
+        "frontend/shared.js"
+      ],
+      "routes": []
+    },
+    {
+      "id": "frontend/visualize.html",
+      "path": "frontend/visualize.html",
+      "name": "visualize.html",
+      "folder": "frontend",
+      "extension": ".html",
+      "lines": 1603,
+      "functions": [
+        {
+          "name": "renderTableWorkspace",
+          "kind": "function"
+        },
+        {
+          "name": "switchWorkspaceTable",
+          "kind": "function"
+        },
+        {
+          "name": "setRecommendation",
+          "kind": "function"
+        },
+        {
+          "name": "toChartId",
+          "kind": "function"
+        },
+        {
+          "name": "defaultChartOptions",
+          "kind": "function"
+        },
+        {
+          "name": "getSavedCharts",
+          "kind": "function"
+        },
+        {
+          "name": "getActiveChart",
+          "kind": "function"
+        },
+        {
+          "name": "buildChartLabelFromPayload",
+          "kind": "function"
+        },
+        {
+          "name": "filtersEqual",
+          "kind": "function"
+        },
+        {
+          "name": "buildChartComparisonPayload",
+          "kind": "function"
+        },
+        {
+          "name": "persistState",
+          "kind": "function"
+        },
+        {
+          "name": "normaliseLegacyCharts",
+          "kind": "function"
+        },
+        {
+          "name": "renderChartMarkup",
+          "kind": "function"
+        },
+        {
+          "name": "updateViewModeButtons",
+          "kind": "function"
+        },
+        {
+          "name": "populateFormFromChart",
+          "kind": "function"
+        },
+        {
+          "name": "renderPreviewForActiveChart",
+          "kind": "function"
+        },
+        {
+          "name": "updateChartEditState",
+          "kind": "function"
+        },
+        {
+          "name": "renderChartFilterPanel",
+          "kind": "function"
+        },
+        {
+          "name": "updateChartOptionVisibility",
+          "kind": "function"
+        },
+        {
+          "name": "getColumnMeta",
+          "kind": "function"
+        },
+        {
+          "name": "describeColumn",
+          "kind": "function"
+        },
+        {
+          "name": "buildChartExplanation",
+          "kind": "function"
+        },
+        {
+          "name": "addNote",
+          "kind": "function"
+        },
+        {
+          "name": "addMissingNote",
+          "kind": "function"
+        },
+        {
+          "name": "renderActiveChartSummary",
+          "kind": "function"
+        },
+        {
+          "name": "setActiveChart",
+          "kind": "function"
+        },
+        {
+          "name": "removeChart",
+          "kind": "function"
+        },
+        {
+          "name": "renameActiveChart",
+          "kind": "function"
+        },
+        {
+          "name": "saveActiveChartNote",
+          "kind": "function"
+        },
+        {
+          "name": "duplicateActiveChart",
+          "kind": "function"
+        },
+        {
+          "name": "moveActiveChart",
+          "kind": "function"
+        },
+        {
+          "name": "buildSuggestedTitle",
+          "kind": "function"
+        },
+        {
+          "name": "syncSuggestedTitle",
+          "kind": "function"
+        },
+        {
+          "name": "syncChartControls",
+          "kind": "function"
+        },
+        {
+          "name": "applyRecommendation",
+          "kind": "function"
+        },
+        {
+          "name": "renderSavedCharts",
+          "kind": "function"
+        },
+        {
+          "name": "renderPage",
+          "kind": "function"
+        },
+        {
+          "name": "buildChartRequestPayload",
+          "kind": "function"
+        },
+        {
+          "name": "applyRequestPayloadToForm",
+          "kind": "function"
+        },
+        {
+          "name": "getSafeChartRequestPayload",
+          "kind": "function"
+        },
+        {
+          "name": "createSavedChart",
+          "kind": "function"
+        },
+        {
+          "name": "updateSavedChart",
+          "kind": "function"
+        },
+        {
+          "name": "buildStoredChartPayload",
+          "kind": "function"
+        },
+        {
+          "name": "ensureChartRendered",
+          "kind": "function"
+        },
+        {
+          "name": "applyChartPreviewFilter",
+          "kind": "function"
+        },
+        {
+          "name": "clearActivePreviewFilter",
+          "kind": "function"
+        },
+        {
+          "name": "hydrateSavedCharts",
+          "kind": "function"
+        },
+        {
+          "name": "renderChart",
+          "kind": "function"
+        },
+        {
+          "name": "resetChartFormToActive",
+          "kind": "function"
+        },
+        {
+          "name": "saveWorkspace",
+          "kind": "function"
+        },
+        {
+          "name": "downloadChart",
+          "kind": "function"
+        },
+        {
+          "name": "downloadExport",
+          "kind": "function"
+        },
+        {
+          "name": "downloadDashboard",
+          "kind": "function"
+        },
+        {
+          "name": "setStatus",
+          "kind": "arrow"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        "frontend/shared.js"
+      ],
+      "helper_refs": [
+        "downloadBinary",
+        "escapeHtml",
+        "fetchJson",
+        "filterPreviewRows",
+        "formatNumber",
+        "getChartCompatibility",
+        "getPreviewColumns",
+        "populateSelect",
+        "recommendChartConfig",
+        "renderPreview",
+        "renderWorkspaceTablePanel",
+        "requireSession",
+        "saveSession",
+        "saveWorkspaceFlow",
+        "setStatusText",
+        "summarizePreviewColumns",
+        "switchWorkspaceTable"
+      ],
+      "api_refs": [
+        "/api/export/chart",
+        "/api/export/dashboard",
+        "/api/export/dataset",
+        "/api/export/report",
+        "/api/preview",
+        "/api/visualize"
+      ],
+      "page_refs": [
+        "/prepare",
+        "/static/styles.css"
+      ],
+      "script_refs": [
+        "frontend/shared.js"
+      ],
+      "routes": []
+    },
+    {
+      "id": "ingestion/loader.py",
+      "path": "ingestion/loader.py",
+      "name": "loader.py",
+      "folder": "ingestion",
+      "extension": ".py",
+      "lines": 555,
+      "functions": [
+        {
+          "name": "_decode_text",
+          "line": 19,
+          "kind": "function"
+        },
+        {
+          "name": "_looks_like_unparsed_delimited_frame",
+          "line": 29,
+          "kind": "function"
+        },
+        {
+          "name": "_generated_header_names",
+          "line": 41,
+          "kind": "function"
+        },
+        {
+          "name": "_headers_look_like_values",
+          "line": 82,
+          "kind": "function"
+        },
+        {
+          "name": "_parse_delimited_text",
+          "line": 128,
+          "kind": "function"
+        },
+        {
+          "name": "_read_delimited",
+          "line": 152,
+          "kind": "function"
+        },
+        {
+          "name": "_sheet_quality_score",
+          "line": 216,
+          "kind": "function"
+        },
+        {
+          "name": "_sheet_name_bias",
+          "line": 225,
+          "kind": "function"
+        },
+        {
+          "name": "_sheet_long_text_penalty",
+          "line": 233,
+          "kind": "function"
+        },
+        {
+          "name": "_rank_excel_sheet",
+          "line": 246,
+          "kind": "function"
+        },
+        {
+          "name": "_read_excel",
+          "line": 254,
+          "kind": "function"
+        },
+        {
+          "name": "_flatten_json_record",
+          "line": 296,
+          "kind": "function"
+        },
+        {
+          "name": "_coerce_json_frame",
+          "line": 313,
+          "kind": "function"
+        },
+        {
+          "name": "_read_json",
+          "line": 410,
+          "kind": "function"
+        },
+        {
+          "name": "_read_zip_archive",
+          "line": 440,
+          "kind": "function"
+        },
+        {
+          "name": "load_uploaded_dataset",
+          "line": 489,
+          "kind": "function"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        "utils/helpers.py"
+      ],
+      "helper_refs": [],
+      "api_refs": [],
+      "page_refs": [],
+      "script_refs": [],
+      "routes": []
+    },
+    {
+      "id": "schema/detect.py",
+      "path": "schema/detect.py",
+      "name": "detect.py",
+      "folder": "schema",
+      "extension": ".py",
+      "lines": 156,
+      "functions": [
+        {
+          "name": "_looks_like_datetime",
+          "line": 11,
+          "kind": "function"
+        },
+        {
+          "name": "_tokenize_column_name",
+          "line": 20,
+          "kind": "function"
+        },
+        {
+          "name": "_looks_like_identifier",
+          "line": 24,
+          "kind": "function"
+        },
+        {
+          "name": "_looks_like_rate",
+          "line": 30,
+          "kind": "function"
+        },
+        {
+          "name": "_looks_like_count",
+          "line": 36,
+          "kind": "function"
+        },
+        {
+          "name": "_looks_like_geo",
+          "line": 42,
+          "kind": "function"
+        },
+        {
+          "name": "_looks_like_time_dimension",
+          "line": 48,
+          "kind": "function"
+        },
+        {
+          "name": "infer_column_type",
+          "line": 54,
+          "kind": "function"
+        },
+        {
+          "name": "_infer_column_role",
+          "line": 66,
+          "kind": "function"
+        },
+        {
+          "name": "_aggregation_hint",
+          "line": 86,
+          "kind": "function"
+        },
+        {
+          "name": "_allowed_charts",
+          "line": 101,
+          "kind": "function"
+        },
+        {
+          "name": "_column_warnings",
+          "line": 112,
+          "kind": "function"
+        },
+        {
+          "name": "detect_schema",
+          "line": 132,
+          "kind": "function"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        "utils/helpers.py"
+      ],
+      "helper_refs": [],
+      "api_refs": [],
+      "page_refs": [],
+      "script_refs": [],
+      "routes": []
+    },
+    {
+      "id": "scripts/build_codebase_memory_graph.py",
+      "path": "scripts/build_codebase_memory_graph.py",
+      "name": "build_codebase_memory_graph.py",
+      "folder": "scripts",
+      "extension": ".py",
+      "lines": 999,
+      "functions": [
+        {
+          "name": "discover_source_files",
+          "line": 39,
+          "kind": "function"
+        },
+        {
+          "name": "safe_read",
+          "line": 57,
+          "kind": "function"
+        },
+        {
+          "name": "top_folder",
+          "line": 64,
+          "kind": "function"
+        },
+        {
+          "name": "resolve_python_module",
+          "line": 71,
+          "kind": "function"
+        },
+        {
+          "name": "resolve_relative_asset",
+          "line": 83,
+          "kind": "function"
+        },
+        {
+          "name": "extract_route_meta",
+          "line": 104,
+          "kind": "function"
+        },
+        {
+          "name": "parse_python",
+          "line": 123,
+          "kind": "function"
+        },
+        {
+          "name": "parse_js_like",
+          "line": 169,
+          "kind": "function"
+        },
+        {
+          "name": "parse_html",
+          "line": 184,
+          "kind": "function"
+        },
+        {
+          "name": "parse_css",
+          "line": 214,
+          "kind": "function"
+        },
+        {
+          "name": "parse_file",
+          "line": 232,
+          "kind": "function"
+        },
+        {
+          "name": "build_route_lookup",
+          "line": 274,
+          "kind": "function"
+        },
+        {
+          "name": "add_edge",
+          "line": 290,
+          "kind": "function"
+        },
+        {
+          "name": "build_graph",
+          "line": 300,
+          "kind": "function"
+        },
+        {
+          "name": "render_html",
+          "line": 380,
+          "kind": "function"
+        },
+        {
+          "name": "main",
+          "line": 987,
+          "kind": "function"
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "helper_refs": [],
+      "api_refs": [],
+      "page_refs": [],
+      "script_refs": [],
+      "routes": []
+    },
+    {
+      "id": "scripts/run_regression_checks.py",
+      "path": "scripts/run_regression_checks.py",
+      "name": "run_regression_checks.py",
+      "folder": "scripts",
+      "extension": ".py",
+      "lines": 219,
+      "functions": [
+        {
+          "name": "_upload_file",
+          "line": 16,
+          "kind": "function"
+        },
+        {
+          "name": "_expect_equal",
+          "line": 22,
+          "kind": "function"
+        },
+        {
+          "name": "_expect_in",
+          "line": 27,
+          "kind": "function"
+        },
+        {
+          "name": "run",
+          "line": 36,
+          "kind": "function"
+        }
+      ],
+      "classes": [],
+      "imports": [
+        "app.py"
+      ],
+      "helper_refs": [],
+      "api_refs": [],
+      "page_refs": [],
+      "script_refs": [],
+      "routes": []
+    },
+    {
+      "id": "scripts/run_workspace_regression_checks.js",
+      "path": "scripts/run_workspace_regression_checks.js",
+      "name": "run_workspace_regression_checks.js",
+      "folder": "scripts",
+      "extension": ".js",
+      "lines": 256,
+      "functions": [
+        {
+          "name": "createLocalStorage",
+          "kind": "function"
+        },
+        {
+          "name": "buildTable",
+          "kind": "function"
+        },
+        {
+          "name": "expectEqual",
+          "kind": "function"
+        },
+        {
+          "name": "expect",
+          "kind": "function"
+        },
+        {
+          "name": "loadDataTool",
+          "kind": "function"
+        },
+        {
+          "name": "run",
+          "kind": "function"
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "helper_refs": [],
+      "api_refs": [],
+      "page_refs": [],
+      "script_refs": [],
+      "routes": []
+    },
+    {
+      "id": "transformation/transform.py",
+      "path": "transformation/transform.py",
+      "name": "transform.py",
+      "folder": "transformation",
+      "extension": ".py",
+      "lines": 111,
+      "functions": [
+        {
+          "name": "_coerce_value",
+          "line": 19,
+          "kind": "function"
+        },
+        {
+          "name": "_apply_derived_columns",
+          "line": 27,
+          "kind": "function"
+        },
+        {
+          "name": "_apply_filters",
+          "line": 57,
+          "kind": "function"
+        },
+        {
+          "name": "_apply_groupby",
+          "line": 72,
+          "kind": "function"
+        },
+        {
+          "name": "apply_transformations",
+          "line": 97,
+          "kind": "function"
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "helper_refs": [],
+      "api_refs": [],
+      "page_refs": [],
+      "script_refs": [],
+      "routes": []
+    },
+    {
+      "id": "utils/helpers.py",
+      "path": "utils/helpers.py",
+      "name": "helpers.py",
+      "folder": "utils",
+      "extension": ".py",
+      "lines": 78,
+      "functions": [
+        {
+          "name": "ensure_directory",
+          "line": 11,
+          "kind": "function"
+        },
+        {
+          "name": "normalize_headers",
+          "line": 16,
+          "kind": "function"
+        },
+        {
+          "name": "sanitize_filename_stem",
+          "line": 35,
+          "kind": "function"
+        },
+        {
+          "name": "dataframe_preview",
+          "line": 40,
+          "kind": "function"
+        },
+        {
+          "name": "chart_options_for_type",
+          "line": 49,
+          "kind": "function"
+        },
+        {
+          "name": "make_json_safe",
+          "line": 59,
+          "kind": "function"
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "helper_refs": [],
+      "api_refs": [],
+      "page_refs": [],
+      "script_refs": [],
+      "routes": []
+    },
+    {
+      "id": "visualization/plots.py",
+      "path": "visualization/plots.py",
+      "name": "plots.py",
+      "folder": "visualization",
+      "extension": ".py",
+      "lines": 705,
+      "functions": [
+        {
+          "name": "_wrap_label",
+          "line": 18,
+          "kind": "function"
+        },
+        {
+          "name": "_has_long_labels",
+          "line": 25,
+          "kind": "function"
+        },
+        {
+          "name": "_set_categorical_figure_size",
+          "line": 29,
+          "kind": "function"
+        },
+        {
+          "name": "_safe_int",
+          "line": 42,
+          "kind": "function"
+        },
+        {
+          "name": "_safe_nonnegative_int",
+          "line": 50,
+          "kind": "function"
+        },
+        {
+          "name": "_normalise_chart_options",
+          "line": 58,
+          "kind": "function"
+        },
+        {
+          "name": "_palette_colors",
+          "line": 81,
+          "kind": "function"
+        },
+        {
+          "name": "_resolve_rotation",
+          "line": 91,
+          "kind": "function"
+        },
+        {
+          "name": "_add_value_labels",
+          "line": 100,
+          "kind": "function"
+        },
+        {
+          "name": "_aggregation_function",
+          "line": 112,
+          "kind": "function"
+        },
+        {
+          "name": "_resolve_aggregation",
+          "line": 122,
+          "kind": "function"
+        },
+        {
+          "name": "_latest_metric_by_category",
+          "line": 152,
+          "kind": "function"
+        },
+        {
+          "name": "_series_from_grouped_data",
+          "line": 177,
+          "kind": "function"
+        },
+        {
+          "name": "_sort_and_trim_series",
+          "line": 209,
+          "kind": "function"
+        },
+        {
+          "name": "_collapse_pie_series",
+          "line": 220,
+          "kind": "function"
+        },
+        {
+          "name": "_prepare_pie_series",
+          "line": 231,
+          "kind": "function"
+        },
+        {
+          "name": "_prepare_line_frame",
+          "line": 253,
+          "kind": "function"
+        },
+        {
+          "name": "_prepare_heatmap_table",
+          "line": 282,
+          "kind": "function"
+        },
+        {
+          "name": "_to_serialisable_scalar",
+          "line": 332,
+          "kind": "function"
+        },
+        {
+          "name": "_format_value_label",
+          "line": 345,
+          "kind": "function"
+        },
+        {
+          "name": "describe_chart_data",
+          "line": 357,
+          "kind": "function"
+        },
+        {
+          "name": "_validate_chart",
+          "line": 538,
+          "kind": "function"
+        },
+        {
+          "name": "create_chart",
+          "line": 575,
+          "kind": "function"
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "helper_refs": [],
+      "api_refs": [],
+      "page_refs": [],
+      "script_refs": [],
+      "routes": []
+    }
+  ],
+  "edges": [
+    {
+      "source": "app.py",
+      "target": "analysis/stats.py",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "app.py",
+      "target": "cleaning/cleaner.py",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "app.py",
+      "target": "frontend/database.html",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "app.py",
+      "target": "frontend/guide.html",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "app.py",
+      "target": "frontend/prepare.html",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "app.py",
+      "target": "frontend/upload.html",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "app.py",
+      "target": "frontend/visualize.html",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "app.py",
+      "target": "ingestion/loader.py",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "app.py",
+      "target": "schema/detect.py",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "app.py",
+      "target": "transformation/transform.py",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "app.py",
+      "target": "utils/helpers.py",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "app.py",
+      "target": "visualization/plots.py",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "cleaning/cleaner.py",
+      "target": "schema/detect.py",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "frontend/database.html",
+      "target": "frontend/shared.js",
+      "labels": [
+        "imports",
+        "loads script",
+        "uses shared helper"
+      ],
+      "weight": 3
+    },
+    {
+      "source": "frontend/database.html",
+      "target": "app.py",
+      "labels": [
+        "/api/upload"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "frontend/database.html",
+      "target": "frontend/prepare.html",
+      "labels": [
+        "/prepare"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "frontend/guide.html",
+      "target": "frontend/database.html",
+      "labels": [
+        "/database"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "frontend/index.html",
+      "target": "app.py",
+      "labels": [
+        "/api/export/chart",
+        "/api/export/dataset",
+        "/api/export/report",
+        "/api/transform",
+        "/api/upload",
+        "/api/visualize"
+      ],
+      "weight": 6
+    },
+    {
+      "source": "frontend/prepare.html",
+      "target": "frontend/shared.js",
+      "labels": [
+        "imports",
+        "loads script",
+        "uses shared helper"
+      ],
+      "weight": 3
+    },
+    {
+      "source": "frontend/prepare.html",
+      "target": "app.py",
+      "labels": [
+        "/api/transform"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "frontend/prepare.html",
+      "target": "frontend/visualize.html",
+      "labels": [
+        "/visualize"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "frontend/shared.js",
+      "target": "app.py",
+      "labels": [
+        "/api/transform"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "frontend/upload.html",
+      "target": "frontend/shared.js",
+      "labels": [
+        "imports",
+        "loads script",
+        "uses shared helper"
+      ],
+      "weight": 3
+    },
+    {
+      "source": "frontend/upload.html",
+      "target": "app.py",
+      "labels": [
+        "/api/upload"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "frontend/upload.html",
+      "target": "frontend/database.html",
+      "labels": [
+        "/database"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "frontend/upload.html",
+      "target": "frontend/guide.html",
+      "labels": [
+        "/guide"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "frontend/upload.html",
+      "target": "frontend/prepare.html",
+      "labels": [
+        "/prepare"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "frontend/visualize.html",
+      "target": "frontend/shared.js",
+      "labels": [
+        "imports",
+        "loads script",
+        "uses shared helper"
+      ],
+      "weight": 3
+    },
+    {
+      "source": "frontend/visualize.html",
+      "target": "app.py",
+      "labels": [
+        "/api/export/chart",
+        "/api/export/dashboard",
+        "/api/export/dataset",
+        "/api/export/report",
+        "/api/preview",
+        "/api/visualize"
+      ],
+      "weight": 6
+    },
+    {
+      "source": "frontend/visualize.html",
+      "target": "frontend/prepare.html",
+      "labels": [
+        "/prepare"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "ingestion/loader.py",
+      "target": "utils/helpers.py",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "schema/detect.py",
+      "target": "utils/helpers.py",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    },
+    {
+      "source": "scripts/run_regression_checks.py",
+      "target": "app.py",
+      "labels": [
+        "imports"
+      ],
+      "weight": 1
+    }
+  ],
+  "duplicates": [
+    {
+      "name": "setStatus",
+      "files": [
+        "frontend/database.html",
+        "frontend/index.html",
+        "frontend/prepare.html",
+        "frontend/upload.html",
+        "frontend/visualize.html"
+      ]
+    },
+    {
+      "name": "switchWorkspaceTable",
+      "files": [
+        "frontend/prepare.html",
+        "frontend/shared.js",
+        "frontend/visualize.html"
+      ]
+    },
+    {
+      "name": "buildChartRequestPayload",
+      "files": [
+        "frontend/index.html",
+        "frontend/visualize.html"
+      ]
+    },
+    {
+      "name": "buildSuggestedTitle",
+      "files": [
+        "frontend/index.html",
+        "frontend/visualize.html"
+      ]
+    },
+    {
+      "name": "collectTransformConfig",
+      "files": [
+        "frontend/index.html",
+        "frontend/prepare.html"
+      ]
+    },
+    {
+      "name": "downloadBinary",
+      "files": [
+        "frontend/index.html",
+        "frontend/shared.js"
+      ]
+    },
+    {
+      "name": "downloadExport",
+      "files": [
+        "frontend/index.html",
+        "frontend/visualize.html"
+      ]
+    },
+    {
+      "name": "escapeHtml",
+      "files": [
+        "frontend/index.html",
+        "frontend/shared.js"
+      ]
+    },
+    {
+      "name": "fetchJson",
+      "files": [
+        "frontend/index.html",
+        "frontend/shared.js"
+      ]
+    },
+    {
+      "name": "formatNumber",
+      "files": [
+        "frontend/index.html",
+        "frontend/shared.js"
+      ]
+    },
+    {
+      "name": "getChartCompatibility",
+      "files": [
+        "frontend/index.html",
+        "frontend/shared.js"
+      ]
+    },
+    {
+      "name": "getColumnsForRoles",
+      "files": [
+        "frontend/index.html",
+        "frontend/shared.js"
+      ]
+    },
+    {
+      "name": "getColumnsForTypes",
+      "files": [
+        "frontend/index.html",
+        "frontend/shared.js"
+      ]
+    },
+    {
+      "name": "populateMultiSelect",
+      "files": [
+        "frontend/index.html",
+        "frontend/shared.js"
+      ]
+    },
+    {
+      "name": "populateSelect",
+      "files": [
+        "frontend/index.html",
+        "frontend/shared.js"
+      ]
+    },
+    {
+      "name": "recommendChartConfig",
+      "files": [
+        "frontend/index.html",
+        "frontend/shared.js"
+      ]
+    },
+    {
+      "name": "renderAnalysis",
+      "files": [
+        "frontend/index.html",
+        "frontend/shared.js"
+      ]
+    },
+    {
+      "name": "renderPreview",
+      "files": [
+        "frontend/index.html",
+        "frontend/shared.js"
+      ]
+    },
+    {
+      "name": "renderSchema",
+      "files": [
+        "frontend/index.html",
+        "frontend/shared.js"
+      ]
+    },
+    {
+      "name": "renderSelectedFile",
+      "files": [
+        "frontend/database.html",
+        "frontend/upload.html"
+      ]
+    },
+    {
+      "name": "renderTableWorkspace",
+      "files": [
+        "frontend/prepare.html",
+        "frontend/visualize.html"
+      ]
+    },
+    {
+      "name": "run",
+      "files": [
+        "scripts/run_regression_checks.py",
+        "scripts/run_workspace_regression_checks.js"
+      ]
+    },
+    {
+      "name": "saveWorkspace",
+      "files": [
+        "frontend/prepare.html",
+        "frontend/visualize.html"
+      ]
+    },
+    {
+      "name": "setRecommendation",
+      "files": [
+        "frontend/index.html",
+        "frontend/visualize.html"
+      ]
+    },
+    {
+      "name": "syncChartControls",
+      "files": [
+        "frontend/index.html",
+        "frontend/visualize.html"
+      ]
+    },
+    {
+      "name": "syncSuggestedTitle",
+      "files": [
+        "frontend/index.html",
+        "frontend/visualize.html"
+      ]
+    },
+    {
+      "name": "truncateValue",
+      "files": [
+        "frontend/index.html",
+        "frontend/shared.js"
+      ]
+    },
+    {
+      "name": "uniqueColumns",
+      "files": [
+        "frontend/index.html",
+        "frontend/shared.js"
+      ]
+    },
+    {
+      "name": "updateColumnControls",
+      "files": [
+        "frontend/index.html",
+        "frontend/prepare.html"
+      ]
+    }
+  ],
+  "hotspots": [
+    {
+      "path": "app.py",
+      "degree": 19,
+      "functions": 26,
+      "folder": "root"
+    },
+    {
+      "path": "frontend/prepare.html",
+      "degree": 7,
+      "functions": 19,
+      "folder": "frontend"
+    },
+    {
+      "path": "frontend/upload.html",
+      "degree": 6,
+      "functions": 5,
+      "folder": "frontend"
+    },
+    {
+      "path": "frontend/database.html",
+      "degree": 6,
+      "functions": 2,
+      "folder": "frontend"
+    },
+    {
+      "path": "frontend/visualize.html",
+      "degree": 5,
+      "functions": 54,
+      "folder": "frontend"
+    },
+    {
+      "path": "frontend/shared.js",
+      "degree": 5,
+      "functions": 49,
+      "folder": "frontend"
+    },
+    {
+      "path": "schema/detect.py",
+      "degree": 3,
+      "functions": 13,
+      "folder": "schema"
+    },
+    {
+      "path": "utils/helpers.py",
+      "degree": 3,
+      "functions": 6,
+      "folder": "utils"
+    },
+    {
+      "path": "frontend/guide.html",
+      "degree": 3,
+      "functions": 0,
+      "folder": "frontend"
+    },
+    {
+      "path": "ingestion/loader.py",
+      "degree": 2,
+      "functions": 16,
+      "folder": "ingestion"
+    }
+  ],
+  "summary": {
+    "files": 19,
+    "functions": 303,
+    "edges": 33,
+    "folders": 10
+  },
+  "generated_from": "D:\\Data Visualisation Tool"
+}

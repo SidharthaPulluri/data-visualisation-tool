@@ -1,6 +1,14 @@
 # Memory Graph
 
-This is the living map of the app's active logic, shared state, and known cleanup decisions. The internal `/memory-graph` page now reads from the same session/workspace memory layer described here. Update this file whenever a major workflow, module boundary, or storage shape changes.
+This is the living maintenance map for the repository. It documents active logic, shared state, cleanup decisions, and where the standalone codebase memory graph helps us reason about the tool without reparsing the whole project mentally every time.
+
+The visual graph is a separate developer tool, not a shipped product feature:
+
+- Generator: [D:\Data Visualisation Tool\scripts\build_codebase_memory_graph.py](D:\Data%20Visualisation%20Tool\scripts\build_codebase_memory_graph.py)
+- Viewer: [D:\Data Visualisation Tool\tools\codebase_memory_graph\index.html](D:\Data%20Visualisation%20Tool\tools\codebase_memory_graph\index.html)
+- Cached graph data: [D:\Data Visualisation Tool\tools\codebase_memory_graph\graph-data.json](D:\Data%20Visualisation%20Tool\tools\codebase_memory_graph\graph-data.json)
+
+Update this file whenever a major workflow, module boundary, storage shape, or graph rule changes.
 
 ## Current Flow
 
@@ -28,7 +36,6 @@ flowchart TD
 
 - Browser session key: `data_visualisation_tool_session`
 - Workspace key: `data_visualisation_tool_workspaces`
-- Memory event key: `data_visualisation_tool_memory_events`
 - Per-table state lives in `shared.js` via:
   - `buildTableRecord`
   - `mirrorActiveTableIntoSession`
@@ -44,8 +51,6 @@ These are the shared helpers pages should use instead of re-implementing behavio
 - `switchWorkspaceTable`
 - `ensureDatasetState`
 - `saveWorkspaceFlow`
-- `recordMemoryEvent`
-- `buildWorkspaceMemoryGraph`
 - `saveSession` / `loadSession`
 - `fetchJson` / `downloadBinary`
 
@@ -57,7 +62,7 @@ These are the shared helpers pages should use instead of re-implementing behavio
 - Workspace switching and workspace-save flow now have shared runtime helpers in [D:\Data Visualisation Tool\frontend\shared.js](D:\Data%20Visualisation%20Tool\frontend\shared.js).
 - Parser heuristics for JSON, ZIP, headerless files, and Excel ranking are concentrated in [D:\Data Visualisation Tool\ingestion\loader.py](D:\Data%20Visualisation%20Tool\ingestion\loader.py).
 - `prepare.html` and `visualize.html` now use the shared workspace helpers without keeping old live fallback bodies in place for switching and workspace-save flows.
-- The internal memory graph page now uses real session/workspace/export lineage instead of a static architecture poster.
+- The developer graph is now generated out of band from source files instead of being embedded in the Flask app.
 
 ### Still partially duplicated
 
@@ -84,9 +89,6 @@ Remove these if they are still not referenced in the next pass:
 - `frontend/assets/vysri-built-mark.svg`
 - `frontend/assets/vysri-services-logo-cropped.png`
 - `frontend/assets/vysri-services-logo.svg`
-- tracked but currently unused:
-  - `frontend/assets/vysri-services-logo.png`
-  - `frontend/assets/vysri-services-wordmark.png`
 
 ## Regression Baseline
 
@@ -106,6 +108,7 @@ Core fixture families:
 - ambiguous workbook sheet selection
 - empty-file rejection
 - multi-file workspace reopen and per-table state restoration
+- standalone graph generation after major structural changes
 
 ## Update Rule
 
@@ -117,3 +120,4 @@ Update this file when any of these change:
 - chart rendering pipeline
 - exported asset/logo choice
 - regression fixture coverage
+- codebase graph extraction rules

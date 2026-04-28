@@ -10,7 +10,6 @@ A deterministic local BI-style app for structured datasets. Upload one or more s
 
 - Structured file ingestion for `CSV`, `TSV`, `XLSX`, `XLS`, `JSON`, ZIP archives, nested JSON payloads, multi-sheet Excel workbooks, and headerless `.data` files
 - Multi-file workspaces with per-table switching in preparation and visualization
-- Internal memory/provenance graph for sessions, tables, transforms, charts, workspaces, and exports at `/memory-graph`
 - Rule-based schema detection for numeric, categorical, datetime, and text columns
 - Deterministic cleaning rules for missing values, duplicates, type coercion, and text normalization
 - Parser diagnostics and recovery notes for delimiter inference, headerless fallback, duplicate-header normalization, nested JSON path selection, worksheet selection, and dropped empty rows/columns
@@ -57,7 +56,18 @@ node scripts/run_workspace_regression_checks.js
 
 ## Memory Graph
 
-Use [D:\Data Visualisation Tool\MEMORY_GRAPH.md](D:\Data%20Visualisation%20Tool\MEMORY_GRAPH.md) as the living system map for active flows, shared state, cleanup decisions, and known residuals.
+Use [D:\Data Visualisation Tool\MEMORY_GRAPH.md](D:\Data%20Visualisation%20Tool\MEMORY_GRAPH.md) as the living maintenance map for active flows, shared state, cleanup decisions, and known residuals.
+
+To build the standalone codebase memory graph tool that maps files as stars and functions as planets:
+
+```powershell
+python scripts/build_codebase_memory_graph.py
+```
+
+Generated outputs:
+
+- [D:\Data Visualisation Tool\tools\codebase_memory_graph\index.html](D:\Data%20Visualisation%20Tool\tools\codebase_memory_graph\index.html)
+- [D:\Data Visualisation Tool\tools\codebase_memory_graph\graph-data.json](D:\Data%20Visualisation%20Tool\tools\codebase_memory_graph\graph-data.json)
 
 ## Deploy
 

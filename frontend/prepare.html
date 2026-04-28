@@ -630,12 +630,6 @@
           state.transformHistoryIndex = options.historyIndex;
         }
 
-        window.dataTool.recordMemoryEvent("transform_applied", {
-          activeTableId: state.activeTableId || null,
-          filename: state.filename || null,
-          historyIndex: state.transformHistoryIndex ?? 0,
-          label: state.transformHistory?.[state.transformHistoryIndex]?.label || "Prepared view",
-        });
         window.dataTool.saveSession(state);
         renderSession();
         setStatus(options.successStatus || `Preview updated. ${payload.shape.rows} rows and ${payload.shape.columns} columns in the current view.`);
