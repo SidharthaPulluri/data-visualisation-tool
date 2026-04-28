@@ -945,7 +945,7 @@ def render_html(graph: dict[str, Any]) -> str:
         </div>
         <div class="controls">
           <input id="searchInput" class="search" type="text" placeholder="Search a file or function">
-          <button id="resetViewButton" class="reset-button" type="button">Reset view</button>
+          <button id="resetViewButton" class="reset-button" type="button">Reset focus</button>
         </div>
       </div>
       <div class="graph-wrap">
@@ -956,7 +956,7 @@ def render_html(graph: dict[str, Any]) -> str:
         </div>
         <canvas id="graphCanvas" width="1500" height="760"></canvas>
         <div class="legend" id="legend"></div>
-        <div class="graph-help">Wheel to zoom · click a star to reveal planets · click a strand to inspect the connection</div>
+        <div class="graph-help">Click a star to focus its orbit · click a planet to inspect a function · click a strand to inspect the connection</div>
       </div>
     </section>
 
@@ -1025,8 +1025,7 @@ def render_html(graph: dict[str, Any]) -> str:
     const state = {{
       selectedId: null,
       selectedEdgeKey: null,
-      search: "",
-      scale: 1
+      search: ""
     }};
 
     function escapeHtml(value) {{
@@ -1045,6 +1044,52 @@ def render_html(graph: dict[str, Any]) -> str:
         degreeMap.set(edge.target, (degreeMap.get(edge.target) || 0) + 1);
       }});
       return files.map((file) => ({{ ...file, degree: degreeMap.get(file.path) || 0 }}));
+    }}
+
+    function buildSimilarityLookup(clusters) {{
+      const lookup = new Map();
+      clusters.forEach((cluster) => {{
+        cluster.members.forEach((member) => {{
+          lookup.set(member.id, cluster.average_score || 0);
+        }});
+      }});
+      return lookup;
+    }}
+
+    function buildEdgesByFile(edges) {{
+      const lookup = new Map();
+      edges.forEach((edge) => {{
+        if (!lookup.has(edge.source)) lookup.set(edge.source, []);
+        if (!lookup.has(edge.target)) lookup.set(edge.target, []);
+        lookup.get(edge.source).push(edge);
+        lookup.get(edge.target).push(edge);
+      }});
+      return lookup;
+    }}
+
+    function functionVisualMeta(file, fn) {{
+      const clusterScore = similarityLookup.get(`${{file.path}}::${{fn.name}}`) || 0;
+      const keywordScore = Math.min((fn.keywords || []).length, 8) * 0.14;
+      const degreeScore = Math.min(file.degree || 0, 8) * 0.08;
+      const kindBase = fn.kind === "class" ? 1.35 : fn.kind === "arrow" ? 1.1 : 1;
+      const weight = Math.max(1, Math.min(3.8, kindBase + keywordScore + degreeScore + clusterScore * 1.35));
+      let color = "#d8ebff";
+      if (clusterScore >= 0.92) {{
+        color = "#ffd166";
+      }} else if (clusterScore >= 0.78) {{
+        color = "#8cf0ff";
+      }} else if (fn.kind === "class") {{
+        color = "#ffab70";
+      }} else if (fn.kind === "arrow") {{
+        color = "#c9b8ff";
+      }}
+      return {{
+        weight,
+        radius: 3.3 + weight * 1.1,
+        color,
+        stroke: clusterScore >= 0.78 ? "rgba(255,255,255,0.78)" : "rgba(255,255,255,0.18)",
+        linkColor: clusterScore >= 0.78 ? "rgba(145, 227, 255, 0.46)" : "rgba(255,255,255,0.08)"
+      }};
     }}
 
     function groupFilesByFolder(files) {{
@@ -1109,6 +1154,7 @@ def render_html(graph: dict[str, Any]) -> str:
             const pAngle = (Math.PI * 2 * fnIndex) / Math.max(Math.min((file.functions || []).length, 18), 1);
             const px = fx + Math.cos(pAngle) * orbit;
             const py = fy + Math.sin(pAngle) * orbit;
+            const visual = functionVisualMeta(file, fn);
             planetNodes.push({{
               id: `${{file.path}}::${{fn.name}}`,
               parentId: file.path,
@@ -1120,9 +1166,13 @@ def render_html(graph: dict[str, Any]) -> str:
               line: fn.line || null,
               functionKind: fn.kind || "function",
               keywords: fn.keywords || [],
+              weight: visual.weight,
+              color: visual.color,
+              stroke: visual.stroke,
+              linkColor: visual.linkColor,
               x: px,
               y: py,
-              r: 5
+              r: visual.radius
             }});
           }});
         }});
@@ -1132,6 +1182,8 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     const filesWithDegree = attachDegrees(GRAPH.files, GRAPH.edges);
+    const similarityLookup = buildSimilarityLookup(GRAPH.similarity_clusters);
+    const edgesByFile = buildEdgesByFile(GRAPH.edges);
     const positions = buildPositions(filesWithDegree);
     const fileLookup = new Map(filesWithDegree.map((file) => [file.path, file]));
     const fileNodeLookup = new Map(positions.fileNodes.map((node) => [node.path, node]));
@@ -1195,22 +1247,23 @@ def render_html(graph: dict[str, Any]) -> str:
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
-      const screenX = (clientX - rect.left) * scaleX;
-      const screenY = (clientY - rect.top) * scaleY;
-      const translateX = (canvas.width - canvas.width * state.scale) / 2;
-      const translateY = (canvas.height - canvas.height * state.scale) / 2;
       return {{
-        x: (screenX - translateX) / state.scale,
-        y: (screenY - translateY) / state.scale
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
       }};
     }}
 
     function resetView() {{
-      state.scale = 1;
+      state.selectedId = null;
+      state.selectedEdgeKey = null;
+      state.search = "";
+      searchInput.value = "";
+      renderSelectionPill(null);
+      renderDetails(null);
     }}
 
-    function drawGroupZones() {{
-      positions.groupZones.forEach((zone) => {{
+    function drawGroupZones(scene) {{
+      scene.groupZones.forEach((zone) => {{
         const color = FOLDER_COLORS[zone.folder] || "#8aa4c8";
         const gradient = ctx.createRadialGradient(zone.centerX, zone.centerY, 12, zone.centerX, zone.centerY, zone.haloRadius);
         gradient.addColorStop(0, color + "22");
@@ -1233,7 +1286,7 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     function connectedEdgesForFile(path) {{
-      return GRAPH.edges.filter((edge) => edge.source === path || edge.target === path);
+      return edgesByFile.get(path) || [];
     }}
 
     function edgeKey(edge) {{
@@ -1362,10 +1415,8 @@ def render_html(graph: dict[str, Any]) -> str:
       return minDistance;
     }}
 
-    function drawEdges() {{
-      const displayNodeMap = buildDisplayNodeMap();
-      const selectedNetwork = selectedNetworkPaths();
-      const focusPath = selectedFocusPath();
+    function drawEdges(scene) {{
+      const {{ displayNodeMap, selectedNetwork, focusPath }} = scene;
       GRAPH.edges.forEach((edge) => {{
         const geometry = getVisibleEdgeGeometry(edge, displayNodeMap);
         if (!geometry) return;
@@ -1391,15 +1442,13 @@ def render_html(graph: dict[str, Any]) -> str:
       }});
     }}
 
-    function drawPlanets() {{
-      const displayNodeMap = buildDisplayNodeMap();
-      const displayPlanets = buildDisplayPlanets(displayNodeMap);
-      const displayPlanetMap = new Map(displayPlanets.map((planet) => [planet.id, planet]));
+    function drawPlanets(scene) {{
+      const {{ displayNodeMap, displayPlanetMap, visiblePlanetMap }} = scene;
       positions.fileNodes.forEach((baseFileNode) => {{
         const fileNode = displayNodeMap.get(baseFileNode.path);
         if (!fileNode) return;
         if (!shouldShowPlanets(fileNode)) return;
-        const planets = (planetsByParent.get(fileNode.path) || []).map((planet) => displayPlanetMap.get(planet.id) || planet);
+        const planets = (planetsByParent.get(fileNode.path) || []).map((planet) => visiblePlanetMap.get(planet.id) || displayPlanetMap.get(planet.id) || planet);
         if (!planets.length) return;
         ctx.strokeStyle = "rgba(255,255,255,0.09)";
         ctx.lineWidth = 1;
@@ -1409,23 +1458,25 @@ def render_html(graph: dict[str, Any]) -> str:
 
         planets.forEach((planet) => {{
           const selected = state.selectedId === planet.id;
-          ctx.strokeStyle = selected ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.10)";
+          ctx.strokeStyle = selected ? "rgba(255,255,255,0.84)" : planet.linkColor;
+          ctx.lineWidth = selected ? 1.6 : Math.max(0.8, planet.weight * 0.34);
           ctx.beginPath();
           ctx.moveTo(fileNode.x, fileNode.y);
           ctx.lineTo(planet.x, planet.y);
           ctx.stroke();
-          ctx.fillStyle = selected ? "#ffffff" : "#d8ebff";
+          ctx.fillStyle = selected ? "#ffffff" : planet.color;
           ctx.beginPath();
           ctx.arc(planet.x, planet.y, planet.r, 0, Math.PI * 2);
           ctx.fill();
+          ctx.strokeStyle = selected ? "rgba(255,255,255,0.9)" : planet.stroke;
+          ctx.lineWidth = selected ? 1.4 : 0.9;
+          ctx.stroke();
         }});
       }});
     }}
 
-    function drawStars() {{
-      const displayNodeMap = buildDisplayNodeMap();
-      const selectedNetwork = selectedNetworkPaths();
-      const focusPath = selectedFocusPath();
+    function drawStars(scene) {{
+      const {{ displayNodeMap, selectedNetwork, focusPath }} = scene;
       positions.fileNodes.forEach((baseFileNode) => {{
         const fileNode = displayNodeMap.get(baseFileNode.path);
         if (!fileNode) return;
@@ -1462,33 +1513,45 @@ def render_html(graph: dict[str, Any]) -> str:
       }});
     }}
 
-    function draw() {{
-      const focusPath = selectedFocusPath();
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#07111e";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.save();
-      ctx.translate((canvas.width - canvas.width * state.scale) / 2, (canvas.height - canvas.height * state.scale) / 2);
-      ctx.scale(state.scale, state.scale);
-      if (!focusPath) {{
-        drawGroupZones();
-      }}
-      drawEdges();
-      drawPlanets();
-      drawStars();
-      ctx.restore();
-    }}
-
-    function hitTest(event) {{
-      const point = toWorld(event.clientX, event.clientY);
+    function createScene() {{
       const displayNodeMap = buildDisplayNodeMap();
       const displayPlanets = buildDisplayPlanets(displayNodeMap);
       const visiblePlanets = displayPlanets.filter((planet) => {{
         const parent = displayNodeMap.get(planet.parentId);
         return parent && shouldShowPlanets(parent);
       }});
-      const visibleStars = [...displayNodeMap.values()].filter(isVisibleFile);
+      return {{
+        displayNodeMap,
+        displayPlanets,
+        displayPlanetMap: new Map(displayPlanets.map((planet) => [planet.id, planet])),
+        visiblePlanets,
+        visiblePlanetMap: new Map(visiblePlanets.map((planet) => [planet.id, planet])),
+        visibleStars: [...displayNodeMap.values()].filter(isVisibleFile),
+        selectedNetwork: selectedNetworkPaths(),
+        focusPath: selectedFocusPath(),
+        groupZones: positions.groupZones
+      }};
+    }}
+
+    function draw() {{
+      const scene = createScene();
+      const focusPath = scene.focusPath;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#07111e";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      if (!focusPath) {{
+        drawGroupZones(scene);
+      }}
+      drawEdges(scene);
+      drawPlanets(scene);
+      drawStars(scene);
+    }}
+
+    function hitTest(event) {{
+      const point = toWorld(event.clientX, event.clientY);
+      const scene = createScene();
+      const {{ displayNodeMap, visiblePlanets, visibleStars }} = scene;
       const nodes = [...visiblePlanets, ...visibleStars];
       for (let index = nodes.length - 1; index >= 0; index -= 1) {{
         const node = nodes[index];
@@ -1505,6 +1568,16 @@ def render_html(graph: dict[str, Any]) -> str:
         }}
       }}
       return null;
+    }}
+
+    let drawQueued = false;
+    function requestDraw() {{
+      if (drawQueued) return;
+      drawQueued = true;
+      window.requestAnimationFrame(() => {{
+        drawQueued = false;
+        draw();
+      }});
     }}
 
     function renderHeroStats() {{
@@ -1667,6 +1740,7 @@ def render_html(graph: dict[str, Any]) -> str:
           <ul class="detail-list">
             <li><span class="detail-key">Kind</span>${{escapeHtml(planet.functionKind)}}</li>
             <li><span class="detail-key">Parent star</span>${{escapeHtml(planet.filePath)}}</li>
+            <li><span class="detail-key">Visual weight</span>${{planet.weight ? planet.weight.toFixed(2) : "1.00"}}${{planet.color ? `<br><span class="muted">Color ${{escapeHtml(planet.color)}}</span>` : ""}}</li>
             <li><span class="detail-key">Keywords</span>${{planet.keywords.length ? planet.keywords.map((keyword) => escapeHtml(keyword)).join(", ") : "None extracted"}}</li>
             <li><span class="detail-key">Logic cluster</span>${{relatedCluster ? `${{escapeHtml(relatedCluster.label)}} [${{relatedCluster.average_score.toFixed(2)}}]<br><span class="muted">${{relatedCluster.members.filter((member) => member.id !== planet.id).map((member) => `${{escapeHtml(member.file)}}::${{escapeHtml(member.name)}}`).join("<br>") || "No peers beyond this node"}}</span>` : "No strong cross-file similarity cluster"}}</li>
           </ul>
@@ -1682,7 +1756,7 @@ def render_html(graph: dict[str, Any]) -> str:
       }}
       renderSelectionPill(nodeId);
       renderDetails(nodeId);
-      draw();
+      requestDraw();
     }}
 
     canvas.addEventListener("click", (event) => {{
@@ -1698,20 +1772,14 @@ def render_html(graph: dict[str, Any]) -> str:
       updateSelection(node.path || node.id);
     }});
 
-    canvas.addEventListener("wheel", (event) => {{
-      event.preventDefault();
-      state.scale = Math.min(2.0, Math.max(0.82, state.scale * (event.deltaY < 0 ? 1.08 : 0.92)));
-      draw();
-    }}, {{ passive: false }});
-
     searchInput.addEventListener("input", () => {{
       state.search = searchInput.value.trim().toLowerCase();
-      draw();
+      requestDraw();
     }});
 
     resetViewButton.addEventListener("click", () => {{
       resetView();
-      draw();
+      requestDraw();
     }});
 
     renderHeroStats();
@@ -1721,7 +1789,7 @@ def render_html(graph: dict[str, Any]) -> str:
     renderDuplicates();
     renderSelectionPill(null);
     renderDetails(null);
-    draw();
+    requestDraw();
   </script>
 </body>
 </html>

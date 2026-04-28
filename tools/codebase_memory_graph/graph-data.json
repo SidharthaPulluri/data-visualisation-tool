@@ -7354,7 +7354,7 @@
       "name": "build_codebase_memory_graph.py",
       "folder": "scripts",
       "extension": ".py",
-      "lines": 1743,
+      "lines": 1811,
       "functions": [
         {
           "name": "discover_source_files",
@@ -8030,8 +8030,8 @@
             "span",
             "edge",
             "map",
-            "ctx",
             "planet",
+            "ctx",
             "math",
             "display"
           ],
@@ -8051,7 +8051,7 @@
         },
         {
           "name": "main",
-          "line": 1731,
+          "line": 1799,
           "kind": "function",
           "keywords": [
             "graph",
