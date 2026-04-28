@@ -3,7 +3,7 @@ from __future__ import annotations
 import ast
 import json
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -342,7 +342,13 @@ def parse_html(path: Path, text: str) -> dict[str, Any]:
 
     inline_scripts = re.findall(r"<script>([\s\S]*?)</script>", text, flags=re.IGNORECASE)
     for script in inline_scripts:
-        parsed = parse_js_like(script)
+        script_for_parse = script
+        if "const GRAPH =" in script and "const FOLDER_COLORS =" in script:
+            graph_start = script.find("const GRAPH =")
+            colors_start = script.find("const FOLDER_COLORS =", graph_start)
+            if graph_start != -1 and colors_start != -1:
+                script_for_parse = script[:graph_start] + "const GRAPH = {};\n" + script[colors_start:]
+        parsed = parse_js_like(script_for_parse)
         info["functions"].extend(parsed["functions"])
         info["helper_refs"].update(parsed["helper_refs"])
         info["api_refs"].update(parsed["api_refs"])
@@ -534,6 +540,12 @@ def build_similarity_clusters(files: list[dict[str, Any]]) -> list[dict[str, Any
 
 
 def build_graph(files: list[dict[str, Any]]) -> dict[str, Any]:
+    base_name_counts = Counter(item["name"] for item in files)
+    for file_info in files:
+        if base_name_counts[file_info["name"]] > 1:
+            folder = file_info["folder"]
+            file_info["name"] = f"{folder}/{file_info['name']}" if folder != "root" else file_info["path"]
+
     by_path = {item["path"]: item for item in files}
     api_lookup, page_lookup = build_route_lookup(by_path)
     edges: dict[tuple[str, str], dict[str, Any]] = {}
