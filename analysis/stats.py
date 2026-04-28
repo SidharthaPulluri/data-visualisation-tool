@@ -55,6 +55,10 @@ def _format_dimension_value(value: Any) -> str:
     return text
 
 
+def _is_generic_generated_name(column_name: str) -> bool:
+    return bool(re.fullmatch(r"(column|feature|vote)_\d+", str(column_name).strip().lower()))
+
+
 def _metric_slot_label(slot: str) -> str:
     labels = {
         "primary_count": "Primary volume field",
@@ -143,6 +147,7 @@ def _numeric_like_ratio(series: pd.Series) -> float:
 
 
 def _pick_dimension_column(schema: dict[str, dict[str, Any]], df: pd.DataFrame) -> str | None:
+    generic_categorical_columns: list[str] = []
     candidates: list[tuple[int, int, str]] = []
     for column, meta in schema.items():
         if meta["type"] not in {"categorical", "text", "datetime"}:
@@ -159,12 +164,17 @@ def _pick_dimension_column(schema: dict[str, dict[str, Any]], df: pd.DataFrame) 
         if {"sl", "no", "col"}.issubset(name_tokens) or {"serial", "number"}.issubset(name_tokens):
             continue
 
+        if _is_generic_generated_name(column):
+            generic_categorical_columns.append(column)
+
         semantic_score = {
             "geography": 1,
             "category": 3,
             "time": 4,
             "descriptor": 5,
         }.get(meta.get("role"), 6)
+        if column in {"party", "class_label", "label"}:
+            semantic_score = 0
         if _column_matches(column, {"country", "territory", "state", "district", "province", "city", "ut"}):
             semantic_score = 0
         elif _column_matches(column, {"region", "continent", "area"}):
@@ -173,6 +183,18 @@ def _pick_dimension_column(schema: dict[str, dict[str, Any]], df: pd.DataFrame) 
         code_penalty = 1 if _column_matches(column, {"iso", "code", "numeric"}) else 0
         richness_score = -unique_count if meta.get("role") in {"geography", "category"} else abs(unique_count - min(max(len(df) // 4, 4), 40))
         candidates.append((semantic_score, code_penalty, richness_score, column))
+
+    if generic_categorical_columns and len(generic_categorical_columns) == len(candidates):
+        ranked_generic = sorted(
+            generic_categorical_columns,
+            key=lambda name: (
+                0 if name in {"party", "class_label", "label"} else 1,
+                int(schema[name].get("unique", 0) > 12),
+                int(schema[name].get("unique", 0)),
+                list(df.columns).index(name),
+            ),
+        )
+        return ranked_generic[0]
 
     candidates.sort()
     return candidates[0][3] if candidates else None
@@ -343,6 +365,12 @@ def _detect_dataset_intent(
         intent_label = "Cross-tab or matrix-style table"
         confidence = 0.7
         reasons.append("It contains multiple category-style fields plus numeric measures, which is typical of a comparison matrix.")
+    elif len(category_fields) >= 3 and not numeric_fields:
+        intent_key = "categorical_response_table"
+        intent_label = "Categorical response dataset"
+        confidence = 0.74
+        reasons.append("Most fields are categorical responses rather than numeric measures.")
+        reasons.append("That usually means the file is meant for counts, splits, and response-pattern comparisons.")
     else:
         reasons.append("It has a stable comparison field and numeric measures, so it can still be analyzed as a structured table.")
 
@@ -617,11 +645,18 @@ def _build_dataset_story(
         for column in numeric_columns:
             role = schema.get(column, {}).get("role")
             aggregation_map[column] = "mean" if role == "rate" else "sum"
-        compare_df = (
-            detail_df.groupby(dimension_column, dropna=False)[list(aggregation_map.keys())]
-            .agg(aggregation_map)
-            .reset_index()
-        )
+        if aggregation_map:
+            compare_df = (
+                detail_df.groupby(dimension_column, dropna=False)[list(aggregation_map.keys())]
+                .agg(aggregation_map)
+                .reset_index()
+            )
+        else:
+            compare_df = (
+                detail_df.groupby(dimension_column, dropna=False)
+                .size()
+                .reset_index(name="row_count")
+            )
 
     metric_choices: list[dict[str, Any]] = []
 
@@ -710,6 +745,24 @@ def _build_dataset_story(
             }
         )
 
+    if not headline_metrics and numeric_columns == []:
+        headline_metrics.append(
+            {
+                "label": "Records",
+                "column": None,
+                "value": int(len(detail_df)),
+                "formatted_value": _format_value(len(detail_df)),
+            }
+        )
+        headline_metrics.append(
+            {
+                "label": "Response fields",
+                "column": None,
+                "value": max(int(df.shape[1]) - 1, 0),
+                "formatted_value": _format_value(max(int(df.shape[1]) - 1, 0)),
+            }
+        )
+
     overview = [
         f"Dataset type: {dataset_intent['label']}.",
         f"Main comparison field: {_format_label(dimension_column)}.",
@@ -727,6 +780,19 @@ def _build_dataset_story(
                     compare_df,
                     dimension_column=dimension_column,
                     metric_column=primary_count,
+                    ascending=False,
+                ),
+            }
+        )
+    elif "row_count" in compare_df.columns:
+        ranking_sections.append(
+            {
+                "title": f"Most common {_format_label(dimension_column)} values",
+                "metric": "row_count",
+                "items": _top_rankings(
+                    compare_df,
+                    dimension_column=dimension_column,
+                    metric_column="row_count",
                     ascending=False,
                 ),
             }
@@ -807,6 +873,15 @@ def _build_dataset_story(
                 takeaways.append(
                     f"{_format_dimension_value(top_row[dimension_column])} is the largest contributor in {_format_label(primary_count)}, accounting for about {share:.1f}% of the total."
                 )
+    elif "row_count" in compare_df.columns and not compare_df.empty:
+        count_series = pd.to_numeric(compare_df["row_count"], errors="coerce")
+        if count_series.notna().any() and float(count_series.sum()) > 0:
+            top_idx = count_series.idxmax()
+            top_row = compare_df.loc[top_idx]
+            share = float(top_row["row_count"]) / float(count_series.sum()) * 100
+            takeaways.append(
+                f"{_format_dimension_value(top_row[dimension_column])} is the most common {_format_label(dimension_column)} value, representing about {share:.1f}% of the rows."
+            )
 
     if pending_count and pending_rate and not detail_df.empty:
         pending_series = pd.to_numeric(compare_df[pending_count], errors="coerce")
@@ -834,7 +909,10 @@ def _build_dataset_story(
             )
 
     if not takeaways:
-        takeaways.append("This dataset can be compared meaningfully by the main categorical field, but no standout story was detected automatically.")
+        if numeric_columns:
+            takeaways.append("This dataset can be compared meaningfully by the main categorical field, but no standout story was detected automatically.")
+        else:
+            takeaways.append("This dataset is mostly categorical, so the most useful first step is comparing label counts and response patterns.")
 
     consistency_checks = _build_consistency_checks(
         detail_df=detail_df,

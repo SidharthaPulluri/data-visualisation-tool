@@ -631,7 +631,7 @@
             <div class="guide-num">1</div>
             <div>
               <strong>Upload your file</strong>
-              <span>Use a CSV, Excel, or JSON dataset with clear column names.</span>
+              <span>Use a CSV, TSV, DATA, Excel, or JSON dataset with clear column names.</span>
             </div>
           </div>
           <div class="guide-step">
@@ -659,7 +659,7 @@
           <h3>Step 1: Upload Dataset</h3>
           <p class="helper">Start here. The app will inspect the file and prepare chart options automatically.</p>
           <label for="fileInput">Choose file</label>
-          <input id="fileInput" type="file" accept=".csv,.xlsx,.json">
+          <input id="fileInput" type="file" accept=".csv,.tsv,.data,.xlsx,.xls,.json">
           <button id="uploadButton" class="secondary">Upload And Process</button>
         </div>
 
@@ -1472,7 +1472,7 @@
     ids.uploadButton.addEventListener("click", async () => {
       const file = ids.fileInput.files[0];
       if (!file) {
-        setStatus("Choose a CSV, XLSX, or JSON file first.");
+        setStatus("Choose a CSV, TSV, DATA, XLSX, XLS, or JSON file first.");
         setRecommendation("Choose a dataset file first. CSV is the easiest starting point.");
         return;
       }

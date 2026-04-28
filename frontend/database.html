@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database Dataset Path</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="landing-body">
+  <main class="landing-page">
+    <header class="landing-topbar">
+      <div class="landing-topbar-inner">
+        <div class="landing-brand-lockup">
+          <img class="landing-logo" src="/static/assets/vysri-services-wordmark.png" alt="VySri Services logo">
+          <div class="landing-brand">
+            <span class="eyebrow">Rule-based analytics</span>
+            <strong>Sidhartha Utilities</strong>
+            <span class="landing-brand-subtitle">A utility workspace from the VySri Services brand.</span>
+          </div>
+        </div>
+        <div class="landing-topbar-meta">
+          <span class="landing-topbar-chip">Database dataset path</span>
+          <span class="landing-topbar-chip">No AI or ML</span>
+          <span class="landing-topbar-chip">Deterministic outputs</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="landing-hero landing-hero-compact">
+      <div class="landing-hero-inner">
+        <div class="landing-hero-copy">
+          <span class="eyebrow">Step 1</span>
+          <p class="landing-kicker">Database-origin dataset workflow</p>
+          <h1>Start with exported query results and collection extracts.</h1>
+          <p class="landing-lead">Use this path when your dataset comes from PostgreSQL, MySQL, SQL Server, SQLite, MongoDB, or another database system. Upload the exported result file, keep the source context, and continue into the same rule-based preparation and charting flow.</p>
+          <div class="landing-hero-actions">
+            <a class="action-link" href="#database-upload">Upload database extract</a>
+            <a class="button-link ghost" href="/">Back to source chooser</a>
+          </div>
+          <p class="landing-trust">Separate source path. Same deterministic analysis core.</p>
+        </div>
+
+        <div class="landing-hero-visual" aria-hidden="true">
+          <div class="landing-visual-stage">
+            <div class="landing-visual-ribbon">Database -> Export -> Explain -> Chart</div>
+            <div class="landing-visual-grid">
+              <div>
+                <span>Source type</span>
+                <strong>Postgres / MongoDB</strong>
+              </div>
+              <div>
+                <span>Input mode</span>
+                <strong>Exported dataset</strong>
+              </div>
+              <div>
+                <span>Context kept</span>
+                <strong>System + table</strong>
+              </div>
+              <div>
+                <span>Next stage</span>
+                <strong>Prepare workspace</strong>
+              </div>
+            </div>
+            <div class="landing-visual-caption">
+              <p>Useful when the same database can produce many different datasets.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-section landing-source-section">
+      <div class="landing-section-head">
+        <span class="section-kicker">What this path is for</span>
+        <h2>Keep database-origin work separate from ordinary file uploads.</h2>
+      </div>
+      <div class="landing-source-grid">
+        <article class="source-path-card">
+          <span class="section-kicker">Best fit</span>
+          <h3>SQL query results</h3>
+          <p>Upload result files exported from PostgreSQL, MySQL, SQL Server, SQLite, BigQuery, Snowflake, or similar systems.</p>
+        </article>
+        <article class="source-path-card">
+          <span class="section-kicker">Also works for</span>
+          <h3>MongoDB or NoSQL extracts</h3>
+          <p>Use JSON, CSV, TSV, or other exported flat-file representations of collection or document data.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="database-upload" class="landing-upload-band">
+      <div class="landing-upload-copy">
+        <span class="section-kicker">Database upload path</span>
+        <h2>Tell the tool where the extract came from, then upload it.</h2>
+        <p class="helper">Direct live database connections are not enabled here yet. This path is for exported result files, but it keeps the source system and object context separate from ordinary file-based work.</p>
+      </div>
+      <div class="landing-upload-controls">
+        <div class="control-grid database-source-grid">
+          <div>
+            <label for="sourceType">Source type</label>
+            <select id="sourceType">
+              <option value="postgresql">PostgreSQL</option>
+              <option value="mysql">MySQL</option>
+              <option value="sql-server">SQL Server</option>
+              <option value="sqlite">SQLite</option>
+              <option value="mongodb">MongoDB</option>
+              <option value="other-sql">Other SQL database</option>
+              <option value="other-nosql">Other NoSQL database</option>
+            </select>
+          </div>
+          <div>
+            <label for="sourceObject">Table / collection / view</label>
+            <input id="sourceObject" type="text" placeholder="orders, votes_1984, tb_cases_by_country...">
+          </div>
+          <div class="control-grid-span">
+            <label for="sourceNotes">Query or source notes</label>
+            <textarea id="sourceNotes" rows="3" placeholder="Optional notes about the query, collection filter, or export context."></textarea>
+          </div>
+        </div>
+        <div class="file-picker landing-file-picker">
+          <input id="fileInput" class="file-input-native" type="file" accept=".csv,.tsv,.data,.xlsx,.xls,.json">
+          <label for="fileInput" class="file-picker-shell">
+            <span class="file-picker-button">Browse database extract</span>
+            <span id="fileName" class="file-picker-name">No export selected yet</span>
+          </label>
+          <p class="helper file-picker-help">Accepted export formats: CSV, TSV, DATA, Excel (.xlsx, .xls), JSON</p>
+        </div>
+        <button id="uploadButton" class="landing-upload-button" type="button">Upload database dataset</button>
+        <div id="status" class="status landing-status">Choose an exported dataset file to begin.</div>
+      </div>
+    </section>
+
+    <section class="landing-proof-strip landing-proof-strip-compact">
+      <div>
+        <span>Separated flow</span>
+        <strong>Database-origin datasets no longer start in the normal file path.</strong>
+      </div>
+      <div>
+        <span>Context capture</span>
+        <strong>Source system, object name, and notes can travel with the session.</strong>
+      </div>
+      <div>
+        <span>Same core tool</span>
+        <strong>Preparation, charting, and exports still use the deterministic engine.</strong>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/shared.js"></script>
+  <script>
+    const ids = {
+      fileInput: document.getElementById("fileInput"),
+      fileName: document.getElementById("fileName"),
+      uploadButton: document.getElementById("uploadButton"),
+      status: document.getElementById("status"),
+      sourceType: document.getElementById("sourceType"),
+      sourceObject: document.getElementById("sourceObject"),
+      sourceNotes: document.getElementById("sourceNotes")
+    };
+
+    function setStatus(message) {
+      ids.status.textContent = message;
+    }
+
+    function renderSelectedFile() {
+      const file = ids.fileInput.files[0];
+      ids.fileName.textContent = file ? file.name : "No export selected yet";
+    }
+
+    ids.uploadButton.addEventListener("click", async () => {
+      const file = ids.fileInput.files[0];
+      if (!file) {
+        setStatus("Choose a CSV, TSV, DATA, XLSX, XLS, or JSON export first.");
+        return;
+      }
+
+      try {
+        setStatus("Uploading and processing database dataset...");
+        const formData = new FormData();
+        formData.append("file", file);
+        const payload = await window.dataTool.fetchJson("/api/upload", { method: "POST", body: formData });
+        window.dataTool.saveSession({
+          datasetId: payload.dataset_id,
+          datasetState: payload.dataset_state,
+          filename: payload.filename,
+          shape: payload.shape,
+          schema: payload.schema,
+          preview: payload.preview,
+          analysis: payload.analysis,
+          transformConfig: {},
+          transformHistory: [{ label: "Original cleaned view", config: {} }],
+          transformHistoryIndex: 0,
+          chartConfig: null,
+          sourcePath: "database",
+          sourceContext: {
+            sourceType: ids.sourceType.value,
+            sourceObject: ids.sourceObject.value.trim(),
+            sourceNotes: ids.sourceNotes.value.trim()
+          }
+        });
+        window.location.href = "/prepare";
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    ids.fileInput.addEventListener("change", renderSelectedFile);
+    renderSelectedFile();
+  </script>
+</body>
+</html>

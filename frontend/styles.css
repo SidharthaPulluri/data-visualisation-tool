@@ -39,6 +39,10 @@ body {
   padding: 0 0 48px;
 }
 
+.guide-page {
+  padding-bottom: 56px;
+}
+
 .landing-topbar {
   width: 100vw;
   margin-left: calc(50% - 50vw);
@@ -314,6 +318,145 @@ body {
   margin-top: 30px;
 }
 
+.landing-simple-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: end;
+  padding: 24px 10px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.landing-simple-copy h1 {
+  margin: 10px 0 10px;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  line-height: 0.95;
+  letter-spacing: -0.07em;
+  max-width: 12ch;
+}
+
+.landing-simple-lead {
+  max-width: 64ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.landing-simple-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.landing-source-grid-main {
+  margin-top: 24px;
+  padding: 0 10px;
+}
+
+.landing-card-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.landing-quick-links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  padding: 0 10px;
+  margin-top: 26px;
+}
+
+.landing-source-section {
+  padding: 0 10px;
+}
+
+.landing-source-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.source-path-card {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow);
+}
+
+.source-path-card h3 {
+  margin: 0;
+  font-size: 1.18rem;
+}
+
+.source-path-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.source-path-card .insight-list {
+  margin: 0;
+}
+
+.source-path-card-active {
+  border-color: rgba(31, 94, 255, 0.2);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(244, 249, 255, 0.92) 100%);
+}
+
+.guide-hero {
+  padding: 26px 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.guide-hero h1 {
+  margin: 10px 0 10px;
+  font-size: clamp(2.4rem, 5vw, 4.4rem);
+  line-height: 0.94;
+  letter-spacing: -0.07em;
+  max-width: 11ch;
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 24px 10px 0;
+}
+
+.guide-card {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: var(--shadow);
+}
+
+.guide-card h2 {
+  margin: 0;
+}
+
+.guide-card .insight-list {
+  margin: 0;
+}
+
+.guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 26px 10px 0;
+}
+
+.landing-topbar-chip-link {
+  text-decoration: none;
+}
+
 .landing-upload-band {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(320px, 440px);
@@ -359,7 +502,7 @@ body {
 
 .landing-proof-strip {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 18px;
   padding: 16px 10px 0;
 }
@@ -389,6 +532,19 @@ body {
 
 .landing-section {
   padding: 0 10px;
+}
+
+.landing-hero-compact {
+  padding-bottom: 28px;
+}
+
+.landing-proof-strip-compact {
+  margin-top: 24px;
+}
+
+.database-source-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 4px;
 }
 
 .landing-section-head {
@@ -1623,7 +1779,10 @@ tr:hover td {
   .landing-upload-band,
   .landing-two-column,
   .landing-steps,
-  .landing-proof-strip {
+  .landing-proof-strip,
+  .landing-source-grid,
+  .landing-quick-links,
+  .guide-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1640,6 +1799,11 @@ tr:hover td {
 
   .landing-right-rail {
     gap: 18px;
+  }
+
+  .landing-simple-hero {
+    grid-template-columns: 1fr;
+    align-items: start;
   }
 
   .page-grid,
@@ -1713,11 +1877,13 @@ tr:hover td {
 
   .landing-lead,
   .landing-trust,
+  .landing-simple-copy h1,
   .landing-kicker,
   .landing-hero-copy h1,
   .landing-upload-copy h2,
   .landing-section-head h2,
   .landing-close-copy,
+  .guide-hero h1,
   .landing-brand strong,
   .landing-brand-subtitle {
     padding-left: 0;
@@ -1733,7 +1899,10 @@ tr:hover td {
   }
 
   .landing-hero-actions .action-link,
-  .landing-hero-actions .button-link {
+  .landing-hero-actions .button-link,
+  .landing-simple-actions .button-link,
+  .guide-actions .action-link,
+  .guide-actions .button-link {
     width: 100%;
   }
 
@@ -1905,7 +2074,11 @@ tr:hover td {
 
   .landing-upload-band,
   .landing-proof-strip,
-  .landing-section {
+  .landing-section,
+  .landing-source-grid-main,
+  .landing-quick-links,
+  .guide-grid,
+  .guide-actions {
     margin-top: 22px;
   }
 

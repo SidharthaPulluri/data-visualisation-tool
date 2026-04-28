@@ -179,6 +179,16 @@ def prepare_page() -> Any:
     return send_from_directory(FRONTEND_DIR, "prepare.html")
 
 
+@app.get("/database")
+def database_page() -> Any:
+    return send_from_directory(FRONTEND_DIR, "database.html")
+
+
+@app.get("/guide")
+def guide_page() -> Any:
+    return send_from_directory(FRONTEND_DIR, "guide.html")
+
+
 @app.get("/visualize")
 def visualize_page() -> Any:
     return send_from_directory(FRONTEND_DIR, "visualize.html")
@@ -193,7 +203,7 @@ def health() -> Any:
 def upload_dataset() -> Any:
     file = request.files.get("file")
     if not file or not file.filename:
-        return _json_response({"error": "Please choose a CSV, Excel, or JSON file."}, 400)
+        return _json_response({"error": "Please choose a CSV, TSV, DATA, Excel, or JSON file."}, 400)
 
     try:
         raw_df, load_report = load_uploaded_dataset(file)

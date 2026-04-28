@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Upload Dataset</title>
+  <title>Sidhartha Utilities</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body class="landing-body">
@@ -19,172 +19,81 @@
           </div>
         </div>
         <div class="landing-topbar-meta">
-          <span class="landing-topbar-chip">Upload-first workflow</span>
           <span class="landing-topbar-chip">No AI or ML</span>
           <span class="landing-topbar-chip">Deterministic outputs</span>
         </div>
       </div>
     </header>
 
-    <section class="landing-hero">
-      <div class="landing-hero-inner">
-        <div class="landing-hero-copy">
-          <span class="eyebrow">Step 1</span>
-          <p class="landing-kicker">Transparent, rule-based analytics</p>
-          <h1>Understand structured files without AI guesswork.</h1>
-          <p class="landing-lead">Upload a CSV, TSV, Excel, or JSON file and get a clear explanation of what it contains, what to compare, which charts make sense, and what stands out using logic you can actually trust.</p>
-          <div class="landing-hero-actions">
-            <a class="action-link" href="#upload-start">Upload a dataset</a>
-            <a class="button-link ghost" href="#workflow">See how it works</a>
-          </div>
-          <p class="landing-trust">Same file. Same explanation. Every time.</p>
-        </div>
-
-        <div class="landing-hero-visual" aria-hidden="true">
-          <div class="landing-visual-stage">
-            <div class="landing-visual-ribbon">File -> Explain -> Chart -> Export</div>
-            <div class="landing-visual-grid">
-              <div>
-                <span>Dataset type</span>
-                <strong>Panel comparison</strong>
-              </div>
-              <div>
-                <span>Main field</span>
-                <strong>Country / territory</strong>
-              </div>
-              <div>
-                <span>Primary metric</span>
-                <strong>Incident cases</strong>
-              </div>
-              <div>
-                <span>First chart</span>
-                <strong>Top-N bar</strong>
-              </div>
-            </div>
-            <div class="landing-visual-caption">
-              <p>Built for people who start with files, not databases.</p>
-            </div>
-          </div>
-        </div>
+    <section class="landing-simple-hero">
+      <div class="landing-simple-copy">
+        <span class="section-kicker">Start here</span>
+        <h1>Choose how you want to begin.</h1>
+        <p class="landing-simple-lead">Use the file path for CSV, TSV, DATA, Excel, and JSON uploads. Use the database path when the dataset came from SQL, MongoDB, or another source system export. If you want a walkthrough first, open the guide page.</p>
+      </div>
+      <div class="landing-simple-actions">
+        <a class="button-link ghost" href="/guide">Read how to use the tool</a>
       </div>
     </section>
 
-    <section id="upload-start" class="landing-upload-band">
-      <div class="landing-upload-copy">
-        <span class="section-kicker">Start here</span>
-        <h2>Drop in one structured file and move straight into analysis.</h2>
-        <p class="helper">The tool parses the file, applies deterministic cleanup, detects field roles, and opens a guided workspace for preparation and charting.</p>
-      </div>
-      <div class="landing-upload-controls">
+    <section class="landing-source-grid landing-source-grid-main">
+      <article class="source-path-card source-path-card-active">
+        <span class="section-kicker">Structured files</span>
+        <h3>Upload a normal data file</h3>
+        <p>Best for CSV, TSV, DATA, Excel, and JSON datasets that are already exported and ready to inspect.</p>
         <div class="file-picker landing-file-picker">
-          <input id="fileInput" class="file-input-native" type="file" accept=".csv,.tsv,.xlsx,.xls,.json">
+          <input id="fileInput" class="file-input-native" type="file" accept=".csv,.tsv,.data,.xlsx,.xls,.json">
           <label for="fileInput" class="file-picker-shell">
             <span class="file-picker-button">Browse dataset</span>
             <span id="fileName" class="file-picker-name">No file selected yet</span>
           </label>
-          <p class="helper file-picker-help">Accepted formats: CSV, TSV, Excel (.xlsx, .xls), JSON</p>
+          <p class="helper file-picker-help">Accepted formats: CSV, TSV, DATA, Excel (.xlsx, .xls), JSON</p>
         </div>
         <button id="uploadButton" class="landing-upload-button" type="button">Upload and continue</button>
         <div id="status" class="status landing-status">Choose a file to begin.</div>
-      </div>
-    </section>
+      </article>
 
-    <section class="landing-proof-strip">
-      <div>
-        <span>Upload-first</span>
-        <strong>No SQL, warehouse, or modeling required.</strong>
-      </div>
-      <div>
-        <span>Transparent logic</span>
-        <strong>Every recommendation comes from visible rules.</strong>
-      </div>
-      <div>
-        <span>Safer defaults</span>
-        <strong>Warnings help prevent weak charts and bad aggregation.</strong>
-      </div>
-    </section>
-
-    <section id="workflow" class="landing-section">
-      <div class="landing-section-head">
-        <span class="section-kicker">Workflow</span>
-        <h2>From upload to understanding in minutes.</h2>
-      </div>
-      <div class="landing-steps">
-        <article>
-          <span>01</span>
-          <h3>Upload the file</h3>
-          <p>Start with one CSV, TSV, Excel, or JSON dataset.</p>
-        </article>
-        <article>
-          <span>02</span>
-          <h3>Understand the structure</h3>
-          <p>See what the dataset appears to track, what can be compared, and which metrics matter first.</p>
-        </article>
-        <article>
-          <span>03</span>
-          <h3>Prepare the view</h3>
-          <p>Review schema, preview the table, apply transformations, and inspect data quality.</p>
-        </article>
-        <article>
-          <span>04</span>
-          <h3>Build visuals and export</h3>
-          <p>Create charts, compare saved views, and export the data, charts, or reports you need.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="landing-section landing-two-column">
-      <div>
-        <div class="landing-section-head">
-          <span class="section-kicker">Why it feels different</span>
-          <h2>Built for trust, not magic.</h2>
+      <article class="source-path-card">
+        <span class="section-kicker">Database datasets</span>
+        <h3>Start from a SQL or MongoDB export</h3>
+        <p>Use a separate path when the dataset came from PostgreSQL, MySQL, SQL Server, SQLite, MongoDB, or another source system.</p>
+        <ul class="insight-list">
+          <li>Keep source-system context separate from ordinary file uploads.</li>
+          <li>Capture table, collection, and export notes before analysis.</li>
+          <li>Then continue into the same preparation and charting engine.</li>
+        </ul>
+        <div class="landing-card-actions">
+          <a class="button-link" href="/database">Open database path</a>
         </div>
-        <div class="landing-bullets">
-          <div>
-            <h3>Transparent recommendations</h3>
-            <p>Dataset explanations, metric choices, and chart suggestions are driven by deterministic rules instead of hidden AI logic.</p>
-          </div>
-          <div>
-            <h3>Beginner-friendly guidance</h3>
-            <p>The tool helps users understand a file before they try to chart it, which makes the first useful visual much easier to reach.</p>
-          </div>
-          <div>
-            <h3>Repeatable outputs</h3>
-            <p>The same file produces the same explanation and guidance every time, which is valuable for trust, compliance, and review.</p>
-          </div>
+      </article>
+    </section>
+
+    <section class="landing-quick-links">
+      <div class="landing-mini-section">
+        <span class="section-kicker">Guide</span>
+        <h3>Need instructions first?</h3>
+        <p class="helper">Open the separate guide page for a clear step-by-step explanation of upload, prepare, chart, and export.</p>
+        <div class="button-row">
+          <a class="button-link ghost" href="/guide">Open guide page</a>
         </div>
       </div>
 
-      <div class="landing-right-rail">
-        <div class="landing-mini-section">
-          <span class="section-kicker">Saved session</span>
-          <h3>Resume where you left off</h3>
-          <div id="sessionSummary" class="empty-copy">No saved dataset session yet.</div>
-          <div class="button-row">
-            <a id="resumeButton" class="button-link ghost" href="/prepare">Open preparation</a>
-            <button id="clearButton" class="ghost" type="button">Clear saved session</button>
-          </div>
-        </div>
-
-        <div class="landing-mini-section">
-          <span class="section-kicker">Saved workspaces</span>
-          <h3>Open a previous analysis</h3>
-          <div id="workspaceList" class="workspace-list">
-            <div class="empty-copy">No saved workspaces yet.</div>
-          </div>
+      <div class="landing-mini-section">
+        <span class="section-kicker">Saved session</span>
+        <h3>Resume where you left off</h3>
+        <div id="sessionSummary" class="empty-copy">No saved dataset session yet.</div>
+        <div class="button-row">
+          <a id="resumeButton" class="button-link ghost" href="/prepare">Open preparation</a>
+          <button id="clearButton" class="ghost" type="button">Clear saved session</button>
         </div>
       </div>
-    </section>
 
-    <section class="landing-section landing-close">
-      <div class="landing-section-head">
-        <span class="section-kicker">For people with data</span>
-        <h2>A better starting point than blank spreadsheets, raw plotting, or black-box assistants.</h2>
-      </div>
-      <p class="landing-close-copy">If you have a structured file and want a fast, understandable, and trustworthy way to explore it, this tool gives you a stronger first step.</p>
-      <div class="landing-hero-actions">
-        <a class="action-link" href="#upload-start">Upload a dataset</a>
-        <a class="button-link ghost" href="/prepare">Open saved preparation</a>
+      <div class="landing-mini-section">
+        <span class="section-kicker">Saved workspaces</span>
+        <h3>Open a previous analysis</h3>
+        <div id="workspaceList" class="workspace-list">
+          <div class="empty-copy">No saved workspaces yet.</div>
+        </div>
       </div>
     </section>
   </main>
@@ -273,7 +182,7 @@
     ids.uploadButton.addEventListener("click", async () => {
       const file = ids.fileInput.files[0];
       if (!file) {
-        setStatus("Choose a CSV, TSV, XLSX, XLS, or JSON file first.");
+        setStatus("Choose a CSV, TSV, DATA, XLSX, XLS, or JSON file first.");
         return;
       }
 
