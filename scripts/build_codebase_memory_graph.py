@@ -1025,6 +1025,7 @@ def render_html(graph: dict[str, Any]) -> str:
     const state = {{
       selectedId: null,
       selectedEdgeKey: null,
+      focusedId: null,
       search: ""
     }};
 
@@ -1218,14 +1219,23 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     function selectedNetworkPaths() {{
+      const focusPath = selectedFocusPath();
       if (state.selectedEdgeKey) {{
         const edge = edgeLookup.get(state.selectedEdgeKey);
-        return edge ? new Set([edge.source, edge.target]) : new Set();
+        if (!edge) return new Set();
+        const linked = new Set([edge.source, edge.target]);
+        if (focusPath) {{
+          linked.add(focusPath);
+          connectedEdgesForFile(focusPath).forEach((focusEdge) => {{
+            linked.add(focusEdge.source);
+            linked.add(focusEdge.target);
+          }});
+        }}
+        return linked;
       }}
-      const parentId = activeParentId();
-      if (!parentId) return new Set();
-      const linked = new Set([parentId]);
-      connectedEdgesForFile(parentId).forEach((edge) => {{
+      if (!focusPath) return new Set();
+      const linked = new Set([focusPath]);
+      connectedEdgesForFile(focusPath).forEach((edge) => {{
         linked.add(edge.source);
         linked.add(edge.target);
       }});
@@ -1233,14 +1243,14 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     function selectedFocusPath() {{
-      return state.selectedEdgeKey ? null : activeParentId();
+      return state.focusedId || activeParentId();
     }}
 
     function shouldShowPlanets(node) {{
       if (!isVisibleFile(node)) return false;
       if (state.search) return true;
-      const parentId = activeParentId();
-      return parentId === node.path;
+      const focusPath = selectedFocusPath();
+      return focusPath === node.path;
     }}
 
     function toWorld(clientX, clientY) {{
@@ -1256,6 +1266,7 @@ def render_html(graph: dict[str, Any]) -> str:
     function resetView() {{
       state.selectedId = null;
       state.selectedEdgeKey = null;
+      state.focusedId = null;
       state.search = "";
       searchInput.value = "";
       renderSelectionPill(null);
@@ -1753,6 +1764,15 @@ def render_html(graph: dict[str, Any]) -> str:
       state.selectedEdgeKey = nodeId && edgeLookup.has(nodeId) ? nodeId : null;
       if (state.selectedEdgeKey) {{
         state.selectedId = null;
+      }} else if (!nodeId) {{
+        state.focusedId = null;
+      }} else if (fileNodeLookup.has(nodeId)) {{
+        state.focusedId = nodeId;
+      }} else {{
+        const fn = functionLookup.get(nodeId);
+        if (fn) {{
+          state.focusedId = fn.parentId;
+        }}
       }}
       renderSelectionPill(nodeId);
       renderDetails(nodeId);

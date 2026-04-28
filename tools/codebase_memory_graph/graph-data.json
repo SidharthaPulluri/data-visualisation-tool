@@ -7354,7 +7354,7 @@
       "name": "build_codebase_memory_graph.py",
       "folder": "scripts",
       "extension": ".py",
-      "lines": 1811,
+      "lines": 1831,
       "functions": [
         {
           "name": "discover_source_files",
@@ -8027,8 +8027,8 @@
           "kind": "function",
           "keywords": [
             "node",
-            "span",
             "edge",
+            "span",
             "map",
             "planet",
             "ctx",
@@ -8051,7 +8051,7 @@
         },
         {
           "name": "main",
-          "line": 1799,
+          "line": 1819,
           "kind": "function",
           "keywords": [
             "graph",
@@ -8441,12 +8441,12 @@
       "name": "tools/index.html",
       "folder": "tools",
       "extension": ".html",
-      "lines": 1096,
+      "lines": 1164,
       "functions": [
         {
           "name": "escapeHtml",
           "kind": "function",
-          "line": 34,
+          "line": 33,
           "keywords": [
             "all",
             "replace",
@@ -8467,7 +8467,7 @@
         {
           "name": "attachDegrees",
           "kind": "function",
-          "line": 43,
+          "line": 42,
           "keywords": [
             "map",
             "degree",
@@ -8493,9 +8493,93 @@
           "stem": "attach degrees"
         },
         {
+          "name": "buildSimilarityLookup",
+          "kind": "function",
+          "line": 51,
+          "keywords": [
+            "lookup",
+            "cluster",
+            "clusters",
+            "each",
+            "for",
+            "member",
+            "average",
+            "build"
+          ],
+          "fingerprint": [
+            "average",
+            "build",
+            "cluster",
+            "clusters",
+            "each",
+            "for",
+            "lookup",
+            "member",
+            "similarity"
+          ],
+          "stem": "build similarity lookup"
+        },
+        {
+          "name": "buildEdgesByFile",
+          "kind": "function",
+          "line": 61,
+          "keywords": [
+            "edge",
+            "lookup",
+            "edges",
+            "source",
+            "target",
+            "get",
+            "has",
+            "push"
+          ],
+          "fingerprint": [
+            "build",
+            "edge",
+            "edges",
+            "file",
+            "get",
+            "has",
+            "lookup",
+            "push",
+            "source",
+            "target"
+          ],
+          "stem": "build edges file"
+        },
+        {
+          "name": "functionVisualMeta",
+          "kind": "function",
+          "line": 72,
+          "keywords": [
+            "score",
+            "color",
+            "cluster",
+            "kind",
+            "math",
+            "rgba",
+            "degree",
+            "else"
+          ],
+          "fingerprint": [
+            "cluster",
+            "color",
+            "degree",
+            "else",
+            "function",
+            "kind",
+            "math",
+            "meta",
+            "rgba",
+            "score",
+            "visual"
+          ],
+          "stem": "function visual meta"
+        },
+        {
           "name": "groupFilesByFolder",
           "kind": "function",
-          "line": 52,
+          "line": 97,
           "keywords": [
             "groups",
             "folder",
@@ -8522,7 +8606,7 @@
         {
           "name": "normalizeText",
           "kind": "function",
-          "line": 63,
+          "line": 108,
           "keywords": [
             "case",
             "lower",
@@ -8539,7 +8623,7 @@
         {
           "name": "buildPositions",
           "kind": "function",
-          "line": 67,
+          "line": 112,
           "keywords": [
             "math",
             "group",
@@ -8567,7 +8651,7 @@
         {
           "name": "isFunctionMatch",
           "kind": "function",
-          "line": 150,
+          "line": 202,
           "keywords": [
             "planet",
             "haystack",
@@ -8595,7 +8679,7 @@
         {
           "name": "isVisibleFile",
           "kind": "function",
-          "line": 156,
+          "line": 208,
           "keywords": [
             "node",
             "haystack",
@@ -8623,7 +8707,7 @@
         {
           "name": "activeParentId",
           "kind": "function",
-          "line": 163,
+          "line": 215,
           "keywords": [
             "selected",
             "state",
@@ -8649,7 +8733,7 @@
         {
           "name": "selectedNetworkPaths",
           "kind": "function",
-          "line": 170,
+          "line": 222,
           "keywords": [
             "edge",
             "parent",
@@ -8677,7 +8761,7 @@
         {
           "name": "selectedFocusPath",
           "kind": "function",
-          "line": 185,
+          "line": 237,
           "keywords": [
             "selected",
             "active",
@@ -8702,7 +8786,7 @@
         {
           "name": "shouldShowPlanets",
           "kind": "function",
-          "line": 189,
+          "line": 241,
           "keywords": [
             "node",
             "parent",
@@ -8728,26 +8812,26 @@
         {
           "name": "toWorld",
           "kind": "function",
-          "line": 196,
+          "line": 248,
           "keywords": [
-            "scale",
-            "canvas",
             "rect",
             "client",
+            "scale",
+            "canvas",
             "height",
-            "screen",
-            "state",
-            "translate"
+            "width",
+            "bounding",
+            "get"
           ],
           "fingerprint": [
+            "bounding",
             "canvas",
             "client",
+            "get",
             "height",
             "rect",
             "scale",
-            "screen",
-            "state",
-            "translate",
+            "width",
             "world"
           ],
           "stem": "world"
@@ -8755,16 +8839,26 @@
         {
           "name": "resetView",
           "kind": "function",
-          "line": 210,
+          "line": 258,
           "keywords": [
-            "reset",
-            "scale",
             "state",
-            "view"
+            "render",
+            "search",
+            "selected",
+            "details",
+            "edge",
+            "input",
+            "key"
           ],
           "fingerprint": [
+            "details",
+            "edge",
+            "input",
+            "key",
+            "render",
             "reset",
-            "scale",
+            "search",
+            "selected",
             "state",
             "view"
           ],
@@ -8773,7 +8867,7 @@
         {
           "name": "drawGroupZones",
           "kind": "function",
-          "line": 214,
+          "line": 267,
           "keywords": [
             "zone",
             "ctx",
@@ -8802,33 +8896,25 @@
         {
           "name": "connectedEdgesForFile",
           "kind": "function",
-          "line": 237,
+          "line": 290,
           "keywords": [
-            "edge",
             "edges",
             "connected",
-            "filter",
             "for",
-            "graph",
-            "source",
-            "target"
+            "get"
           ],
           "fingerprint": [
             "connected",
-            "edge",
             "edges",
-            "filter",
             "for",
-            "graph",
-            "source",
-            "target"
+            "get"
           ],
           "stem": "connected edges for"
         },
         {
           "name": "edgeKey",
           "kind": "function",
-          "line": 241,
+          "line": 294,
           "keywords": [
             "edge",
             "key",
@@ -8846,7 +8932,7 @@
         {
           "name": "describeEdgeLabel",
           "kind": "function",
-          "line": 245,
+          "line": 298,
           "keywords": [
             "label",
             "the",
@@ -8874,7 +8960,7 @@
         {
           "name": "edgeExplanation",
           "kind": "function",
-          "line": 264,
+          "line": 317,
           "keywords": [
             "edge",
             "label",
@@ -8900,7 +8986,7 @@
         {
           "name": "buildDisplayNodeMap",
           "kind": "function",
-          "line": 268,
+          "line": 321,
           "keywords": [
             "strength",
             "math",
@@ -8927,7 +9013,7 @@
         {
           "name": "buildDisplayPlanets",
           "kind": "function",
-          "line": 324,
+          "line": 377,
           "keywords": [
             "parent",
             "planet",
@@ -8955,7 +9041,7 @@
         {
           "name": "getVisibleEdgeGeometry",
           "kind": "function",
-          "line": 342,
+          "line": 395,
           "keywords": [
             "source",
             "target",
@@ -8981,7 +9067,7 @@
         {
           "name": "pointToQuadraticDistance",
           "kind": "function",
-          "line": 355,
+          "line": 408,
           "keywords": [
             "geometry",
             "inv",
@@ -9008,7 +9094,7 @@
         {
           "name": "drawEdges",
           "kind": "function",
-          "line": 367,
+          "line": 420,
           "keywords": [
             "geometry",
             "selected",
@@ -9036,16 +9122,16 @@
         {
           "name": "drawPlanets",
           "kind": "function",
-          "line": 396,
+          "line": 447,
           "keywords": [
-            "node",
             "planet",
             "ctx",
-            "display",
+            "node",
             "map",
-            "planets",
             "selected",
-            "stroke"
+            "stroke",
+            "planets",
+            "display"
           ],
           "fingerprint": [
             "ctx",
@@ -9063,7 +9149,7 @@
         {
           "name": "drawStars",
           "kind": "function",
-          "line": 427,
+          "line": 480,
           "keywords": [
             "node",
             "ctx",
@@ -9071,8 +9157,8 @@
             "color",
             "connected",
             "fill",
-            "focus",
-            "network"
+            "rgba",
+            "stroke"
           ],
           "fingerprint": [
             "color",
@@ -9080,62 +9166,90 @@
             "ctx",
             "draw",
             "fill",
-            "focus",
-            "network",
             "node",
+            "rgba",
             "selected",
-            "stars"
+            "stars",
+            "stroke"
           ],
           "stem": "draw stars"
         },
         {
+          "name": "createScene",
+          "kind": "function",
+          "line": 518,
+          "keywords": [
+            "display",
+            "map",
+            "planet",
+            "planets",
+            "node",
+            "visible",
+            "parent",
+            "selected"
+          ],
+          "fingerprint": [
+            "create",
+            "display",
+            "map",
+            "node",
+            "parent",
+            "planet",
+            "planets",
+            "scene",
+            "selected",
+            "visible"
+          ],
+          "stem": "create scene"
+        },
+        {
           "name": "draw",
           "kind": "function",
-          "line": 467,
+          "line": 538,
           "keywords": [
+            "scene",
+            "draw",
             "canvas",
             "ctx",
-            "draw",
-            "scale",
+            "focus",
+            "fill",
             "height",
-            "state",
-            "width",
-            "focus"
+            "rect"
           ],
           "fingerprint": [
             "canvas",
             "ctx",
             "draw",
+            "fill",
             "focus",
             "height",
-            "scale",
-            "state",
-            "width"
+            "rect",
+            "scene"
           ],
           "stem": "draw"
         },
         {
           "name": "hitTest",
           "kind": "function",
-          "line": 485,
+          "line": 553,
           "keywords": [
-            "node",
-            "display",
             "index",
-            "map",
-            "planets",
-            "visible",
+            "node",
             "geometry",
-            "point"
+            "point",
+            "visible",
+            "edge",
+            "distance",
+            "event"
           ],
           "fingerprint": [
-            "display",
+            "distance",
+            "edge",
+            "event",
             "geometry",
             "hit",
             "index",
-            "map",
             "node",
-            "planets",
             "point",
             "test",
             "visible"
@@ -9143,9 +9257,31 @@
           "stem": "hit test"
         },
         {
+          "name": "requestDraw",
+          "kind": "function",
+          "line": 577,
+          "keywords": [
+            "draw",
+            "queued",
+            "request",
+            "animation",
+            "frame",
+            "window"
+          ],
+          "fingerprint": [
+            "animation",
+            "draw",
+            "frame",
+            "queued",
+            "request",
+            "window"
+          ],
+          "stem": "request draw"
+        },
+        {
           "name": "renderHeroStats",
           "kind": "function",
-          "line": 512,
+          "line": 585,
           "keywords": [
             "span",
             "summary",
@@ -9172,7 +9308,7 @@
         {
           "name": "renderLegend",
           "kind": "function",
-          "line": 523,
+          "line": 596,
           "keywords": [
             "folder",
             "legend",
@@ -9199,7 +9335,7 @@
         {
           "name": "renderHotspots",
           "kind": "function",
-          "line": 533,
+          "line": 606,
           "keywords": [
             "span",
             "escape",
@@ -9226,7 +9362,7 @@
         {
           "name": "renderSimilarityClusters",
           "kind": "function",
-          "line": 543,
+          "line": 616,
           "keywords": [
             "similarity",
             "span",
@@ -9253,7 +9389,7 @@
         {
           "name": "renderDuplicates",
           "kind": "function",
-          "line": 558,
+          "line": 631,
           "keywords": [
             "span",
             "duplicate",
@@ -9280,7 +9416,7 @@
         {
           "name": "renderSelectionPill",
           "kind": "function",
-          "line": 571,
+          "line": 644,
           "keywords": [
             "planet",
             "span",
@@ -9307,14 +9443,14 @@
         {
           "name": "renderDetails",
           "kind": "function",
-          "line": 609,
+          "line": 682,
           "keywords": [
             "span",
             "detail",
             "escape",
+            "planet",
             "cluster",
             "edge",
-            "planet",
             "key",
             "related"
           ],
@@ -9335,7 +9471,7 @@
         {
           "name": "updateSelection",
           "kind": "function",
-          "line": 679,
+          "line": 753,
           "keywords": [
             "node",
             "selected",
@@ -10883,7 +11019,7 @@
           "id": "tools/codebase_memory_graph/index.html::escapeHtml",
           "file": "tools/codebase_memory_graph/index.html",
           "name": "escapeHtml",
-          "line": 34,
+          "line": 33,
           "kind": "function"
         }
       ],
@@ -12046,7 +12182,7 @@
   ],
   "summary": {
     "files": 20,
-    "functions": 350,
+    "functions": 355,
     "edges": 33,
     "folders": 11,
     "similarity_clusters": 31
