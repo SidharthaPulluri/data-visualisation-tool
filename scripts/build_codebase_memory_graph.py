@@ -1101,6 +1101,7 @@ def render_html(graph: dict[str, Any]) -> str:
     const detailCard = document.getElementById("detailCard");
     const selectionPill = document.getElementById("selectionPill");
     const legend = document.getElementById("legend");
+    const graphHelp = document.querySelector(".graph-help");
     const LAYOUT_STORAGE_KEY = "data_visualisation_tool_codebase_memory_graph_layout_v1";
 
     const state = {{
@@ -1112,6 +1113,10 @@ def render_html(graph: dict[str, Any]) -> str:
       layoutOverrides: loadLayoutOverrides(),
       suppressClick: false
     }};
+
+    if (graphHelp) {{
+      graphHelp.textContent = "Overview mode lets you drag stars or whole constellations and save the layout · clicking a star enters focus mode · use Back to overview / drag mode to rearrange again";
+    }}
 
     function escapeHtml(value) {{
       return String(value)
@@ -1774,6 +1779,17 @@ def render_html(graph: dict[str, Any]) -> str:
       drawStars(scene);
     }}
 
+    function hitTestGroupZone(point, scene) {{
+      const zones = [...scene.groupZones]
+        .map((zone) => {{
+          const distance = Math.hypot(zone.centerX - point.x, zone.centerY - point.y);
+          return {{ zone, distance }};
+        }})
+        .filter((item) => item.distance <= item.zone.haloRadius)
+        .sort((left, right) => left.zone.haloRadius - right.zone.haloRadius || left.distance - right.distance);
+      return zones.length ? zones[0].zone : null;
+    }}
+
     function hitTest(event) {{
       const point = toWorld(event.clientX, event.clientY);
       const scene = createScene();
@@ -1818,6 +1834,24 @@ def render_html(graph: dict[str, Any]) -> str:
       baseNode.x = nextX;
       baseNode.y = nextY;
       state.layoutOverrides[path] = {{ x: nextX, y: nextY }};
+    }}
+
+    function updateManualClusterPositions(dragState, deltaX, deltaY) {{
+      const members = dragState.members || [];
+      if (!members.length) return;
+      const clampedDeltaX = clamp(
+        deltaX,
+        Math.max(...members.map((member) => 42 - member.startX)),
+        Math.min(...members.map((member) => (canvas.width - 42) - member.startX))
+      );
+      const clampedDeltaY = clamp(
+        deltaY,
+        Math.max(...members.map((member) => 42 - member.startY)),
+        Math.min(...members.map((member) => (canvas.height - 42) - member.startY))
+      );
+      members.forEach((member) => {{
+        updateManualStarPosition(member.path, member.startX + clampedDeltaX, member.startY + clampedDeltaY);
+      }});
     }}
 
     function renderHeroStats() {{
@@ -2032,24 +2066,72 @@ def render_html(graph: dict[str, Any]) -> str:
 
     canvas.addEventListener("mousedown", (event) => {{
       if (!canRearrangeLayout()) return;
-      const node = hitTest(event);
-      if (!node || node.kind !== "file") return;
       const point = toWorld(event.clientX, event.clientY);
+      const scene = createScene();
+      const nodes = [...scene.visiblePlanets, ...scene.visibleStars];
+      let fileNode = null;
+      for (let index = nodes.length - 1; index >= 0; index -= 1) {{
+        const node = nodes[index];
+        if (node.kind !== "file") continue;
+        const distance = Math.hypot(node.x - point.x, node.y - point.y);
+        if (distance <= node.r + 4) {{
+          fileNode = node;
+          break;
+        }}
+      }}
+      if (fileNode) {{
+        state.drag = {{
+          mode: "file",
+          path: fileNode.path,
+          offsetX: point.x - fileNode.x,
+          offsetY: point.y - fileNode.y,
+          moved: false
+        }};
+        canvas.style.cursor = "grabbing";
+        return;
+      }}
+      const zone = hitTestGroupZone(point, scene);
+      if (!zone) return;
+      const members = scene.visibleStars
+        .filter((node) => node.folder === zone.folder)
+        .map((node) => ({{
+          path: node.path,
+          startX: node.x,
+          startY: node.y
+        }}));
+      if (!members.length) return;
       state.drag = {{
-        path: node.path,
-        offsetX: point.x - node.x,
-        offsetY: point.y - node.y,
+        mode: "group",
+        folder: zone.folder,
+        anchorX: point.x,
+        anchorY: point.y,
+        members,
         moved: false
       }};
       canvas.style.cursor = "grabbing";
     }});
 
     canvas.addEventListener("mousemove", (event) => {{
-      if (!state.drag) return;
+      if (!state.drag) {{
+        if (!canRearrangeLayout()) {{
+          canvas.style.cursor = "default";
+          return;
+        }}
+        const point = toWorld(event.clientX, event.clientY);
+        const scene = createScene();
+        const overFile = scene.visibleStars.some((node) => Math.hypot(node.x - point.x, node.y - point.y) <= node.r + 4);
+        const overZone = overFile ? null : hitTestGroupZone(point, scene);
+        canvas.style.cursor = overFile || overZone ? "grab" : "default";
+        return;
+      }}
       const point = toWorld(event.clientX, event.clientY);
-      const nextX = point.x - state.drag.offsetX;
-      const nextY = point.y - state.drag.offsetY;
-      updateManualStarPosition(state.drag.path, nextX, nextY);
+      if (state.drag.mode === "group") {{
+        updateManualClusterPositions(state.drag, point.x - state.drag.anchorX, point.y - state.drag.anchorY);
+      }} else {{
+        const nextX = point.x - state.drag.offsetX;
+        const nextY = point.y - state.drag.offsetY;
+        updateManualStarPosition(state.drag.path, nextX, nextY);
+      }}
       state.drag.moved = true;
       state.suppressClick = true;
       requestDraw();
@@ -2061,7 +2143,7 @@ def render_html(graph: dict[str, Any]) -> str:
         persistLayoutOverrides();
       }}
       state.drag = null;
-      canvas.style.cursor = "default";
+      canvas.style.cursor = canRearrangeLayout() ? "grab" : "default";
       requestDraw();
     }});
 
