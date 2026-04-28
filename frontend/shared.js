@@ -1,6 +1,7 @@
 (function () {
   const STORAGE_KEY = "data_visualisation_tool_session";
   const WORKSPACES_KEY = "data_visualisation_tool_workspaces";
+  const MEMORY_GRAPH_KEY = "data_visualisation_tool_memory_events";
   const ACTIVE_TABLE_FIELDS = [
     "datasetId",
     "datasetState",
@@ -27,6 +28,40 @@
     } catch {
       return fallback;
     }
+  }
+
+  function createMemoryEvent(type, payload = {}) {
+    return {
+      id: `memory_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      type,
+      createdAt: new Date().toISOString(),
+      payload: cloneJson(payload, payload) || {},
+    };
+  }
+
+  function loadMemoryEvents() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(MEMORY_GRAPH_KEY) || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveMemoryEvents(events) {
+    localStorage.setItem(MEMORY_GRAPH_KEY, JSON.stringify((Array.isArray(events) ? events : []).slice(0, 120)));
+  }
+
+  function recordMemoryEvent(type, payload = {}) {
+    const events = loadMemoryEvents();
+    const event = createMemoryEvent(type, payload);
+    events.unshift(event);
+    saveMemoryEvents(events);
+    return event;
+  }
+
+  function clearMemoryEvents() {
+    localStorage.removeItem(MEMORY_GRAPH_KEY);
   }
 
   function buildTableRecord(record = {}) {
@@ -120,7 +155,14 @@
       sourcePath: options.sourcePath || null,
       sourceContext: cloneJson(options.sourceContext, null),
     };
-    return mirrorActiveTableIntoSession(session, workspaceTables[0].id);
+    const nextSession = mirrorActiveTableIntoSession(session, workspaceTables[0].id);
+    recordMemoryEvent("session_initialized", {
+      sourcePath: nextSession.sourcePath || "file",
+      tableCount: workspaceTables.length,
+      activeTableId: nextSession.activeTableId,
+      filename: nextSession.filename || null,
+    });
+    return nextSession;
   }
 
   function getWorkspaceTables(session) {
@@ -201,6 +243,11 @@
     const nextSession = setActiveTable(state, tableId);
     replaceSessionState(state, nextSession);
     saveSession(state);
+    recordMemoryEvent("table_switched", {
+      activeTableId: state.activeTableId,
+      filename: state.filename || null,
+      lastPage: state.lastPage || null,
+    });
     if (reload && typeof window !== "undefined") {
       window.location.reload();
     }
@@ -479,6 +526,13 @@
     const snapshot = createWorkspaceSnapshot(session, name);
     workspaces.unshift(snapshot);
     saveWorkspaces(workspaces.slice(0, 8));
+    recordMemoryEvent("workspace_saved", {
+      workspaceId: snapshot.id,
+      name: snapshot.name,
+      filename: snapshot.filename || null,
+      tableCount: Array.isArray(snapshot.session?.tables) ? snapshot.session.tables.length : 0,
+      lastPage: snapshot.lastPage || "/prepare",
+    });
     return snapshot;
   }
 
@@ -523,6 +577,201 @@
       .replace(/\s+/g, " ")
       .trim();
     return base || String(value || "");
+  }
+
+  function createGraphNode(id, kind, title, details = [], meta = {}) {
+    return {
+      id,
+      kind,
+      title,
+      details: Array.isArray(details) ? details.filter(Boolean) : [],
+      meta: cloneJson(meta, meta) || {},
+    };
+  }
+
+  function createGraphEdge(from, to, label) {
+    return { from, to, label };
+  }
+
+  function buildWorkspaceMemoryGraph(session, options = {}) {
+    const currentSession = normalizeSessionShape(session || loadSession() || null);
+    const workspaces = options.includeWorkspaces === false ? [] : loadWorkspaces();
+    const events = options.includeEvents === false ? [] : loadMemoryEvents();
+    const nodes = [];
+    const edges = [];
+
+    if (currentSession) {
+      const sessionId = `session:${currentSession.activeTableId || currentSession.datasetId || currentSession.filename || "current"}`;
+      nodes.push(
+        createGraphNode(
+          sessionId,
+          "session",
+          currentSession.filename || "Current session",
+          [
+            `${formatNumber(currentSession.shape?.rows || 0, 0)} rows`,
+            `${formatNumber(currentSession.shape?.columns || 0, 0)} columns`,
+            `${formatNumber(getWorkspaceTables(currentSession).length || 0, 0)} tables`,
+          ],
+          {
+            activeTableId: currentSession.activeTableId || null,
+            sourcePath: currentSession.sourcePath || "file",
+            lastPage: currentSession.lastPage || "/prepare",
+          }
+        )
+      );
+
+      if (currentSession.sourcePath || currentSession.sourceContext) {
+        const sourceId = `source:${currentSession.sourcePath || "file"}:${currentSession.activeTableId || "current"}`;
+        const sourceContext = currentSession.sourceContext || {};
+        nodes.push(
+          createGraphNode(
+            sourceId,
+            "source",
+            currentSession.sourcePath === "database" ? "Database-origin source" : "Structured file source",
+            [
+              sourceContext.sourceType ? `Type: ${humanizeFieldName(sourceContext.sourceType)}` : null,
+              sourceContext.sourceObject ? `Object: ${sourceContext.sourceObject}` : null,
+              sourceContext.sourceNotes ? truncateValue(sourceContext.sourceNotes, 56) : null,
+            ],
+            sourceContext
+          )
+        );
+        edges.push(createGraphEdge(sourceId, sessionId, "feeds"));
+      }
+
+      getWorkspaceTables(currentSession).forEach((table, index) => {
+        const tableId = `table:${table.id}`;
+        nodes.push(
+          createGraphNode(
+            tableId,
+            "table",
+            table.filename || `Table ${index + 1}`,
+            [
+              `${formatNumber(table.shape?.rows || 0, 0)} rows`,
+              `${formatNumber(table.shape?.columns || 0, 0)} columns`,
+              table.id === currentSession.activeTableId ? "Active table" : null,
+            ],
+            {
+              datasetId: table.datasetId || null,
+              active: table.id === currentSession.activeTableId,
+            }
+          )
+        );
+        edges.push(createGraphEdge(sessionId, tableId, "contains"));
+
+        (table.transformHistory || []).forEach((entry, historyIndex) => {
+          const transformId = `${tableId}:transform:${historyIndex}`;
+          nodes.push(
+            createGraphNode(
+              transformId,
+              "transform",
+              entry.label || `Transform ${historyIndex + 1}`,
+              [
+                historyIndex === (table.transformHistoryIndex ?? 0) ? "Current prepared view" : null,
+                Object.keys(entry.config || {}).length ? `${Object.keys(entry.config || {}).length} config groups` : "No transform options",
+              ],
+              {
+                tableId: table.id,
+                index: historyIndex,
+                config: entry.config || {},
+              }
+            )
+          );
+          edges.push(createGraphEdge(tableId, transformId, historyIndex === 0 ? "starts with" : "evolves to"));
+        });
+
+        (table.charts || []).forEach((chart, chartIndex) => {
+          const chartId = `chart:${table.id}:${chart.id || chartIndex}`;
+          nodes.push(
+            createGraphNode(
+              chartId,
+              "chart",
+              chart.label || chart.title || `${humanizeFieldName(chart.chart_type || "chart")} chart`,
+              [
+                chart.chart_type ? `Type: ${humanizeFieldName(chart.chart_type)}` : null,
+                chart.x_column ? `X: ${humanizeFieldName(chart.x_column)}` : null,
+                chart.y_column ? `Y: ${humanizeFieldName(chart.y_column)}` : null,
+                chart.id === table.activeChartId ? "Active chart" : null,
+              ],
+              {
+                tableId: table.id,
+                active: chart.id === table.activeChartId,
+                chartType: chart.chart_type || null,
+              }
+            )
+          );
+          edges.push(createGraphEdge(tableId, chartId, "visualized as"));
+        });
+      });
+    }
+
+    workspaces.forEach((workspace, index) => {
+      const workspaceId = `workspace:${workspace.id || index}`;
+      const tableCount = Array.isArray(workspace.session?.tables) ? workspace.session.tables.length : 0;
+      nodes.push(
+        createGraphNode(
+          workspaceId,
+          "workspace",
+          workspace.name || "Saved workspace",
+          [
+            workspace.filename || null,
+            `${formatNumber(tableCount, 0)} tables`,
+            workspace.savedAt ? `Saved ${new Date(workspace.savedAt).toLocaleString()}` : null,
+          ],
+          {
+            workspaceId: workspace.id || null,
+            lastPage: workspace.lastPage || "/prepare",
+          }
+        )
+      );
+      if (currentSession) {
+        edges.push(createGraphEdge(`session:${currentSession.activeTableId || currentSession.datasetId || currentSession.filename || "current"}`, workspaceId, "saved as"));
+      }
+    });
+
+    events.slice(0, 18).forEach((event, index) => {
+      const eventId = `event:${event.id || index}`;
+      const payload = event.payload || {};
+      nodes.push(
+        createGraphNode(
+          eventId,
+          "event",
+          humanizeFieldName(event.type || "event"),
+          [
+            payload.filename || payload.name || payload.endpoint || null,
+            event.createdAt ? new Date(event.createdAt).toLocaleString() : null,
+          ],
+          payload
+        )
+      );
+
+      if (payload.workspaceId) {
+        edges.push(createGraphEdge(`workspace:${payload.workspaceId}`, eventId, "recorded"));
+      } else if (payload.activeTableId) {
+        edges.push(createGraphEdge(`table:${payload.activeTableId}`, eventId, "recorded"));
+      } else if (currentSession) {
+        edges.push(createGraphEdge(`session:${currentSession.activeTableId || currentSession.datasetId || currentSession.filename || "current"}`, eventId, "recorded"));
+      }
+    });
+
+    return {
+      currentSession,
+      workspaces,
+      events,
+      nodes,
+      edges,
+      summary: {
+        tables: currentSession ? getWorkspaceTables(currentSession).length : 0,
+        transforms: currentSession
+          ? getWorkspaceTables(currentSession).reduce((total, table) => total + (table.transformHistory || []).length, 0)
+          : 0,
+        charts: currentSession
+          ? getWorkspaceTables(currentSession).reduce((total, table) => total + (table.charts || []).length, 0)
+          : 0,
+        workspaces: workspaces.length,
+        events: events.length,
+      },
+    };
   }
 
   function getPreviewColumns(rows) {
@@ -1227,6 +1476,13 @@ function renderAnalysis(container, analysis, shape) {
     anchor.download = filename;
     anchor.click();
     URL.revokeObjectURL(url);
+    recordMemoryEvent("export_downloaded", {
+      endpoint,
+      filename,
+      datasetId: payload?.dataset_id || null,
+      chartType: payload?.chart_type || null,
+      dashboardColumns: payload?.dashboard_columns || null,
+    });
     return filename;
   }
 
@@ -1273,5 +1529,9 @@ function renderAnalysis(container, analysis, shape) {
     storeWorkspace,
     deleteWorkspace,
     getWorkspace,
+    loadMemoryEvents,
+    clearMemoryEvents,
+    recordMemoryEvent,
+    buildWorkspaceMemoryGraph,
   };
 })();

@@ -1,6 +1,6 @@
 # Memory Graph
 
-This is the living map of the app's active logic, shared state, and known cleanup decisions. Update this file whenever a major workflow, module boundary, or storage shape changes.
+This is the living map of the app's active logic, shared state, and known cleanup decisions. The internal `/memory-graph` page now reads from the same session/workspace memory layer described here. Update this file whenever a major workflow, module boundary, or storage shape changes.
 
 ## Current Flow
 
@@ -28,6 +28,7 @@ flowchart TD
 
 - Browser session key: `data_visualisation_tool_session`
 - Workspace key: `data_visualisation_tool_workspaces`
+- Memory event key: `data_visualisation_tool_memory_events`
 - Per-table state lives in `shared.js` via:
   - `buildTableRecord`
   - `mirrorActiveTableIntoSession`
@@ -43,6 +44,8 @@ These are the shared helpers pages should use instead of re-implementing behavio
 - `switchWorkspaceTable`
 - `ensureDatasetState`
 - `saveWorkspaceFlow`
+- `recordMemoryEvent`
+- `buildWorkspaceMemoryGraph`
 - `saveSession` / `loadSession`
 - `fetchJson` / `downloadBinary`
 
@@ -54,6 +57,7 @@ These are the shared helpers pages should use instead of re-implementing behavio
 - Workspace switching and workspace-save flow now have shared runtime helpers in [D:\Data Visualisation Tool\frontend\shared.js](D:\Data%20Visualisation%20Tool\frontend\shared.js).
 - Parser heuristics for JSON, ZIP, headerless files, and Excel ranking are concentrated in [D:\Data Visualisation Tool\ingestion\loader.py](D:\Data%20Visualisation%20Tool\ingestion\loader.py).
 - `prepare.html` and `visualize.html` now use the shared workspace helpers without keeping old live fallback bodies in place for switching and workspace-save flows.
+- The internal memory graph page now uses real session/workspace/export lineage instead of a static architecture poster.
 
 ### Still partially duplicated
 

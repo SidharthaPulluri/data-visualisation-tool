@@ -10,6 +10,7 @@ A deterministic local BI-style app for structured datasets. Upload one or more s
 
 - Structured file ingestion for `CSV`, `TSV`, `XLSX`, `XLS`, `JSON`, ZIP archives, nested JSON payloads, multi-sheet Excel workbooks, and headerless `.data` files
 - Multi-file workspaces with per-table switching in preparation and visualization
+- Internal memory/provenance graph for sessions, tables, transforms, charts, workspaces, and exports at `/memory-graph`
 - Rule-based schema detection for numeric, categorical, datetime, and text columns
 - Deterministic cleaning rules for missing values, duplicates, type coercion, and text normalization
 - Parser diagnostics and recovery notes for delimiter inference, headerless fallback, duplicate-header normalization, nested JSON path selection, worksheet selection, and dropped empty rows/columns

@@ -1406,6 +1406,15 @@
         state.dashboardMode = state.dashboardMode || "single";
         renderSavedCharts();
         persistState();
+        window.dataTool.recordMemoryEvent(shouldUpdateActive ? "chart_updated" : "chart_created", {
+          activeTableId: state.activeTableId || null,
+          filename: state.filename || null,
+          chartId: savedChart.id,
+          chartType: savedChart.chart_type,
+          xColumn: savedChart.x_column,
+          yColumn: savedChart.y_column || null,
+          label: savedChart.label || savedChart.title || null,
+        });
         setStatus(
           `${shouldUpdateActive
             ? `Updated ${savedChart.label || "the active chart"} with the latest settings.`
