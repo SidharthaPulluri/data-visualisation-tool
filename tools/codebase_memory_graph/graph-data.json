@@ -7354,7 +7354,7 @@
       "name": "build_codebase_memory_graph.py",
       "folder": "scripts",
       "extension": ".py",
-      "lines": 1938,
+      "lines": 2009,
       "functions": [
         {
           "name": "discover_source_files",
@@ -8027,15 +8027,16 @@
           "kind": "function",
           "keywords": [
             "node",
+            "planet",
             "span",
             "edge",
             "map",
-            "planet",
-            "math",
             "ctx",
-            "selected"
+            "math",
+            "color"
           ],
           "fingerprint": [
+            "color",
             "ctx",
             "edge",
             "html",
@@ -8044,14 +8045,13 @@
             "node",
             "planet",
             "render",
-            "selected",
             "span"
           ],
           "stem": "render html"
         },
         {
           "name": "main",
-          "line": 1926,
+          "line": 1997,
           "kind": "function",
           "keywords": [
             "graph",
@@ -8441,7 +8441,7 @@
       "name": "tools/index.html",
       "folder": "tools",
       "extension": ".html",
-      "lines": 1287,
+      "lines": 1291,
       "functions": [
         {
           "name": "escapeHtml",
@@ -9573,19 +9573,19 @@
           "kind": "function",
           "line": 719,
           "keywords": [
-            "planet",
             "span",
+            "planet",
             "edge",
-            "node",
             "escape",
+            "node",
             "selection",
-            "pill",
-            "eyebrow"
+            "length",
+            "pill"
           ],
           "fingerprint": [
             "edge",
             "escape",
-            "eyebrow",
+            "length",
             "node",
             "pill",
             "planet",
@@ -9598,7 +9598,7 @@
         {
           "name": "renderDetails",
           "kind": "function",
-          "line": 757,
+          "line": 760,
           "keywords": [
             "span",
             "detail",
@@ -9626,7 +9626,7 @@
         {
           "name": "updateSelection",
           "kind": "function",
-          "line": 828,
+          "line": 832,
           "keywords": [
             "node",
             "state",

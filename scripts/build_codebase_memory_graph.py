@@ -1093,24 +1093,50 @@ def render_html(graph: dict[str, Any]) -> str:
 
     function functionVisualMeta(file, fn) {{
       const clusterScore = similarityLookup.get(`${{file.path}}::${{fn.name}}`) || 0;
-      const keywordScore = Math.min((fn.keywords || []).length, 8) * 0.14;
-      const degreeScore = Math.min(file.degree || 0, 8) * 0.08;
-      const kindBase = fn.kind === "class" ? 1.35 : fn.kind === "arrow" ? 1.1 : 1;
-      const weight = Math.max(1, Math.min(3.8, kindBase + keywordScore + degreeScore + clusterScore * 1.35));
+      const keywordScore = Math.min((fn.keywords || []).length, 8) * 0.16;
+      const degreeScore = Math.min(file.degree || 0, 8) * 0.09;
+      const kindBase = fn.kind === "class" ? 1.7 : fn.kind === "arrow" ? 1.28 : fn.kind === "method" ? 1.14 : 1;
+      const weight = Math.max(1, Math.min(5.4, kindBase + keywordScore + degreeScore + clusterScore * 1.7));
       let color = "#d8ebff";
+      let coreColor = "#f8fbff";
+      let haloColor = "rgba(151, 214, 255, 0.24)";
+      let orbitBand = 2;
       if (clusterScore >= 0.92) {{
         color = "#ffd166";
+        coreColor = "#fff5d9";
+        haloColor = "rgba(255, 209, 102, 0.34)";
+        orbitBand = 0;
       }} else if (clusterScore >= 0.78) {{
         color = "#8cf0ff";
+        coreColor = "#edfeff";
+        haloColor = "rgba(140, 240, 255, 0.3)";
+        orbitBand = 1;
       }} else if (fn.kind === "class") {{
         color = "#ffab70";
+        coreColor = "#fff0e5";
+        haloColor = "rgba(255, 171, 112, 0.28)";
+        orbitBand = 1;
       }} else if (fn.kind === "arrow") {{
         color = "#c9b8ff";
+        coreColor = "#f1ecff";
+        haloColor = "rgba(201, 184, 255, 0.26)";
+        orbitBand = 1;
+      }} else if (weight >= 4.2) {{
+        orbitBand = 0;
+      }} else if (weight >= 2.9) {{
+        orbitBand = 1;
       }}
+      const normalizedWeight = (weight - 1) / 4.4;
+      const radius = 2.8 + weight * 1.65 + (orbitBand === 0 ? 0.8 : orbitBand === 1 ? 0.3 : 0);
       return {{
         weight,
-        radius: 3.3 + weight * 1.1,
+        radius,
         color,
+        coreColor,
+        haloColor,
+        orbitBand,
+        orbitOffset: (normalizedWeight - 0.5) * 8,
+        glow: 8 + weight * 3.8 + (orbitBand === 0 ? 8 : orbitBand === 1 ? 4 : 0),
         stroke: clusterScore >= 0.78 ? "rgba(255,255,255,0.78)" : "rgba(255,255,255,0.18)",
         linkColor: clusterScore >= 0.78 ? "rgba(145, 227, 255, 0.46)" : "rgba(255,255,255,0.08)"
       }};
@@ -1212,8 +1238,13 @@ def render_html(graph: dict[str, Any]) -> str:
               keywords: fn.keywords || [],
               weight: visual.weight,
               color: visual.color,
+              coreColor: visual.coreColor,
+              haloColor: visual.haloColor,
               stroke: visual.stroke,
               linkColor: visual.linkColor,
+              orbitBand: visual.orbitBand,
+              orbitOffset: visual.orbitOffset,
+              glow: visual.glow,
               x: px,
               y: py,
               r: visual.radius
@@ -1434,19 +1465,29 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     function buildDisplayPlanets(displayNodeMap) {{
-      return positions.planetNodes.map((planet, index) => {{
+      return positions.planetNodes.map((planet) => {{
         const parent = displayNodeMap.get(planet.parentId);
         if (!parent) {{
           return planet;
         }}
         const siblings = planetsByParent.get(planet.parentId) || [];
-        const siblingCount = Math.max(Math.min(siblings.length, 18), 1);
-        const siblingIndex = siblings.findIndex((item) => item.id === planet.id);
-        const angle = (Math.PI * 2 * Math.max(siblingIndex, 0)) / siblingCount;
+        const orbitBands = [
+          parent.orbit * 0.48,
+          parent.orbit * 0.78,
+          parent.orbit * 1.08
+        ];
+        const bandSiblings = siblings.filter((item) => (item.orbitBand || 0) === (planet.orbitBand || 0));
+        const siblingCount = Math.max(Math.min(bandSiblings.length, 18), 1);
+        const siblingIndex = bandSiblings.findIndex((item) => item.id === planet.id);
+        const bandIndex = Math.max(0, Math.min(2, planet.orbitBand || 0));
+        const angleOffset = bandIndex === 0 ? -Math.PI / 2 : bandIndex === 1 ? Math.PI / 5 : -Math.PI / 7;
+        const angle = ((Math.PI * 2 * Math.max(siblingIndex, 0)) / siblingCount) + angleOffset + ((planet.weight || 1) - 1) * 0.045;
+        const orbitRadius = Math.max(18, orbitBands[bandIndex] + (planet.orbitOffset || 0));
         return {{
           ...planet,
-          x: parent.x + Math.cos(angle) * parent.orbit,
-          y: parent.y + Math.sin(angle) * parent.orbit
+          orbitRadius,
+          x: parent.x + Math.cos(angle) * orbitRadius,
+          y: parent.y + Math.sin(angle) * orbitRadius
         }};
       }});
     }}
@@ -1511,11 +1552,18 @@ def render_html(graph: dict[str, Any]) -> str:
         if (!shouldShowPlanets(fileNode)) return;
         const planets = (planetsByParent.get(fileNode.path) || []).map((planet) => visiblePlanetMap.get(planet.id) || displayPlanetMap.get(planet.id) || planet);
         if (!planets.length) return;
-        ctx.strokeStyle = "rgba(255,255,255,0.09)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(fileNode.x, fileNode.y, fileNode.orbit, 0, Math.PI * 2);
-        ctx.stroke();
+        const orbitLevels = [...new Set(planets.map((planet) => Number((planet.orbitRadius || fileNode.orbit).toFixed(2))))].sort((left, right) => left - right);
+        orbitLevels.forEach((orbitRadius, orbitIndex) => {{
+          ctx.strokeStyle = orbitIndex === 0
+            ? "rgba(255, 209, 102, 0.18)"
+            : orbitIndex === 1
+              ? "rgba(120, 229, 255, 0.14)"
+              : "rgba(255,255,255,0.08)";
+          ctx.lineWidth = orbitIndex === 0 ? 1.25 : 0.95;
+          ctx.beginPath();
+          ctx.arc(fileNode.x, fileNode.y, orbitRadius, 0, Math.PI * 2);
+          ctx.stroke();
+        }});
 
         planets.forEach((planet) => {{
           const selected = state.selectedId === planet.id;
@@ -1525,12 +1573,35 @@ def render_html(graph: dict[str, Any]) -> str:
           ctx.moveTo(fileNode.x, fileNode.y);
           ctx.lineTo(planet.x, planet.y);
           ctx.stroke();
+
+          const halo = ctx.createRadialGradient(planet.x, planet.y, 0, planet.x, planet.y, planet.r + (planet.glow || 10));
+          halo.addColorStop(0, selected ? "rgba(255,255,255,0.42)" : (planet.haloColor || "rgba(151, 214, 255, 0.18)"));
+          halo.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = halo;
+          ctx.beginPath();
+          ctx.arc(planet.x, planet.y, planet.r + (planet.glow || 10), 0, Math.PI * 2);
+          ctx.fill();
+
           ctx.fillStyle = selected ? "#ffffff" : planet.color;
           ctx.beginPath();
           ctx.arc(planet.x, planet.y, planet.r, 0, Math.PI * 2);
           ctx.fill();
+
+          ctx.fillStyle = selected ? "#dff6ff" : (planet.coreColor || "#f8fbff");
+          ctx.beginPath();
+          ctx.arc(planet.x - planet.r * 0.18, planet.y - planet.r * 0.18, Math.max(1.6, planet.r * 0.48), 0, Math.PI * 2);
+          ctx.fill();
+
           ctx.strokeStyle = selected ? "rgba(255,255,255,0.9)" : planet.stroke;
-          ctx.lineWidth = selected ? 1.4 : 0.9;
+          ctx.lineWidth = selected ? 1.5 : 0.95 + planet.weight * 0.08;
+          ctx.beginPath();
+          ctx.arc(planet.x, planet.y, planet.r, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.strokeStyle = selected ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.14)";
+          ctx.lineWidth = 0.7;
+          ctx.beginPath();
+          ctx.arc(planet.x, planet.y, planet.r + 1.8, 0, Math.PI * 2);
           ctx.stroke();
         }});
       }});
@@ -1819,7 +1890,7 @@ def render_html(graph: dict[str, Any]) -> str:
           <ul class="detail-list">
             <li><span class="detail-key">Kind</span>${{escapeHtml(planet.functionKind)}}</li>
             <li><span class="detail-key">Parent star</span>${{escapeHtml(planet.filePath)}}</li>
-            <li><span class="detail-key">Visual weight</span>${{planet.weight ? planet.weight.toFixed(2) : "1.00"}}${{planet.color ? `<br><span class="muted">Color ${{escapeHtml(planet.color)}}</span>` : ""}}</li>
+            <li><span class="detail-key">Visual weight</span>${{planet.weight ? planet.weight.toFixed(2) : "1.00"}}${{planet.color ? `<br><span class="muted">Color ${{escapeHtml(planet.color)}} · Orbit band ${{(planet.orbitBand || 0) + 1}}</span>` : ""}}</li>
             <li><span class="detail-key">Keywords</span>${{planet.keywords.length ? planet.keywords.map((keyword) => escapeHtml(keyword)).join(", ") : "None extracted"}}</li>
             <li><span class="detail-key">Logic cluster</span>${{relatedCluster ? `${{escapeHtml(relatedCluster.label)}} [${{relatedCluster.average_score.toFixed(2)}}]<br><span class="muted">${{relatedCluster.members.filter((member) => member.id !== planet.id).map((member) => `${{escapeHtml(member.file)}}::${{escapeHtml(member.name)}}`).join("<br>") || "No peers beyond this node"}}</span>` : "No strong cross-file similarity cluster"}}</li>
           </ul>
