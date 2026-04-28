@@ -97,6 +97,8 @@ def _normalise_chart_options(chart_options: dict[str, Any] | None) -> dict[str, 
         "sort_order": sort_order,
         "top_n": _safe_int(options.get("top_n"), 12),
         "row_column": options.get("row_column") or None,
+        "group_column": options.get("group_column") or None,
+        "size_column": options.get("size_column") or None,
         "bins": _safe_int(options.get("bins"), 20),
         "palette": str(options.get("palette", "blue")).lower(),
         "label_rotation": options.get("label_rotation", "auto"),
@@ -134,6 +136,12 @@ def _add_value_labels(axis: plt.Axes, decimals: int = 2, horizontal: bool = Fals
             height = patch.get_height()
             x = patch.get_x() + patch.get_width() / 2
             axis.text(x, height, f"{height:.{decimals}f}".rstrip("0").rstrip("."), va="bottom", ha="center", fontsize=8.5, color="#42526e")
+
+
+def _draw_axis_legend(axis: plt.Axes, **kwargs: Any) -> None:
+    handles, labels = axis.get_legend_handles_labels()
+    if handles and any(label and not str(label).startswith("_") for label in labels):
+        axis.legend(**kwargs)
 
 
 def _is_numeric_like(meta: dict[str, Any]) -> bool:
@@ -749,6 +757,62 @@ def _prepare_heatmap_table(
     return pivot
 
 
+def _top_group_levels(series: pd.Series, limit: int = 6) -> list[Any]:
+    counts = series.dropna().astype(str).value_counts()
+    return counts.head(limit).index.tolist()
+
+
+def _prepare_grouped_frame(
+    df: pd.DataFrame,
+    schema: dict[str, dict[str, str]],
+    x_column: str,
+    y_column: str | None,
+    group_column: str,
+    chart_type: str,
+    options: dict[str, Any],
+) -> pd.DataFrame:
+    columns = [x_column, group_column] + ([y_column] if y_column else [])
+    candidates = df[columns].dropna()
+    if candidates.empty:
+        raise ValueError("The selected columns do not contain enough data for this chart.")
+
+    allowed_groups = _top_group_levels(candidates[group_column], limit=min(max(options["top_n"], 4), 6))
+    candidates = candidates[candidates[group_column].astype(str).isin(allowed_groups)]
+    if candidates.empty:
+        raise ValueError("No usable grouped categories were available after filtering the selected split field.")
+
+    aggregation = _resolve_aggregation("bar", schema, x_column, y_column, options["aggregation"])
+    if y_column:
+        grouped = (
+            candidates.groupby([x_column, group_column], dropna=False)[y_column]
+            .agg(_aggregation_function("mean" if aggregation == "latest" else aggregation))
+            .reset_index(name="value")
+        )
+    else:
+        grouped = (
+            candidates.groupby([x_column, group_column], dropna=False)
+            .size()
+            .reset_index(name="value")
+        )
+
+    order = grouped.groupby(x_column, dropna=False)["value"].sum().sort_values(
+        ascending=options["sort_order"] != "asc"
+    )
+    if options["sort_order"] == "none":
+        category_order = list(dict.fromkeys(grouped[x_column].tolist()))
+    else:
+        category_order = order.index.tolist()
+    if options["top_n"]:
+        category_order = category_order[: options["top_n"]]
+    grouped = grouped[grouped[x_column].isin(category_order)].copy()
+    grouped[x_column] = pd.Categorical(grouped[x_column], categories=category_order, ordered=True)
+    grouped[group_column] = grouped[group_column].astype(str)
+    grouped = grouped.sort_values([x_column, group_column])
+    if grouped.empty:
+        raise ValueError("The grouped chart settings did not produce any rows to plot.")
+    return grouped
+
+
 def _to_serialisable_scalar(value: Any) -> Any:
     if isinstance(value, pd.Timestamp):
         return value.isoformat()
@@ -784,7 +848,17 @@ def describe_chart_data(
 ) -> dict[str, Any]:
     options = _normalise_chart_options(chart_options)
     row_column = options["row_column"]
-    _validate_chart(schema, chart_type, x_column, y_column, row_column=row_column)
+    group_column = options["group_column"]
+    size_column = options["size_column"]
+    _validate_chart(
+        schema,
+        chart_type,
+        x_column,
+        y_column,
+        row_column=row_column,
+        group_column=group_column,
+        size_column=size_column,
+    )
 
     if chart_type == "bar":
         if y_column and y_column in df.columns and schema[x_column]["type"] in {"categorical", "text", "datetime"}:
@@ -966,6 +1040,16 @@ def describe_chart_data(
             "items": [],
         }
 
+    if chart_type in {"grouped_bar", "stacked_bar", "bubble", "density", "beeswarm", "hexbin"}:
+        return {
+            "mode": "unsupported",
+            "summary": (
+                f"{chart_type.replace('_', ' ').title()} compares field structure or grouped values directly in the chart view. "
+                "Chart-linked table filtering is not available for this visual yet."
+            ),
+            "items": [],
+        }
+
     return {
         "mode": "unsupported",
         "summary": f"{chart_type.title()} charts do not have row-level cross-filtering yet.",
@@ -979,6 +1063,8 @@ def _validate_chart(
     x_column: str,
     y_column: str | None,
     row_column: str | None = None,
+    group_column: str | None = None,
+    size_column: str | None = None,
 ) -> None:
     if x_column not in schema:
         raise ValueError("Selected X column is not available in the transformed dataset.")
@@ -986,12 +1072,18 @@ def _validate_chart(
         raise ValueError("Selected Y column is not available in the transformed dataset.")
     if row_column and row_column not in schema:
         raise ValueError("Selected heatmap row column is not available in the transformed dataset.")
+    if group_column and group_column not in schema:
+        raise ValueError("Selected group column is not available in the transformed dataset.")
+    if size_column and size_column not in schema:
+        raise ValueError("Selected size column is not available in the transformed dataset.")
 
     x_type = schema[x_column]["type"]
     x_role = schema[x_column].get("role")
     row_role = schema[row_column].get("role") if row_column and row_column in schema else None
     y_type = schema[y_column]["type"] if y_column and y_column in schema else None
     row_type = schema[row_column]["type"] if row_column and row_column in schema else None
+    group_type = schema[group_column]["type"] if group_column and group_column in schema else None
+    size_type = schema[size_column]["type"] if size_column and size_column in schema else None
 
     rules = {
         "bar": x_type in {"categorical", "datetime", "text"} or y_type == "numeric",
@@ -1002,6 +1094,24 @@ def _validate_chart(
         "area": (x_type == "datetime" or x_role == "time") and y_type == "numeric",
         "scatter": x_type == "numeric" and y_type == "numeric",
         "feature_graph": x_column in schema and len([name for name, meta in schema.items() if meta.get("role") != "constant"]) >= 2,
+        "grouped_bar": (x_type in {"categorical", "text", "datetime"} or x_role == "time")
+        and group_column is not None
+        and group_type in {"categorical", "text", "datetime"}
+        and (y_column is None or y_type == "numeric"),
+        "stacked_bar": (x_type in {"categorical", "text", "datetime"} or x_role == "time")
+        and group_column is not None
+        and group_type in {"categorical", "text", "datetime"}
+        and (y_column is None or y_type == "numeric"),
+        "bubble": x_type == "numeric"
+        and y_type == "numeric"
+        and size_column is not None
+        and size_type == "numeric"
+        and (group_column is None or group_type in {"categorical", "text", "datetime"}),
+        "density": x_type == "numeric" and (group_column is None or group_type in {"categorical", "text", "datetime"}),
+        "beeswarm": x_type in {"categorical", "text", "datetime"}
+        and y_type == "numeric"
+        and (group_column is None or group_type in {"categorical", "text", "datetime"}),
+        "hexbin": x_type == "numeric" and y_type == "numeric",
         "heatmap": row_column is not None
         and (row_type in {"categorical", "text", "datetime"} or row_role == "time")
         and (x_type in {"categorical", "text", "datetime"} or x_role == "time"),
@@ -1023,7 +1133,17 @@ def create_chart(
 ) -> bytes:
     options = _normalise_chart_options(chart_options)
     row_column = options["row_column"]
-    _validate_chart(schema, chart_type, x_column, y_column, row_column=row_column)
+    group_column = options["group_column"]
+    size_column = options["size_column"]
+    _validate_chart(
+        schema,
+        chart_type,
+        x_column,
+        y_column,
+        row_column=row_column,
+        group_column=group_column,
+        size_column=size_column,
+    )
     primary_color, secondary_color = _palette_colors(options["palette"])
 
     figure, axis = plt.subplots(figsize=(10, 6))
@@ -1104,6 +1224,130 @@ def create_chart(
                 axis.text(row[x_column], row[y_column], f"{row[y_column]:.{options['decimal_places']}f}".rstrip("0").rstrip("."), fontsize=8.5, color="#42526e", ha="center", va="bottom")
     elif chart_type == "scatter":
         sns.scatterplot(data=df, x=x_column, y=y_column, ax=axis, color=primary_color)
+    elif chart_type == "grouped_bar":
+        grouped = _prepare_grouped_frame(df, schema, x_column, y_column, group_column, chart_type, options)
+        labels = grouped[x_column].astype(str).unique().tolist()
+        _set_categorical_figure_size(figure, labels, horizontal=False)
+        sns.barplot(
+            data=grouped,
+            x=x_column,
+            y="value",
+            hue=group_column,
+            ax=axis,
+            palette=sns.color_palette("blend:" + secondary_color + "," + primary_color, n_colors=max(grouped[group_column].nunique(), 2)),
+        )
+        axis.set_ylabel(y_column if y_column else "count")
+        axis.legend(title=group_column, frameon=True, edgecolor="#d7e4f2")
+    elif chart_type == "stacked_bar":
+        grouped = _prepare_grouped_frame(df, schema, x_column, y_column, group_column, chart_type, options)
+        pivot = grouped.pivot(index=x_column, columns=group_column, values="value").fillna(0)
+        labels = pivot.index.astype(str).tolist()
+        _set_categorical_figure_size(figure, labels, horizontal=False)
+        colors = sns.color_palette("blend:" + secondary_color + "," + primary_color, n_colors=max(len(pivot.columns), 2))
+        baseline = np.zeros(len(pivot.index))
+        for color, column_name in zip(colors, pivot.columns):
+            values = pivot[column_name].to_numpy(dtype="float64")
+            axis.bar(pivot.index.astype(str), values, bottom=baseline, color=color, edgecolor="white", linewidth=0.5, label=str(column_name))
+            baseline += values
+        axis.set_ylabel(y_column if y_column else "count")
+        axis.legend(title=group_column, frameon=True, edgecolor="#d7e4f2")
+    elif chart_type == "bubble":
+        bubble_columns = [x_column, y_column, size_column] + ([group_column] if group_column else [])
+        bubble_df = df[bubble_columns].dropna()
+        if bubble_df.empty:
+            raise ValueError("The selected columns do not contain enough data for a bubble chart.")
+        sizes = pd.to_numeric(bubble_df[size_column], errors="coerce")
+        if sizes.isna().all():
+            raise ValueError("Bubble size column must be numeric.")
+        size_min = float(sizes.min())
+        size_max = float(sizes.max())
+        if math.isclose(size_min, size_max):
+            size_scale = np.full(len(sizes), 520.0)
+        else:
+            size_scale = 180 + ((sizes - size_min) / (size_max - size_min)) * 1500
+        if group_column:
+            sns.scatterplot(
+                data=bubble_df,
+                x=x_column,
+                y=y_column,
+                hue=group_column,
+                size=size_scale,
+                sizes=(180, 1680),
+                palette="deep",
+                alpha=0.62,
+                edgecolor="white",
+                linewidth=0.7,
+                ax=axis,
+            )
+            _draw_axis_legend(axis, frameon=True, edgecolor="#d7e4f2", bbox_to_anchor=(1.02, 1), loc="upper left")
+        else:
+            axis.scatter(
+                bubble_df[x_column],
+                bubble_df[y_column],
+                s=size_scale,
+                c=primary_color,
+                alpha=0.56,
+                edgecolors="white",
+                linewidths=0.8,
+            )
+        axis.set_xlabel(x_column)
+        axis.set_ylabel(y_column)
+    elif chart_type == "density":
+        density_columns = [x_column] + ([group_column] if group_column else [])
+        density_df = df[density_columns].copy()
+        density_df[x_column] = pd.to_numeric(density_df[x_column], errors="coerce")
+        density_df = density_df.dropna(subset=[x_column])
+        if density_df.empty:
+            raise ValueError("The selected numeric column does not contain enough values for a density plot.")
+        if group_column:
+            allowed_groups = _top_group_levels(density_df[group_column], limit=5)
+            density_df = density_df[density_df[group_column].astype(str).isin(allowed_groups)]
+            sns.kdeplot(
+                data=density_df,
+                x=x_column,
+                hue=group_column,
+                fill=True,
+                common_norm=False,
+                alpha=0.3,
+                linewidth=1.6,
+                ax=axis,
+            )
+            _draw_axis_legend(axis, frameon=True, edgecolor="#d7e4f2")
+        else:
+            sns.kdeplot(data=density_df, x=x_column, fill=True, color=primary_color, linewidth=1.8, alpha=0.35, ax=axis)
+        axis.set_ylabel("density")
+    elif chart_type == "beeswarm":
+        swarm_columns = [x_column, y_column] + ([group_column] if group_column else [])
+        swarm_df = df[swarm_columns].dropna()
+        if swarm_df.empty:
+            raise ValueError("The selected columns do not contain enough data for a beeswarm plot.")
+        allowed_categories = _top_group_levels(swarm_df[x_column], limit=min(max(options["top_n"], 4), 10))
+        swarm_df = swarm_df[swarm_df[x_column].astype(str).isin(allowed_categories)]
+        _set_categorical_figure_size(figure, allowed_categories, horizontal=False)
+        sns.swarmplot(
+            data=swarm_df,
+            x=x_column,
+            y=y_column,
+            hue=group_column if group_column else None,
+            dodge=bool(group_column),
+            size=4.6,
+            alpha=0.82,
+            ax=axis,
+        )
+        if group_column:
+            _draw_axis_legend(axis, title=group_column, frameon=True, edgecolor="#d7e4f2", bbox_to_anchor=(1.02, 1), loc="upper left")
+    elif chart_type == "hexbin":
+        hexbin_df = df[[x_column, y_column]].copy()
+        hexbin_df[x_column] = pd.to_numeric(hexbin_df[x_column], errors="coerce")
+        hexbin_df[y_column] = pd.to_numeric(hexbin_df[y_column], errors="coerce")
+        hexbin_df = hexbin_df.dropna()
+        if hexbin_df.empty:
+            raise ValueError("The selected numeric columns do not contain enough values for a hexbin chart.")
+        grid_size = max(10, min(options["bins"], 35))
+        mesh = axis.hexbin(hexbin_df[x_column], hexbin_df[y_column], gridsize=grid_size, cmap="Blues", mincnt=1, linewidths=0.3)
+        figure.colorbar(mesh, ax=axis, label="rows per bin")
+        axis.set_xlabel(x_column)
+        axis.set_ylabel(y_column)
     elif chart_type == "feature_graph":
         figure.set_size_inches(11.6, 8.2)
         _draw_feature_graph(axis, df, schema, x_column, title, options["palette"])

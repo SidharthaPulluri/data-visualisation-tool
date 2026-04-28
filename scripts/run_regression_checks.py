@@ -96,6 +96,76 @@ def run() -> int:
                 failures,
             )
 
+        for label, chart_payload in [
+            (
+                "sales grouped bar",
+                {
+                    "dataset_id": sales["dataset_id"],
+                    "chart_type": "grouped_bar",
+                    "x_column": "region",
+                    "y_column": "revenue",
+                    "format": "png",
+                    "chart_options": {"group_column": "quarter", "aggregation": "sum", "top_n": 4},
+                },
+            ),
+            (
+                "sales stacked bar",
+                {
+                    "dataset_id": sales["dataset_id"],
+                    "chart_type": "stacked_bar",
+                    "x_column": "region",
+                    "y_column": "orders",
+                    "format": "png",
+                    "chart_options": {"group_column": "quarter", "aggregation": "sum", "top_n": 4},
+                },
+            ),
+            (
+                "sales bubble",
+                {
+                    "dataset_id": sales["dataset_id"],
+                    "chart_type": "bubble",
+                    "x_column": "orders",
+                    "y_column": "revenue",
+                    "format": "png",
+                    "chart_options": {"size_column": "conversion_rate", "group_column": "quarter"},
+                },
+            ),
+            (
+                "sales density",
+                {
+                    "dataset_id": sales["dataset_id"],
+                    "chart_type": "density",
+                    "x_column": "revenue",
+                    "format": "png",
+                    "chart_options": {"group_column": "quarter"},
+                },
+            ),
+            (
+                "sales beeswarm",
+                {
+                    "dataset_id": sales["dataset_id"],
+                    "chart_type": "beeswarm",
+                    "x_column": "quarter",
+                    "y_column": "revenue",
+                    "format": "png",
+                    "chart_options": {"group_column": "region", "top_n": 4},
+                },
+            ),
+            (
+                "sales hexbin",
+                {
+                    "dataset_id": sales["dataset_id"],
+                    "chart_type": "hexbin",
+                    "x_column": "orders",
+                    "y_column": "revenue",
+                    "format": "png",
+                    "chart_options": {"bins": 12},
+                },
+            ),
+        ]:
+            response = client.post("/api/visualize", json=chart_payload)
+            _expect_equal(label, response.status_code, 200, failures)
+
     panel_status, panel = _upload_file(client, FIXTURES / "tb_panel.tsv")
     _expect_equal("panel upload", panel_status, 200, failures)
     if panel_status == 200:

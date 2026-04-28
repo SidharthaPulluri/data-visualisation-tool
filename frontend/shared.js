@@ -1063,6 +1063,7 @@ function renderAnalysis(container, analysis, shape) {
       .filter(([, meta]) => !["identifier", "constant"].includes(meta.role))
       .map(([name]) => name);
     const preferredNumeric = uniqueColumns(counts.concat(rates).concat(measures).concat(numeric));
+    const groupedSplitColumns = uniqueColumns(categorical.concat(datetime)).filter((name) => !identifierLike.has(name));
 
     switch (chartType) {
       case "histogram":
@@ -1070,8 +1071,12 @@ function renderAnalysis(container, analysis, shape) {
         return {
           xColumns: uniqueColumns(rates.concat(measures).concat(counts).concat(numeric)),
           yColumns: [],
+          sizeColumns: [],
+          groupColumns: [],
           rowColumns: [],
           yOptional: true,
+          sizeOptional: true,
+          groupOptional: true,
           rowOptional: true,
           hint: numeric.length
             ? `This ${chartType} chart needs one numeric measure, rate, or count column.`
@@ -1081,19 +1086,57 @@ function renderAnalysis(container, analysis, shape) {
         return {
           xColumns: numeric,
           yColumns: numeric,
+          sizeColumns: [],
+          groupColumns: [],
           rowColumns: [],
           yOptional: false,
+          sizeOptional: true,
+          groupOptional: true,
           rowOptional: true,
           hint: numeric.length >= 2
             ? "Scatter plots need two numeric columns."
             : "You need at least two numeric columns for a scatter plot.",
         };
+      case "bubble":
+        return {
+          xColumns: numeric,
+          yColumns: numeric,
+          sizeColumns: numeric,
+          groupColumns: groupedSplitColumns,
+          rowColumns: [],
+          yOptional: false,
+          sizeOptional: false,
+          groupOptional: true,
+          rowOptional: true,
+          hint: numeric.length >= 3
+            ? "Bubble charts show two numeric axes plus a third numeric field as bubble size. An optional group field can color the bubbles."
+            : "You need three numeric columns for a bubble chart.",
+        };
+      case "hexbin":
+        return {
+          xColumns: numeric,
+          yColumns: numeric,
+          sizeColumns: [],
+          groupColumns: [],
+          rowColumns: [],
+          yOptional: false,
+          sizeOptional: true,
+          groupOptional: true,
+          rowOptional: true,
+          hint: numeric.length >= 2
+            ? "Hexbin charts are useful when many points would overlap in a scatter plot."
+            : "You need two numeric columns for a hexbin chart.",
+        };
       case "feature_graph":
         return {
           xColumns: graphColumns,
           yColumns: [],
+          sizeColumns: [],
+          groupColumns: [],
           rowColumns: [],
           yOptional: true,
+          sizeOptional: true,
+          groupOptional: true,
           rowOptional: true,
           hint: graphColumns.length >= 2
             ? "Feature relationship graph treats each column as a node. Pick a focus field to anchor the graph, then read node size as importance and distance as dependency strength."
@@ -1104,30 +1147,102 @@ function renderAnalysis(container, analysis, shape) {
         return {
           xColumns: datetime,
           yColumns: lineMeasures,
+          sizeColumns: [],
+          groupColumns: [],
           rowColumns: [],
           yOptional: false,
+          sizeOptional: true,
+          groupOptional: true,
           rowOptional: true,
           hint: datetime.length && lineMeasures.length
             ? `${chartType === "area" ? "Area" : "Line"} charts need a date/time column on X and a numeric column on Y.`
             : `You need one datetime column and one numeric column for an ${chartType} chart.`,
         };
+      case "density":
+        return {
+          xColumns: uniqueColumns(rates.concat(measures).concat(counts).concat(numeric)),
+          yColumns: [],
+          sizeColumns: [],
+          groupColumns: groupedSplitColumns,
+          rowColumns: [],
+          yOptional: true,
+          sizeOptional: true,
+          groupOptional: true,
+          rowOptional: true,
+          hint: numeric.length
+            ? "Density plots show where values concentrate along a numeric field, optionally split by a category."
+            : "You need one numeric column for a density plot.",
+        };
       case "pie":
         return {
           xColumns: categorical,
           yColumns: preferredNumeric,
+          sizeColumns: [],
+          groupColumns: [],
           rowColumns: [],
           yOptional: true,
+          sizeOptional: true,
+          groupOptional: true,
           rowOptional: true,
           hint: categorical.length
             ? "Pie charts work best with a few categories and a meaningful part-to-whole measure. Geography fields often need filtering first."
             : "You need a categorical column for a pie chart.",
         };
+      case "grouped_bar":
+        return {
+          xColumns: groupedSplitColumns,
+          yColumns: preferredNumeric,
+          sizeColumns: [],
+          groupColumns: groupedSplitColumns,
+          rowColumns: [],
+          yOptional: true,
+          sizeOptional: true,
+          groupOptional: false,
+          rowOptional: true,
+          hint: groupedSplitColumns.length >= 2
+            ? "Grouped bar charts compare one category across a second split field, such as region by quarter."
+            : "You need a category plus a second split field for a grouped bar chart.",
+        };
+      case "stacked_bar":
+        return {
+          xColumns: groupedSplitColumns,
+          yColumns: preferredNumeric,
+          sizeColumns: [],
+          groupColumns: groupedSplitColumns,
+          rowColumns: [],
+          yOptional: true,
+          sizeOptional: true,
+          groupOptional: false,
+          rowOptional: true,
+          hint: groupedSplitColumns.length >= 2
+            ? "Stacked bar charts show totals while also revealing how each total is composed."
+            : "You need a category plus a second split field for a stacked bar chart.",
+        };
+      case "beeswarm":
+        return {
+          xColumns: groupedSplitColumns,
+          yColumns: preferredNumeric,
+          sizeColumns: [],
+          groupColumns: groupedSplitColumns,
+          rowColumns: [],
+          yOptional: false,
+          sizeOptional: true,
+          groupOptional: true,
+          rowOptional: true,
+          hint: groupedSplitColumns.length && preferredNumeric.length
+            ? "Beeswarm plots show the spread of individual rows inside each category."
+            : "You need one category field and one numeric field for a beeswarm plot.",
+        };
       case "heatmap":
         return {
           xColumns: uniqueColumns(datetime.concat(categorical)),
           yColumns: preferredNumeric,
+          sizeColumns: [],
+          groupColumns: [],
           rowColumns: categorical.length ? categorical.concat(datetime) : allColumns,
           yOptional: true,
+          sizeOptional: true,
+          groupOptional: true,
           rowOptional: false,
           hint: "Heatmaps work best with two grouping fields, such as year and country, plus an optional numeric measure to color each cell.",
         };
@@ -1136,8 +1251,12 @@ function renderAnalysis(container, analysis, shape) {
         return {
           xColumns: categorical.length ? categorical.concat(datetime) : allColumns,
           yColumns: preferredNumeric,
+          sizeColumns: [],
+          groupColumns: [],
           rowColumns: [],
           yOptional: true,
+          sizeOptional: true,
+          groupOptional: true,
           rowOptional: true,
           hint: "Bar charts work best with a category, geography, or time field on X and a count, rate, or measure on Y.",
         };

@@ -94,6 +94,12 @@
                 <option value="line">line</option>
                 <option value="area">area</option>
                 <option value="scatter">scatter</option>
+                <option value="bubble">bubble</option>
+                <option value="hexbin">hexbin</option>
+                <option value="density">density</option>
+                <option value="beeswarm">beeswarm</option>
+                <option value="grouped_bar">grouped bar</option>
+                <option value="stacked_bar">stacked bar</option>
                 <option value="heatmap">heatmap</option>
                 <option value="feature_graph">feature graph</option>
               </select>
@@ -113,9 +119,17 @@
               <label for="rowColumn">Row column</label>
               <select id="rowColumn"></select>
             </div>
+            <div id="groupColumnWrap">
+              <label id="groupColumnLabel" for="groupColumn">Group column</label>
+              <select id="groupColumn"></select>
+            </div>
             <div id="yColumnWrap">
               <label id="yColumnLabel" for="yColumn">Y column</label>
               <select id="yColumn"></select>
+            </div>
+            <div id="sizeColumnWrap">
+              <label for="sizeColumn">Size column</label>
+              <select id="sizeColumn"></select>
             </div>
             <div class="control-grid-span">
               <label for="chartTitle">Chart title</label>
@@ -348,9 +362,14 @@
       xColumn: document.getElementById("xColumn"),
       rowColumnWrap: document.getElementById("rowColumnWrap"),
       rowColumn: document.getElementById("rowColumn"),
+      groupColumnWrap: document.getElementById("groupColumnWrap"),
+      groupColumnLabel: document.getElementById("groupColumnLabel"),
+      groupColumn: document.getElementById("groupColumn"),
       yColumnWrap: document.getElementById("yColumnWrap"),
       yColumnLabel: document.getElementById("yColumnLabel"),
       yColumn: document.getElementById("yColumn"),
+      sizeColumnWrap: document.getElementById("sizeColumnWrap"),
+      sizeColumn: document.getElementById("sizeColumn"),
       chartTitle: document.getElementById("chartTitle"),
       aggregationWrap: document.getElementById("aggregationWrap"),
       aggregation: document.getElementById("aggregation"),
@@ -443,6 +462,8 @@
         sort_order: "desc",
         top_n: 12,
         row_column: "",
+        group_column: "",
+        size_column: "",
         bins: 20,
         palette: "blue",
         label_rotation: "auto",
@@ -553,7 +574,9 @@
       syncChartControls(true);
       if (chart.x_column) ids.xColumn.value = chart.x_column;
       ids.rowColumn.value = chartOptions.row_column || "";
+      ids.groupColumn.value = chartOptions.group_column || "";
       ids.yColumn.value = chart.y_column || "";
+      ids.sizeColumn.value = chartOptions.size_column || "";
       ids.chartTitle.value = chart.title || chart.label || ids.chartTitle.value;
       ids.chartNoteInput.value = chart.note || "";
     }
@@ -647,19 +670,24 @@
     function updateChartOptionVisibility() {
       const chartType = ids.chartType.value;
       const showRowColumn = chartType === "heatmap";
-      const showAggregation = ["bar", "pie", "line", "area", "heatmap"].includes(chartType);
-      const showSorting = ["bar", "pie", "heatmap"].includes(chartType);
-      const showTopN = ["bar", "pie", "heatmap"].includes(chartType);
-      const showBins = chartType === "histogram";
-      const showYColumn = !["histogram", "box", "feature_graph"].includes(chartType);
+      const showGroupColumn = ["grouped_bar", "stacked_bar", "density", "beeswarm", "bubble"].includes(chartType);
+      const showSizeColumn = chartType === "bubble";
+      const showAggregation = ["bar", "pie", "line", "area", "heatmap", "grouped_bar", "stacked_bar"].includes(chartType);
+      const showSorting = ["bar", "pie", "heatmap", "grouped_bar", "stacked_bar"].includes(chartType);
+      const showTopN = ["bar", "pie", "heatmap", "grouped_bar", "stacked_bar", "beeswarm"].includes(chartType);
+      const showBins = ["histogram", "hexbin"].includes(chartType);
+      const showYColumn = !["histogram", "box", "feature_graph", "density"].includes(chartType);
 
       ids.rowColumnWrap.style.display = showRowColumn ? "block" : "none";
+      ids.groupColumnWrap.style.display = showGroupColumn ? "block" : "none";
+      ids.sizeColumnWrap.style.display = showSizeColumn ? "block" : "none";
       ids.aggregationWrap.style.display = showAggregation ? "block" : "none";
       ids.sortOrderWrap.style.display = showSorting ? "block" : "none";
       ids.topNWrap.style.display = showTopN ? "block" : "none";
       ids.binsWrap.style.display = showBins ? "block" : "none";
       ids.yColumnWrap.style.display = showYColumn ? "block" : "none";
       ids.xColumnLabel.textContent = chartType === "feature_graph" ? "Focus column" : "X column";
+      ids.groupColumnLabel.textContent = chartType === "bubble" ? "Color split" : "Group column";
       ids.yColumnLabel.textContent = chartType === "heatmap" ? "Value column" : "Y column";
       updateChartEditState();
     }
@@ -794,6 +822,38 @@
             addNote("Use this scatter plot to see whether higher values in one measure tend to appear alongside higher or lower values in the other.");
           }
           break;
+        case "bubble":
+          shows = `This bubble chart compares ${xDescription} against ${yDescription}, while bubble size comes from ${describeColumn(chartOptions.size_column)}${chartOptions.group_column ? ` and color splits the points by ${describeColumn(chartOptions.group_column)}` : ""}.`;
+          read = "Read horizontal position, vertical position, and bubble size together. Large bubbles are more important on the size field, while clusters show repeated combinations.";
+          addNote("Bubble charts are best when the size field is a meaningful third measure, not just a weak numeric field with tiny variation.");
+          break;
+        case "hexbin":
+          shows = `This hexbin chart summarizes the relationship between ${xDescription} and ${yDescription} by grouping nearby points into hexagonal bins.`;
+          read = "Look for darker or denser hexagons to find where many rows overlap. It works like a compressed scatter plot when raw points would pile up.";
+          addNote("Use hexbin when a scatter plot would become too crowded to read clearly.");
+          break;
+        case "density":
+          shows = chartOptions.group_column
+            ? `This density plot shows where ${xDescription} tends to concentrate, split by ${describeColumn(chartOptions.group_column)}.`
+            : `This density plot shows where values of ${xDescription} are most concentrated.`;
+          read = "Higher peaks mean more rows cluster in that value range. Multiple curves help you compare where different groups tend to sit.";
+          addNote("Density plots summarize shape smoothly, so use them for overall distribution patterns rather than exact row counts.");
+          break;
+        case "beeswarm":
+          shows = `This beeswarm plot shows individual rows of ${yDescription} inside each ${xDescription} category${chartOptions.group_column ? `, with color split by ${describeColumn(chartOptions.group_column)}` : ""}.`;
+          read = "Compare the vertical spread inside each category. Dense stacks, wide spreads, and isolated dots help reveal variation that a single average would hide.";
+          addNote("Beeswarm plots are especially useful when you want row-level spread without the overplotting of a plain strip chart.");
+          break;
+        case "grouped_bar":
+          shows = `This grouped bar chart compares ${yDescription || "row counts"} across ${xDescription}, with bars split by ${describeColumn(chartOptions.group_column)}.`;
+          read = "Compare bars within each category first, then compare the same color across categories to see which split group leads or lags.";
+          addNote("Grouped bars are useful when the second split field matters as much as the main category.");
+          break;
+        case "stacked_bar":
+          shows = `This stacked bar chart compares totals across ${xDescription}, while each bar segment shows how ${describeColumn(chartOptions.group_column)} contributes to that total.`;
+          read = "Read total bar height for the full amount, then compare segment sizes inside each bar to understand composition.";
+          addNote("Stacked bars are best when you care about both the total and the internal mix of each category.");
+          break;
         case "feature_graph":
           shows = `This feature relationship graph treats dataset columns as nodes. ${chart.x_column} is the current focus field, larger nodes are more important, and closer nodes indicate stronger dependencies or associations.`;
           read = "Start with the highlighted focus node, then follow nearby nodes and thicker links. Clusters suggest groups of fields that move together, split rows similarly, or share strong categorical association.";
@@ -851,6 +911,12 @@
         `${activeChart.chart_type === "feature_graph" ? "Focus" : "X"}: ${activeChart.x_column || "n/a"}`
       ];
       const chartOptions = { ...defaultChartOptions(), ...(activeChart.chart_options || {}) };
+      if (chartOptions.group_column) {
+        chips.push(`Group: ${chartOptions.group_column}`);
+      }
+      if (chartOptions.size_column) {
+        chips.push(`Size: ${chartOptions.size_column}`);
+      }
       if (chartOptions.row_column) {
         chips.push(`Row: ${chartOptions.row_column}`);
       }
@@ -1000,10 +1066,14 @@
       const compatibility = window.dataTool.getChartCompatibility(ids.chartType.value, state.schema || {});
       const previousX = ids.xColumn.value;
       const previousRow = ids.rowColumn.value;
+      const previousGroup = ids.groupColumn.value;
       const previousY = ids.yColumn.value;
+      const previousSize = ids.sizeColumn.value;
       window.dataTool.populateSelect(ids.xColumn, compatibility.xColumns, false);
       window.dataTool.populateSelect(ids.rowColumn, compatibility.rowColumns || [], compatibility.rowOptional !== false);
+      window.dataTool.populateSelect(ids.groupColumn, compatibility.groupColumns || [], compatibility.groupOptional !== false);
       window.dataTool.populateSelect(ids.yColumn, compatibility.yColumns, compatibility.yOptional);
+      window.dataTool.populateSelect(ids.sizeColumn, compatibility.sizeColumns || [], compatibility.sizeOptional !== false);
 
       if (!compatibility.xColumns.includes(previousX)) {
         ids.xColumn.value = compatibility.xColumns[0] || "";
@@ -1017,10 +1087,24 @@
         ids.rowColumn.value = "";
       }
 
+      if ((compatibility.groupColumns || []).includes(previousGroup) && previousGroup !== ids.xColumn.value) {
+        ids.groupColumn.value = previousGroup;
+      } else if (compatibility.groupOptional === false) {
+        ids.groupColumn.value = (compatibility.groupColumns || []).find((column) => column !== ids.xColumn.value) || "";
+      } else {
+        ids.groupColumn.value = "";
+      }
+
       if (compatibility.yOptional) {
         ids.yColumn.value = compatibility.yColumns.includes(previousY) ? previousY : "";
       } else if (!compatibility.yColumns.includes(previousY) || previousY === ids.xColumn.value) {
         ids.yColumn.value = compatibility.yColumns.find((column) => column !== ids.xColumn.value) || "";
+      }
+
+      if (compatibility.sizeOptional) {
+        ids.sizeColumn.value = (compatibility.sizeColumns || []).includes(previousSize) ? previousSize : "";
+      } else if (!(compatibility.sizeColumns || []).includes(previousSize) || previousSize === ids.xColumn.value || previousSize === ids.yColumn.value) {
+        ids.sizeColumn.value = (compatibility.sizeColumns || []).find((column) => column !== ids.xColumn.value && column !== ids.yColumn.value) || "";
       }
 
       updateChartOptionVisibility();
@@ -1145,6 +1229,8 @@
         sort_order: ids.sortOrder.value,
         top_n: Number(ids.topN.value || 12),
         row_column: ids.rowColumn.value || null,
+        group_column: ids.groupColumn.value || null,
+        size_column: ids.sizeColumn.value || null,
         bins: Number(ids.bins.value || 20),
         palette: ids.palette.value,
         label_rotation: ids.labelRotation.value,
@@ -1175,8 +1261,14 @@
       if (requestPayload.chart_options?.row_column !== undefined && Array.from(ids.rowColumn.options).some((option) => option.value === requestPayload.chart_options.row_column)) {
         ids.rowColumn.value = requestPayload.chart_options.row_column || "";
       }
+      if (requestPayload.chart_options?.group_column !== undefined && Array.from(ids.groupColumn.options).some((option) => option.value === requestPayload.chart_options.group_column)) {
+        ids.groupColumn.value = requestPayload.chart_options.group_column || "";
+      }
       if (requestPayload.y_column !== undefined && Array.from(ids.yColumn.options).some((option) => option.value === requestPayload.y_column)) {
         ids.yColumn.value = requestPayload.y_column || "";
+      }
+      if (requestPayload.chart_options?.size_column !== undefined && Array.from(ids.sizeColumn.options).some((option) => option.value === requestPayload.chart_options.size_column)) {
+        ids.sizeColumn.value = requestPayload.chart_options.size_column || "";
       }
       ids.chartTitle.value = requestPayload.title || "";
       ids.chartFormat.value = requestPayload.format || "png";
@@ -1215,6 +1307,17 @@
         requestPayload.chart_options.row_column = null;
       }
 
+      if (compatibility.groupOptional === false) {
+        if (!(compatibility.groupColumns || []).includes(requestPayload.chart_options.group_column) || requestPayload.chart_options.group_column === requestPayload.x_column) {
+          requestPayload.chart_options.group_column = (compatibility.groupColumns || []).find((column) => column !== requestPayload.x_column) || "";
+          if (requestPayload.chart_options.group_column) {
+            recoveryNotes.push(`Group column was reset to ${requestPayload.chart_options.group_column}.`);
+          }
+        }
+      } else if (!(compatibility.groupColumns || []).includes(requestPayload.chart_options.group_column || "")) {
+        requestPayload.chart_options.group_column = null;
+      }
+
       if (compatibility.yOptional) {
         if (requestPayload.y_column && !compatibility.yColumns.includes(requestPayload.y_column)) {
           requestPayload.y_column = null;
@@ -1227,7 +1330,23 @@
         }
       }
 
-      if (["bar", "pie"].includes(requestPayload.chart_type) && (!Number.isFinite(requestPayload.chart_options.top_n) || requestPayload.chart_options.top_n < 1)) {
+      if (compatibility.sizeOptional) {
+        if (requestPayload.chart_options.size_column && !(compatibility.sizeColumns || []).includes(requestPayload.chart_options.size_column)) {
+          requestPayload.chart_options.size_column = null;
+          recoveryNotes.push("Size column was cleared because it no longer matches this chart type.");
+        }
+      } else if (
+        !(compatibility.sizeColumns || []).includes(requestPayload.chart_options.size_column || "")
+        || requestPayload.chart_options.size_column === requestPayload.x_column
+        || requestPayload.chart_options.size_column === requestPayload.y_column
+      ) {
+        requestPayload.chart_options.size_column = (compatibility.sizeColumns || []).find((column) => column !== requestPayload.x_column && column !== requestPayload.y_column) || "";
+        if (requestPayload.chart_options.size_column) {
+          recoveryNotes.push(`Size column was reset to ${requestPayload.chart_options.size_column}.`);
+        }
+      }
+
+      if (["bar", "pie", "grouped_bar", "stacked_bar", "beeswarm"].includes(requestPayload.chart_type) && (!Number.isFinite(requestPayload.chart_options.top_n) || requestPayload.chart_options.top_n < 1)) {
         requestPayload.chart_options.top_n = 12;
       }
       if (requestPayload.chart_type === "pie" && (!Number.isFinite(requestPayload.chart_options.top_n) || requestPayload.chart_options.top_n > 12)) {
@@ -1235,7 +1354,13 @@
         recoveryNotes.push("Pie chart categories were limited to the top 8 groups for readability.");
       }
 
-      if (!requestPayload.x_column || (compatibility.yOptional === false && !requestPayload.y_column) || (compatibility.rowOptional === false && !requestPayload.chart_options.row_column)) {
+      if (
+        !requestPayload.x_column
+        || (compatibility.yOptional === false && !requestPayload.y_column)
+        || (compatibility.rowOptional === false && !requestPayload.chart_options.row_column)
+        || (compatibility.groupOptional === false && !requestPayload.chart_options.group_column)
+        || (compatibility.sizeOptional === false && !requestPayload.chart_options.size_column)
+      ) {
         const recommendation = window.dataTool.recommendChartConfig(state.schema || {});
         const fallbackPayload = {
           ...requestPayload,
@@ -1245,6 +1370,8 @@
           chart_options: {
             ...requestPayload.chart_options,
             row_column: null,
+            group_column: null,
+            size_column: null,
           },
         };
         recoveryNotes.push("The selected chart setup was incomplete, so the app switched to the recommended chart configuration.");
