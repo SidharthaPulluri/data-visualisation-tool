@@ -1176,7 +1176,7 @@ def render_html(graph: dict[str, Any]) -> str:
       const keywordScore = Math.min((fn.keywords || []).length, 8) * 0.16;
       const degreeScore = Math.min(file.degree || 0, 8) * 0.09;
       const kindBase = fn.kind === "class" ? 1.7 : fn.kind === "arrow" ? 1.28 : fn.kind === "method" ? 1.14 : 1;
-      const weight = Math.max(1, Math.min(5.4, kindBase + keywordScore + degreeScore + clusterScore * 1.7));
+      const weight = Math.max(1, Math.min(5.1, kindBase + keywordScore + degreeScore + clusterScore * 1.58));
       let color = "#d8ebff";
       let coreColor = "#f8fbff";
       let haloColor = "rgba(151, 214, 255, 0.24)";
@@ -1207,7 +1207,7 @@ def render_html(graph: dict[str, Any]) -> str:
         orbitBand = 1;
       }}
       const normalizedWeight = (weight - 1) / 4.4;
-      const radius = 2.8 + weight * 1.65 + (orbitBand === 0 ? 0.8 : orbitBand === 1 ? 0.3 : 0);
+      const radius = 2.4 + weight * 1.28 + (orbitBand === 0 ? 0.55 : orbitBand === 1 ? 0.2 : 0);
       return {{
         weight,
         radius,
@@ -1216,7 +1216,7 @@ def render_html(graph: dict[str, Any]) -> str:
         haloColor,
         orbitBand,
         orbitOffset: (normalizedWeight - 0.5) * 8,
-        glow: 8 + weight * 3.8 + (orbitBand === 0 ? 8 : orbitBand === 1 ? 4 : 0),
+        glow: 3 + weight * 1.35 + (orbitBand === 0 ? 3.6 : orbitBand === 1 ? 1.8 : 0.8),
         stroke: clusterScore >= 0.78 ? "rgba(255,255,255,0.78)" : "rgba(255,255,255,0.18)",
         linkColor: clusterScore >= 0.78 ? "rgba(145, 227, 255, 0.46)" : "rgba(255,255,255,0.08)"
       }};
@@ -1562,17 +1562,21 @@ def render_html(graph: dict[str, Any]) -> str:
         }}
         const siblings = planetsByParent.get(planet.parentId) || [];
         const orbitBands = [
-          parent.orbit * 0.48,
-          parent.orbit * 0.78,
-          parent.orbit * 1.08
+          parent.orbit * 0.86,
+          parent.orbit * 1.22,
+          parent.orbit * 1.58
         ];
         const bandSiblings = siblings.filter((item) => (item.orbitBand || 0) === (planet.orbitBand || 0));
         const siblingCount = Math.max(Math.min(bandSiblings.length, 18), 1);
-        const siblingIndex = bandSiblings.findIndex((item) => item.id === planet.id);
+        const siblingIndex = Math.max(bandSiblings.findIndex((item) => item.id === planet.id), 0);
         const bandIndex = Math.max(0, Math.min(2, planet.orbitBand || 0));
         const angleOffset = bandIndex === 0 ? -Math.PI / 2 : bandIndex === 1 ? Math.PI / 5 : -Math.PI / 7;
-        const angle = ((Math.PI * 2 * Math.max(siblingIndex, 0)) / siblingCount) + angleOffset + ((planet.weight || 1) - 1) * 0.045;
-        const orbitRadius = Math.max(18, orbitBands[bandIndex] + (planet.orbitOffset || 0));
+        const tierSize = bandIndex === 0 ? 4 : bandIndex === 1 ? 6 : 8;
+        const tierIndex = Math.floor(siblingIndex / tierSize);
+        const tierMembers = Math.max(1, Math.min(tierSize, siblingCount - tierIndex * tierSize));
+        const tierOffset = siblingIndex % tierSize;
+        const angle = ((Math.PI * 2 * tierOffset) / tierMembers) + angleOffset + tierIndex * 0.26 + ((planet.weight || 1) - 1) * 0.032;
+        const orbitRadius = Math.max(18, orbitBands[bandIndex] + tierIndex * 18 + (planet.orbitOffset || 0));
         return {{
           ...planet,
           orbitRadius,
@@ -1645,11 +1649,11 @@ def render_html(graph: dict[str, Any]) -> str:
         const orbitLevels = [...new Set(planets.map((planet) => Number((planet.orbitRadius || fileNode.orbit).toFixed(2))))].sort((left, right) => left - right);
         orbitLevels.forEach((orbitRadius, orbitIndex) => {{
           ctx.strokeStyle = orbitIndex === 0
-            ? "rgba(255, 209, 102, 0.18)"
+            ? "rgba(255, 209, 102, 0.12)"
             : orbitIndex === 1
-              ? "rgba(120, 229, 255, 0.14)"
-              : "rgba(255,255,255,0.08)";
-          ctx.lineWidth = orbitIndex === 0 ? 1.25 : 0.95;
+              ? "rgba(120, 229, 255, 0.1)"
+              : "rgba(255,255,255,0.06)";
+          ctx.lineWidth = orbitIndex === 0 ? 1.05 : 0.78;
           ctx.beginPath();
           ctx.arc(fileNode.x, fileNode.y, orbitRadius, 0, Math.PI * 2);
           ctx.stroke();
@@ -1665,7 +1669,7 @@ def render_html(graph: dict[str, Any]) -> str:
           ctx.stroke();
 
           const halo = ctx.createRadialGradient(planet.x, planet.y, 0, planet.x, planet.y, planet.r + (planet.glow || 10));
-          halo.addColorStop(0, selected ? "rgba(255,255,255,0.42)" : (planet.haloColor || "rgba(151, 214, 255, 0.18)"));
+          halo.addColorStop(0, selected ? "rgba(255,255,255,0.24)" : (planet.haloColor || "rgba(151, 214, 255, 0.12)"));
           halo.addColorStop(1, "rgba(0,0,0,0)");
           ctx.fillStyle = halo;
           ctx.beginPath();

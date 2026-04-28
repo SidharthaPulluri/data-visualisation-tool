@@ -7349,7 +7349,7 @@
       "name": "build_codebase_memory_graph.py",
       "folder": "scripts",
       "extension": ".py",
-      "lines": 2100,
+      "lines": 2104,
       "functions": [
         {
           "name": "discover_source_files",
@@ -8026,8 +8026,8 @@
             "span",
             "edge",
             "map",
-            "ctx",
             "math",
+            "ctx",
             "color"
           ],
           "fingerprint": [
@@ -8046,7 +8046,7 @@
         },
         {
           "name": "main",
-          "line": 2088,
+          "line": 2092,
           "kind": "function",
           "keywords": [
             "graph",
@@ -8436,7 +8436,7 @@
       "name": "tools/index.html",
       "folder": "tools",
       "extension": ".html",
-      "lines": 1362,
+      "lines": 1373,
       "functions": [
         {
           "name": "escapeHtml",
@@ -9033,63 +9033,64 @@
           "stem": "edge key"
         },
         {
-          "name": "describeEdgeLabel",
+          "name": "describeEdgeReason",
           "kind": "function",
           "line": 390,
           "keywords": [
-            "label",
             "the",
+            "kind",
+            "source",
             "target",
-            "api",
-            "calls",
-            "imports",
-            "loads",
-            "page"
+            "page",
+            "reason",
+            "into",
+            "api"
           ],
           "fingerprint": [
             "api",
-            "calls",
             "describe",
             "edge",
-            "imports",
-            "label",
-            "loads",
+            "into",
+            "kind",
             "page",
+            "reason",
+            "source",
             "target",
             "the"
           ],
-          "stem": "describe edge label"
+          "stem": "describe edge reason"
         },
         {
           "name": "edgeExplanation",
           "kind": "function",
-          "line": 409,
+          "line": 413,
           "keywords": [
+            "reason",
             "edge",
-            "label",
-            "escape",
             "span",
-            "describe",
+            "escape",
             "detail",
-            "explanation",
-            "join"
+            "label",
+            "strong",
+            "analysis"
           ],
           "fingerprint": [
-            "describe",
+            "analysis",
             "detail",
             "edge",
             "escape",
             "explanation",
-            "join",
             "label",
-            "span"
+            "reason",
+            "span",
+            "strong"
           ],
           "stem": "edge explanation"
         },
         {
           "name": "buildDisplayNodeMap",
           "kind": "function",
-          "line": 413,
+          "line": 423,
           "keywords": [
             "strength",
             "math",
@@ -9116,7 +9117,7 @@
         {
           "name": "buildDisplayPlanets",
           "kind": "function",
-          "line": 469,
+          "line": 479,
           "keywords": [
             "orbit",
             "math",
@@ -9145,7 +9146,7 @@
         {
           "name": "getVisibleEdgeGeometry",
           "kind": "function",
-          "line": 497,
+          "line": 507,
           "keywords": [
             "source",
             "target",
@@ -9171,7 +9172,7 @@
         {
           "name": "pointToQuadraticDistance",
           "kind": "function",
-          "line": 510,
+          "line": 520,
           "keywords": [
             "geometry",
             "inv",
@@ -9198,7 +9199,7 @@
         {
           "name": "drawEdges",
           "kind": "function",
-          "line": 522,
+          "line": 532,
           "keywords": [
             "geometry",
             "selected",
@@ -9226,7 +9227,7 @@
         {
           "name": "drawPlanets",
           "kind": "function",
-          "line": 549,
+          "line": 559,
           "keywords": [
             "planet",
             "ctx",
@@ -9254,7 +9255,7 @@
         {
           "name": "drawStars",
           "kind": "function",
-          "line": 612,
+          "line": 622,
           "keywords": [
             "node",
             "ctx",
@@ -9282,7 +9283,7 @@
         {
           "name": "createScene",
           "kind": "function",
-          "line": 650,
+          "line": 660,
           "keywords": [
             "display",
             "map",
@@ -9310,7 +9311,7 @@
         {
           "name": "draw",
           "kind": "function",
-          "line": 670,
+          "line": 680,
           "keywords": [
             "scene",
             "draw",
@@ -9336,7 +9337,7 @@
         {
           "name": "hitTest",
           "kind": "function",
-          "line": 685,
+          "line": 695,
           "keywords": [
             "index",
             "node",
@@ -9364,7 +9365,7 @@
         {
           "name": "requestDraw",
           "kind": "function",
-          "line": 709,
+          "line": 719,
           "keywords": [
             "draw",
             "queued",
@@ -9386,7 +9387,7 @@
         {
           "name": "clamp",
           "kind": "function",
-          "line": 717,
+          "line": 727,
           "keywords": [
             "max",
             "min",
@@ -9404,7 +9405,7 @@
         {
           "name": "updateManualStarPosition",
           "kind": "function",
-          "line": 721,
+          "line": 731,
           "keywords": [
             "next",
             "node",
@@ -9433,7 +9434,7 @@
         {
           "name": "renderHeroStats",
           "kind": "function",
-          "line": 731,
+          "line": 741,
           "keywords": [
             "span",
             "summary",
@@ -9460,7 +9461,7 @@
         {
           "name": "renderLegend",
           "kind": "function",
-          "line": 742,
+          "line": 752,
           "keywords": [
             "folder",
             "legend",
@@ -9487,7 +9488,7 @@
         {
           "name": "renderHotspots",
           "kind": "function",
-          "line": 752,
+          "line": 762,
           "keywords": [
             "span",
             "escape",
@@ -9514,7 +9515,7 @@
         {
           "name": "renderSimilarityClusters",
           "kind": "function",
-          "line": 762,
+          "line": 772,
           "keywords": [
             "similarity",
             "span",
@@ -9541,7 +9542,7 @@
         {
           "name": "renderDuplicates",
           "kind": "function",
-          "line": 777,
+          "line": 787,
           "keywords": [
             "span",
             "duplicate",
@@ -9568,16 +9569,16 @@
         {
           "name": "renderSelectionPill",
           "kind": "function",
-          "line": 790,
+          "line": 800,
           "keywords": [
             "span",
-            "planet",
             "edge",
             "escape",
+            "planet",
             "node",
+            "reason",
             "selection",
-            "length",
-            "pill"
+            "length"
           ],
           "fingerprint": [
             "edge",
@@ -9586,6 +9587,7 @@
             "node",
             "pill",
             "planet",
+            "reason",
             "render",
             "selection",
             "span"
@@ -9595,7 +9597,7 @@
         {
           "name": "renderDetails",
           "kind": "function",
-          "line": 831,
+          "line": 842,
           "keywords": [
             "span",
             "detail",
@@ -9623,7 +9625,7 @@
         {
           "name": "updateSelection",
           "kind": "function",
-          "line": 903,
+          "line": 914,
           "keywords": [
             "node",
             "state",
