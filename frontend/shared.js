@@ -361,6 +361,26 @@
     };
   }
 
+  function normalizeSessionShape(session) {
+    if (!session || typeof session !== "object") {
+      return session;
+    }
+
+    const nextSession = {
+      ...session,
+      lastPage: session.lastPage || "/prepare",
+      dashboardMode: session.dashboardMode || "single",
+      dashboardColumns: Number(session.dashboardColumns || 2),
+    };
+
+    if (Array.isArray(session.tables) && session.tables.length) {
+      nextSession.tables = session.tables.map((table) => buildTableRecord(table));
+      return mirrorActiveTableIntoSession(nextSession, nextSession.activeTableId);
+    }
+
+    return nextSession;
+  }
+
   function saveSession(session) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(createStorageSafeSession(session)));
@@ -375,7 +395,7 @@
 
   function loadSession() {
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      return normalizeSessionShape(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"));
     } catch {
       return null;
     }
@@ -388,7 +408,12 @@
   function loadWorkspaces() {
     try {
       const parsed = JSON.parse(localStorage.getItem(WORKSPACES_KEY) || "[]");
-      return Array.isArray(parsed) ? parsed : [];
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((workspace) => ({
+        ...workspace,
+        session: normalizeSessionShape(workspace?.session || null),
+        lastPage: workspace?.lastPage || workspace?.session?.lastPage || "/prepare",
+      }));
     } catch {
       return [];
     }

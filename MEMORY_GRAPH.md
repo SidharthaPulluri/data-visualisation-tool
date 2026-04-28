@@ -53,11 +53,12 @@ These are the shared helpers pages should use instead of re-implementing behavio
 - Chart rendering now goes through `_build_chart_bytes` in [D:\Data Visualisation Tool\app.py](D:\Data%20Visualisation%20Tool\app.py) instead of repeating `create_chart(...)` wiring everywhere.
 - Workspace switching and workspace-save flow now have shared runtime helpers in [D:\Data Visualisation Tool\frontend\shared.js](D:\Data%20Visualisation%20Tool\frontend\shared.js).
 - Parser heuristics for JSON, ZIP, headerless files, and Excel ranking are concentrated in [D:\Data Visualisation Tool\ingestion\loader.py](D:\Data%20Visualisation%20Tool\ingestion\loader.py).
+- `prepare.html` and `visualize.html` now use the shared workspace helpers without keeping old live fallback bodies in place for switching and workspace-save flows.
 
 ### Still partially duplicated
 
-- `prepare.html` and `visualize.html` still contain older inline bodies after the new shared helper calls.
-- They are functionally bypassed by early returns now, but the next cleanup pass should fully remove those dead inline blocks by extracting both page scripts into separate JS modules or rewriting the inline sections cleanly.
+- Page-level chart rendering and preview wiring still live inline in `prepare.html` and `visualize.html`.
+- The next cleanup pass should extract those page scripts into separate JS modules once the workflow surface settles.
 
 ## Active Assets
 
@@ -88,6 +89,7 @@ Remove these if they are still not referenced in the next pass:
 Canonical regression runner:
 
 - [D:\Data Visualisation Tool\scripts\run_regression_checks.py](D:\Data%20Visualisation%20Tool\scripts\run_regression_checks.py)
+- [D:\Data Visualisation Tool\scripts\run_workspace_regression_checks.js](D:\Data%20Visualisation%20Tool\scripts\run_workspace_regression_checks.js)
 
 Core fixture families:
 
@@ -99,6 +101,7 @@ Core fixture families:
 - multi-sheet Excel
 - ambiguous workbook sheet selection
 - empty-file rejection
+- multi-file workspace reopen and per-table state restoration
 
 ## Update Rule
 

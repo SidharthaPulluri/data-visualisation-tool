@@ -333,47 +333,17 @@
     const setStatus = (message) => window.dataTool.setStatusText(ids.status, message);
 
     function renderTableWorkspace() {
-      return window.dataTool.renderWorkspaceTablePanel({
+      window.dataTool.renderWorkspaceTablePanel({
         session: state,
         panel: ids.tableWorkspacePanel,
         meta: ids.tableWorkspaceMeta,
         tabs: ids.tableWorkspaceTabs,
         onSwitch: switchWorkspaceTable
       });
-      const tables = window.dataTool.getWorkspaceTables(state);
-      if (tables.length <= 1) {
-        ids.tableWorkspacePanel.hidden = true;
-        ids.tableWorkspaceTabs.innerHTML = "";
-        return;
-      }
-
-      ids.tableWorkspacePanel.hidden = false;
-      ids.tableWorkspaceMeta.textContent = `${window.dataTool.formatNumber(tables.length, 0)} uploaded files are available in this workspace.`;
-      ids.tableWorkspaceTabs.innerHTML = tables.map((table, index) => `
-        <button
-          type="button"
-          class="table-switch-button${table.id === state.activeTableId ? " active" : ""}"
-          data-table-id="${window.dataTool.escapeHtml(table.id)}"
-        >
-          <strong>${window.dataTool.escapeHtml(table.filename || `Table ${index + 1}`)}</strong>
-          <span>${window.dataTool.formatNumber(table.shape?.rows || 0, 0)} rows • ${window.dataTool.formatNumber(table.shape?.columns || 0, 0)} columns</span>
-        </button>
-      `).join("");
-
-      ids.tableWorkspaceTabs.querySelectorAll("[data-table-id]").forEach((button) => {
-        button.addEventListener("click", () => switchWorkspaceTable(button.dataset.tableId));
-      });
     }
 
     function switchWorkspaceTable(tableId) {
-      return window.dataTool.switchWorkspaceTable(state, tableId);
-      const nextSession = window.dataTool.setActiveTable(state, tableId);
-      Object.keys(state).forEach((key) => {
-        delete state[key];
-      });
-      Object.assign(state, nextSession);
-      window.dataTool.saveSession(state);
-      window.location.reload();
+      window.dataTool.switchWorkspaceTable(state, tableId);
     }
 
     function updateColumnControls(schema) {
@@ -683,36 +653,12 @@
 
     async function saveWorkspace() {
       try {
-        return await window.dataTool.saveWorkspaceFlow({
+        await window.dataTool.saveWorkspaceFlow({
           state,
           lastPage: "/prepare",
           fetchJson: window.dataTool.fetchJson,
           setStatus
         });
-      } catch (error) {
-        setStatus(error.message);
-        return null;
-      }
-      const workspaceName = window.prompt("Name this workspace", `${state.filename || "dataset"} workspace`);
-      if (!workspaceName) {
-        return;
-      }
-
-      try {
-        if (!state.datasetState) {
-          const payload = await window.dataTool.fetchJson("/api/transform", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              dataset_id: state.datasetId,
-              dataset_state: state.datasetState,
-              config: state.transformConfig || {}
-            })
-          });
-          state.datasetState = payload.dataset_state;
-        }
-        const workspace = window.dataTool.storeWorkspace({ ...state, lastPage: "/prepare" }, workspaceName.trim());
-        setStatus(`Saved workspace as ${workspace.name}.`);
       } catch (error) {
         setStatus(error.message);
       }
@@ -747,3 +693,4 @@
   </script>
 </body>
 </html>
+

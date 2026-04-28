@@ -40,13 +40,19 @@ Open `http://127.0.0.1:5000`.
 
 ## Regression Checks
 
-Run the local smoke-test pack to verify ingestion, transforms, intent detection, JSON header-row recovery, mixed-schema JSON arrays, nested JSON extraction, ZIP archive extraction, multi-sheet workbook selection, ambiguous workbook sheet ranking, headerless recovery, chart rendering, and empty-file handling:
+Run the core smoke-test pack to verify ingestion, transforms, intent detection, JSON header-row recovery, mixed-schema JSON arrays, nested JSON extraction, ZIP archive extraction, multi-sheet workbook selection, ambiguous workbook sheet ranking, headerless recovery, chart rendering, and empty-file handling:
 
 ```powershell
 python scripts/run_regression_checks.py
 ```
 
 Fixtures live in [D:\Data Visualisation Tool\regression\fixtures](D:\Data%20Visualisation%20Tool\regression\fixtures).
+
+Run the workspace-state pack to verify multi-file session persistence, active-table restoration, per-table chart state preservation, and saved-workspace reopen flows:
+
+```powershell
+node scripts/run_workspace_regression_checks.js
+```
 
 ## Memory Graph
 
