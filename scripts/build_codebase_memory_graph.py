@@ -1168,6 +1168,10 @@ def render_html(graph: dict[str, Any]) -> str:
       return linked;
     }}
 
+    function selectedFocusPath() {{
+      return state.selectedEdgeKey ? null : activeParentId();
+    }}
+
     function shouldShowPlanets(node) {{
       if (!isVisibleFile(node)) return false;
       if (state.search) return true;
@@ -1247,9 +1251,83 @@ def render_html(graph: dict[str, Any]) -> str:
       return edge.labels.map((label) => `<li><span class="detail-key">${{escapeHtml(label)}}</span>${{escapeHtml(describeEdgeLabel(label))}}</li>`).join("");
     }}
 
-    function getVisibleEdgeGeometry(edge) {{
-      const source = fileNodeLookup.get(edge.source);
-      const target = fileNodeLookup.get(edge.target);
+    function buildDisplayNodeMap() {{
+      const displayMap = new Map(positions.fileNodes.map((node) => [node.path, {{ ...node }}]));
+      const focusPath = selectedFocusPath();
+      if (!focusPath) {{
+        return displayMap;
+      }}
+
+      const focus = displayMap.get(focusPath);
+      if (!focus) {{
+        return displayMap;
+      }}
+
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      focus.x = centerX;
+      focus.y = centerY;
+
+      const relationStrength = new Map();
+      connectedEdgesForFile(focusPath).forEach((edge) => {{
+        const otherPath = edge.source === focusPath ? edge.target : edge.source;
+        const strength = edge.weight + edge.labels.length * 0.45;
+        relationStrength.set(otherPath, Math.max(relationStrength.get(otherPath) || 0, strength));
+      }});
+
+      const connectedEntries = [...relationStrength.entries()]
+        .filter(([path]) => displayMap.has(path))
+        .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]));
+
+      const maxStrength = connectedEntries.length ? connectedEntries[0][1] : 1;
+      const minStrength = connectedEntries.length ? connectedEntries[connectedEntries.length - 1][1] : 0;
+      connectedEntries.forEach(([path, strength], index) => {{
+        const node = displayMap.get(path);
+        if (!node) return;
+        const angle = (Math.PI * 2 * index) / Math.max(connectedEntries.length, 1) - Math.PI / 2;
+        const normalized = maxStrength === minStrength ? 1 : (strength - minStrength) / (maxStrength - minStrength);
+        const ringOffset = Math.floor(index / 8) * 34;
+        const radius = 150 + (1 - normalized) * 120 + ringOffset;
+        node.x = centerX + Math.cos(angle) * radius;
+        node.y = centerY + Math.sin(angle) * radius;
+      }});
+
+      const outerNodes = positions.fileNodes
+        .filter((node) => node.path !== focusPath && !relationStrength.has(node.path))
+        .sort((left, right) => left.path.localeCompare(right.path));
+      outerNodes.forEach((node, index) => {{
+        const target = displayMap.get(node.path);
+        if (!target) return;
+        const angle = (Math.PI * 2 * index) / Math.max(outerNodes.length, 1) - Math.PI / 2;
+        const radius = 330 + Math.floor(index / 14) * 42;
+        target.x = centerX + Math.cos(angle) * radius;
+        target.y = centerY + Math.sin(angle) * radius;
+      }});
+
+      return displayMap;
+    }}
+
+    function buildDisplayPlanets(displayNodeMap) {{
+      return positions.planetNodes.map((planet, index) => {{
+        const parent = displayNodeMap.get(planet.parentId);
+        if (!parent) {{
+          return planet;
+        }}
+        const siblings = planetsByParent.get(planet.parentId) || [];
+        const siblingCount = Math.max(Math.min(siblings.length, 18), 1);
+        const siblingIndex = siblings.findIndex((item) => item.id === planet.id);
+        const angle = (Math.PI * 2 * Math.max(siblingIndex, 0)) / siblingCount;
+        return {{
+          ...planet,
+          x: parent.x + Math.cos(angle) * parent.orbit,
+          y: parent.y + Math.sin(angle) * parent.orbit
+        }};
+      }});
+    }}
+
+    function getVisibleEdgeGeometry(edge, displayNodeMap) {{
+      const source = displayNodeMap.get(edge.source);
+      const target = displayNodeMap.get(edge.target);
       if (!source || !target || !isVisibleFile(source) || !isVisibleFile(target)) return null;
       return {{
         edge,
@@ -1273,22 +1351,27 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     function drawEdges() {{
+      const displayNodeMap = buildDisplayNodeMap();
       const selectedNetwork = selectedNetworkPaths();
+      const focusPath = selectedFocusPath();
       GRAPH.edges.forEach((edge) => {{
-        const geometry = getVisibleEdgeGeometry(edge);
+        const geometry = getVisibleEdgeGeometry(edge, displayNodeMap);
         if (!geometry) return;
         const key = edgeKey(edge);
         const inSelectedNetwork = selectedNetwork.size && selectedNetwork.has(geometry.source.path) && selectedNetwork.has(geometry.target.path);
+        const touchesFocus = focusPath && (geometry.source.path === focusPath || geometry.target.path === focusPath);
         const focused = state.selectedId && (state.selectedId === geometry.source.path || state.selectedId === geometry.target.path || activeParentId() === geometry.source.path || activeParentId() === geometry.target.path || inSelectedNetwork);
         const selected = state.selectedEdgeKey === key;
         ctx.strokeStyle = selected
           ? "rgba(255, 211, 102, 0.92)"
+          : touchesFocus
+            ? "rgba(133, 223, 255, 0.96)"
           : focused
             ? "rgba(110, 197, 255, 0.88)"
             : selectedNetwork.size
               ? "rgba(102, 151, 215, 0.04)"
               : "rgba(102, 151, 215, 0.16)";
-        ctx.lineWidth = selected ? 3.2 : focused ? 2.4 : selectedNetwork.size ? 0.45 : 1.1;
+        ctx.lineWidth = selected ? 3.2 : touchesFocus ? 2.8 : focused ? 2.2 : selectedNetwork.size ? 0.4 : 1.1;
         ctx.beginPath();
         ctx.moveTo(geometry.source.x, geometry.source.y);
         ctx.quadraticCurveTo(geometry.controlX, geometry.controlY, geometry.target.x, geometry.target.y);
@@ -1297,9 +1380,14 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     function drawPlanets() {{
-      positions.fileNodes.forEach((fileNode) => {{
+      const displayNodeMap = buildDisplayNodeMap();
+      const displayPlanets = buildDisplayPlanets(displayNodeMap);
+      const displayPlanetMap = new Map(displayPlanets.map((planet) => [planet.id, planet]));
+      positions.fileNodes.forEach((baseFileNode) => {{
+        const fileNode = displayNodeMap.get(baseFileNode.path);
+        if (!fileNode) return;
         if (!shouldShowPlanets(fileNode)) return;
-        const planets = planetsByParent.get(fileNode.path) || [];
+        const planets = (planetsByParent.get(fileNode.path) || []).map((planet) => displayPlanetMap.get(planet.id) || planet);
         if (!planets.length) return;
         ctx.strokeStyle = "rgba(255,255,255,0.09)";
         ctx.lineWidth = 1;
@@ -1323,8 +1411,12 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     function drawStars() {{
+      const displayNodeMap = buildDisplayNodeMap();
       const selectedNetwork = selectedNetworkPaths();
-      positions.fileNodes.forEach((fileNode) => {{
+      const focusPath = selectedFocusPath();
+      positions.fileNodes.forEach((baseFileNode) => {{
+        const fileNode = displayNodeMap.get(baseFileNode.path);
+        if (!fileNode) return;
         if (!isVisibleFile(fileNode)) return;
         const color = FOLDER_COLORS[fileNode.folder] || "#8aa4c8";
         const selected = state.selectedId === fileNode.path || activeParentId() === fileNode.path;
@@ -1336,6 +1428,13 @@ def render_html(graph: dict[str, Any]) -> str:
         ctx.beginPath();
         ctx.arc(fileNode.x, fileNode.y, fileNode.r, 0, Math.PI * 2);
         ctx.fill();
+        if (focusPath && fileNode.path === focusPath) {{
+          ctx.strokeStyle = "rgba(255, 211, 102, 0.9)";
+          ctx.lineWidth = 2.8;
+          ctx.beginPath();
+          ctx.arc(fileNode.x, fileNode.y, fileNode.r + 10, 0, Math.PI * 2);
+          ctx.stroke();
+        }}
         if (connected) {{
           ctx.strokeStyle = selected ? "rgba(255,255,255,0.92)" : "rgba(110, 197, 255, 0.68)";
           ctx.lineWidth = selected ? 2.2 : 1.6;
@@ -1352,6 +1451,7 @@ def render_html(graph: dict[str, Any]) -> str:
     }}
 
     function draw() {{
+      const focusPath = selectedFocusPath();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "#07111e";
@@ -1359,7 +1459,9 @@ def render_html(graph: dict[str, Any]) -> str:
       ctx.save();
       ctx.translate((canvas.width - canvas.width * state.scale) / 2, (canvas.height - canvas.height * state.scale) / 2);
       ctx.scale(state.scale, state.scale);
-      drawGroupZones();
+      if (!focusPath) {{
+        drawGroupZones();
+      }}
       drawEdges();
       drawPlanets();
       drawStars();
@@ -1368,11 +1470,13 @@ def render_html(graph: dict[str, Any]) -> str:
 
     function hitTest(event) {{
       const point = toWorld(event.clientX, event.clientY);
-      const visiblePlanets = positions.planetNodes.filter((planet) => {{
-        const parent = fileNodeLookup.get(planet.parentId);
+      const displayNodeMap = buildDisplayNodeMap();
+      const displayPlanets = buildDisplayPlanets(displayNodeMap);
+      const visiblePlanets = displayPlanets.filter((planet) => {{
+        const parent = displayNodeMap.get(planet.parentId);
         return parent && shouldShowPlanets(parent);
       }});
-      const visibleStars = positions.fileNodes.filter(isVisibleFile);
+      const visibleStars = [...displayNodeMap.values()].filter(isVisibleFile);
       const nodes = [...visiblePlanets, ...visibleStars];
       for (let index = nodes.length - 1; index >= 0; index -= 1) {{
         const node = nodes[index];
@@ -1382,7 +1486,7 @@ def render_html(graph: dict[str, Any]) -> str:
         }}
       }}
       for (let index = GRAPH.edges.length - 1; index >= 0; index -= 1) {{
-        const geometry = getVisibleEdgeGeometry(GRAPH.edges[index]);
+        const geometry = getVisibleEdgeGeometry(GRAPH.edges[index], displayNodeMap);
         if (!geometry) continue;
         if (pointToQuadraticDistance(point, geometry) <= 8) {{
           return {{ kind: "edge", edge: geometry.edge }};
